@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Loader.Properties
+namespace Ensage.Loader.Properties
 {
 
 
