@@ -39,7 +39,7 @@ namespace CampInformer
 
         static void CurrentDomain_DomainUnload(object sender, EventArgs e)
         {
-             _textFont.Dispose();
+            _textFont.Dispose();
         }
 
         static void Drawing_OnPostReset(EventArgs args)
@@ -54,27 +54,26 @@ namespace CampInformer
 
         static void Drawing_OnEndScene(EventArgs args)
         {
+            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
+                return;
             //foreach (var creep in _creeps)
             var creeps = EntityList.GetEntities<Creep>().Where(x => x.WaitingToSpawn && x.Team == Team.Neutral).ToList();
-            if (creeps.Any())
+            // Check if these creeps are in our namelist
+            foreach (
+                var creep in
+                    from creep in creeps
+                    let name = creep.Name.Substring(17)
+                    where _creepNames.Contains(name)
+                    select creep)
             {
-                // Check if these creeps are in our namelist
-                foreach (
-                    var creep in
-                        from creep in creeps
-                        let name = creep.Name.Substring(17)
-                        where _creepNames.Contains(name)
-                        select creep)
+                Vector2 screenPos;
+                if (Drawing.WorldToScreen(creep.Position, out screenPos))
                 {
-                    Vector2 screenPos;
-                    if (Drawing.WorldToScreen(creep.Position, out screenPos))
-                    {
-                        var text = Game.Localize(creep.Name);
-                        var textSize = _textFont.MeasureText(null, text, FontDrawFlags.Center);
-                        var x = (int)screenPos.X - textSize.Width / 2;
-                        var y = (int)screenPos.Y - textSize.Height / 2;
-                        _textFont.DrawText(null, text, x, y, Color.White);
-                    }
+                    var text = Game.Localize(creep.Name);
+                    var textSize = _textFont.MeasureText(null, text, FontDrawFlags.Center);
+                    var x = (int)screenPos.X - textSize.Width / 2;
+                    var y = (int)screenPos.Y - textSize.Height / 2;
+                    _textFont.DrawText(null, text, x, y, Color.White);
                 }
             }
         }

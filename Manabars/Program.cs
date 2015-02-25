@@ -62,9 +62,6 @@ namespace Manabars
                 return;
 
             var enemies = EntityList.GetEntities<Hero>().Where(x => x.Visible && x.Alive && x.MaxMana != 0 && x.Team != EntityList.GetLocalPlayer().Team).ToList();
-            if (!enemies.Any())
-                return;
-
             foreach (var enemy in enemies)
             {
                 Vector2 screenPos;
