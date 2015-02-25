@@ -39,11 +39,7 @@ namespace CampInformer
 
         static void CurrentDomain_DomainUnload(object sender, EventArgs e)
         {
-            Drawing.OnPreReset -= Drawing_OnPreReset;
-            Drawing.OnPostReset -= Drawing_OnPostReset;
-            Drawing.OnEndScene -= Drawing_OnEndScene;
-            if( !_textFont.IsDisposed )
-                _textFont.Dispose();
+             _textFont.Dispose();
         }
 
         static void Drawing_OnPostReset(EventArgs args)
