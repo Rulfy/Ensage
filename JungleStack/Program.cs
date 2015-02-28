@@ -82,10 +82,10 @@ namespace JungleStack
                         _text.DrawText(null, "StackScript: moving to pull location", 5, 50, SharpDX.Color.White);
                         break;
                     case 0:
-                        if (_noCreep )
-                            _text.DrawText(null, "StackScript: found no creep for pulling.", 5, 50, SharpDX.Color.White);
-                        else
-                            _text.DrawText(null, "StackScript: waiting for next pull.", 5, 50, SharpDX.Color.White);
+                        _text.DrawText(null,
+                            _noCreep
+                                ? "StackScript: found no creep for pulling."
+                                : "StackScript: waiting for next pull.", 5, 50, SharpDX.Color.White);
                         break;
                     case 1:
                         _text.DrawText(null, "StackScript: waiting for attack order.", 5, 50, SharpDX.Color.White);
@@ -188,12 +188,12 @@ namespace JungleStack
                             _pullCreep.Move(_route.Last());
                             _orderState = 0;
 
-                            _timer.Interval = 9000;
+                            _timer.Interval = 10*1000; // wait until next minute starts
                             _timer.Start();
                             return;
                         }
                         _pullCreep.Attack(attackme);
-
+                        _orderState = 2;
                         _timer.Interval = 1650; // Wait until attack starts
                         _timer.Start();
                     }
