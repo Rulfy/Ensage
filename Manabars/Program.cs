@@ -58,10 +58,10 @@ namespace Manabars
 
         static void Drawing_OnEndScene(EventArgs args)
         {
-            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
+            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame)
                 return;
 
-            var enemies = EntityList.GetEntities<Hero>().Where(x => x.Visible && x.Alive && x.MaxMana != 0 && x.Team != EntityList.GetLocalPlayer().Team).ToList();
+            var enemies = EntityList.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && x.MaxMana != 0 && x.Team != EntityList.GetLocalPlayer().Team).ToList();
             foreach (var enemy in enemies)
             {
                 Vector2 screenPos;

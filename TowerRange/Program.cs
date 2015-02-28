@@ -17,7 +17,7 @@ namespace TowerRange
 
         static void Drawing_OnEndScene(EventArgs args)
         {
-            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
+            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame )
                 return;
 
             if (!OwnTowers && !EnemyTowers)
@@ -26,22 +26,32 @@ namespace TowerRange
             var player = EntityList.GetLocalPlayer();
             if (player == null )
                 return;
-            var towers = EntityList.GetEntities<Entity>().Where(x => x.Alive && x.ClassId == 323).ToList(); // TODO: add classes CDOTA_BaseNPC_Tower
+            var towers = EntityList.GetEntities<Building>().Where(x => x.IsAlive && x.ClassId == 323).ToList(); // TODO: add classes CDOTA_BaseNPC_Tower
             if (!towers.Any())
                 return;
 
-            if (EnemyTowers)
+            if (player.Team == Team.Observer)
             {
-                foreach (var tower in towers.Where(x => x.Team != player.Team))
+                foreach (var tower in towers)
                 {
                     Circle.DrawCircle(tower.Position, 850, Color.Red, 1);
                 }
             }
-            if (OwnTowers)
+            else
             {
-                foreach (var tower in towers.Where(x => x.Team == player.Team))
+                if (EnemyTowers)
                 {
-                    Circle.DrawCircle(tower.Position, 850, Color.Green, 1);
+                    foreach (var tower in towers.Where(x => x.Team != player.Team))
+                    {
+                        Circle.DrawCircle(tower.Position, 850, Color.Red, 1);
+                    }
+                }
+                if (OwnTowers)
+                {
+                    foreach (var tower in towers.Where(x => x.Team == player.Team))
+                    {
+                        Circle.DrawCircle(tower.Position, 850, Color.Green, 1);
+                    }
                 }
             }
         }

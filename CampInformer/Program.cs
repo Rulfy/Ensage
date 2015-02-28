@@ -54,10 +54,10 @@ namespace CampInformer
 
         static void Drawing_OnEndScene(EventArgs args)
         {
-            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
+            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame)
                 return;
             //foreach (var creep in _creeps)
-            var creeps = EntityList.GetEntities<Creep>().Where(x => x.WaitingToSpawn && x.Team == Team.Neutral).ToList();
+            var creeps = EntityList.GetEntities<Creep>().Where(x => x.IsWaitingToSpawn && x.Team == Team.Neutral).ToList();
             // Check if these creeps are in our namelist
             foreach (
                 var creep in
