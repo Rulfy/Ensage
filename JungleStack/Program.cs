@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Ensage;
 using SharpDX;
@@ -30,11 +25,12 @@ namespace JungleStack
             new Vector3(2278, 338, 127), // Move for pulling
             new Vector3(3808, -96, 256) // Wait position
         };
-        private static readonly int StartTimeRadiant = 47;
-        private static readonly int StartTimeDire = 45;
 
-        private static readonly int AttackTimeRadiant = 51;
-        private static readonly int AttackTimeDire = 52;
+        private const int StartTimeRadiant = 47;
+        private const int StartTimeDire = 45;
+
+        private const int AttackTimeRadiant = 51;
+        private const int AttackTimeDire = 52;
 
 
         private static Unit _pullCreep;
@@ -62,7 +58,7 @@ namespace JungleStack
             Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
-            Ensage.Game.OnGameWndProc += Game_OnGameWndProc;
+            Game.OnGameWndProc += Game_OnGameWndProc;
         }
 
         static void Drawing_OnEndScene(EventArgs args)
@@ -72,26 +68,26 @@ namespace JungleStack
 
             if (_pullCreep == null)
             {
-                _text.DrawText(null, "StackScript: Select a ranged creep and press \"O\".", 5, 50, SharpDX.Color.White);
+                _text.DrawText(null, "StackScript: Select a ranged creep and press \"O\".", 5, 50, Color.White);
             }
             else
             {
                 switch (_orderState)
                 {
                     case -1:
-                        _text.DrawText(null, "StackScript: moving to pull location", 5, 50, SharpDX.Color.White);
+                        _text.DrawText(null, "StackScript: moving to wait location", 5, 50, Color.White);
                         break;
                     case 0:
                         _text.DrawText(null,
                             _noCreep
                                 ? "StackScript: found no creep for pulling."
-                                : "StackScript: waiting for next pull.", 5, 50, SharpDX.Color.White);
+                                : "StackScript: waiting for next pull.", 5, 50, Color.White);
                         break;
                     case 1:
-                        _text.DrawText(null, "StackScript: waiting for attack order.", 5, 50, SharpDX.Color.White);
+                        _text.DrawText(null, "StackScript: waiting for attack order.", 5, 50, Color.White);
                         break;
                     case 2:
-                        _text.DrawText(null, "StackScript: pulling.", 5, 50, SharpDX.Color.White);
+                        _text.DrawText(null, "StackScript: pulling.", 5, 50, Color.White);
                         break;
                 }
             }
@@ -201,6 +197,10 @@ namespace JungleStack
                 case 2:
                     _pullCreep.Move(_route[1]);
                     _pullCreep.Move(_route[2],true);
+                    _orderState = 0;
+
+                    _timer.Interval = 10*1000; // wait until next minute starts
+                    _timer.Start();
                     break;
             }
         }
