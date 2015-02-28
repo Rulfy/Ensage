@@ -40,7 +40,7 @@ namespace JungleStack
         private static int _startTime;
         private static Vector3[] _route;
         private static bool _noCreep;
-        private static Timer _timer = new Timer();
+        private static readonly Timer Timer = new Timer();
 
 
         static void Main(string[] args)
@@ -59,6 +59,12 @@ namespace JungleStack
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
             Game.OnGameWndProc += Game_OnGameWndProc;
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+        }
+
+        static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+            _text.Dispose();
         }
 
         static void Drawing_OnEndScene(EventArgs args)
@@ -148,7 +154,7 @@ namespace JungleStack
 
         static void Game_OnGameUpdate(EventArgs args)
         {
-            if (_timer.Enabled)
+            if (Timer.Enabled)
                 return;
 
             if (!Game.IsInGame || Game.IsPaused)
@@ -184,14 +190,14 @@ namespace JungleStack
                             _pullCreep.Move(_route.Last());
                             _orderState = 0;
 
-                            _timer.Interval = 10*1000; // wait until next minute starts
-                            _timer.Start();
+                            Timer.Interval = 10*1000; // wait until next minute starts
+                            Timer.Start();
                             return;
                         }
                         _pullCreep.Attack(attackme);
                         _orderState = 2;
-                        _timer.Interval = 1650; // Wait until attack starts
-                        _timer.Start();
+                        Timer.Interval = 1650; // Wait until attack starts
+                        Timer.Start();
                     }
                     break;
                 case 2:
@@ -199,8 +205,8 @@ namespace JungleStack
                     _pullCreep.Move(_route[2],true);
                     _orderState = 0;
 
-                    _timer.Interval = 10*1000; // wait until next minute starts
-                    _timer.Start();
+                    Timer.Interval = 10*1000; // wait until next minute starts
+                    Timer.Start();
                     break;
             }
         }
