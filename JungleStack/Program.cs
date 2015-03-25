@@ -45,6 +45,7 @@ namespace JungleStack
 
         static void Main(string[] args)
         {
+            Timer.Tick += Timer_Tick;
             _text = new Font(
                Drawing.Direct3DDevice,
                new FontDescription
@@ -60,6 +61,11 @@ namespace JungleStack
             Drawing.OnEndScene += Drawing_OnEndScene;
             Game.OnGameWndProc += Game_OnGameWndProc;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+        }
+
+        static void Timer_Tick(object sender, EventArgs e)
+        {
+            Timer.Enabled = false;
         }
 
         static void CurrentDomain_DomainUnload(object sender, EventArgs e)
@@ -111,12 +117,13 @@ namespace JungleStack
 
         static void Game_OnGameWndProc(WndProcEventArgs args)
         {
-            if (args.MsgId != WM_KEYUP || args.WParam != 'O') 
+            if (args.MsgId != WM_KEYUP || args.WParam != 'O' || Game.IsChatOpen) 
                 return;
             
             // Deactivate script
             if (_pullCreep != null)
             {
+                Console.WriteLine("Deactivated");
                 _pullCreep = null;
                 Game.OnGameUpdate -= Game_OnGameUpdate;
                 return;
@@ -141,7 +148,6 @@ namespace JungleStack
                 default:
                     return;
             }
-
             var units = player.Selection.ToList();
             _pullCreep = (Unit)units.FirstOrDefault(unit => unit is Unit && ((Unit)unit).IsControllable && ((Unit)unit).IsRanged);
             if (_pullCreep != null)
@@ -176,6 +182,7 @@ namespace JungleStack
                 case 0:
                     if (seconds >= _startTime)
                     {
+                        Console.WriteLine("Move to route 0");
                         _pullCreep.Move(_route[0]);
                         _orderState = 1;
                     }

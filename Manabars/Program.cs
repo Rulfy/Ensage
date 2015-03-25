@@ -60,7 +60,6 @@ namespace Manabars
         {
             if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame)
                 return;
-
             var enemies = EntityList.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && x.MaxMana != 0 && x.Team != EntityList.GetLocalPlayer().Team).ToList();
             foreach (var enemy in enemies)
             {
@@ -74,7 +73,7 @@ namespace Manabars
              
                 // Draw background
                 _rectangle.Begin();
-                _rectangle.Draw(new[] { start + manaDelta + manaDelta, start + new Vector2(BarLength, 0) }, Color.DarkBlue);
+                _rectangle.Draw(new[] { start + manaDelta, start + new Vector2(BarLength, 0) }, Color.DarkBlue);
                 // Draw manabar
                 _rectangle.Draw(new[] { start, start + manaDelta }, Color.DodgerBlue);
                 _rectangle.End();
