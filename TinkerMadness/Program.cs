@@ -37,7 +37,7 @@ namespace TinkerMadness
 
             // wrong hero picked, disabled our script
             // enable on next pick again
-            if (me.ClassId == 123)
+            if (me.ClassId == ClassId.CDOTA_Unit_Hero_Tinker)
             {
                 Game.OnGameUpdate -= ComboChecker;
             }
@@ -78,6 +78,7 @@ namespace TinkerMadness
                 return;
 
             var me = EntityList.Hero;
+            // Check if we still got a valid target
             if (_target == null || !_target.IsValid || !_target.IsAlive || !me.IsAlive || !_target.IsVisible || _target.UnitState.HasFlag(UnitState.MagicImmune))
             {
                 _target = null;
@@ -85,11 +86,21 @@ namespace TinkerMadness
                 return;
             }
 
-            var abilities = me.Spellbook.Spells.ToList();
-            var Q = abilities[0];
-            var W = abilities[1];
-            var R = abilities[4];
-            //if( R.IsInAbilityPhase || R.C)
+            // Fetch our spells
+            var Q = me.Spellbook.SpellQ;
+            var W = me.Spellbook.SpellW;
+            var R = me.Spellbook.SpellR;
+            if (R.IsInAbilityPhase || R.IsChanneling)
+                return;
+
+            // Fetch our combo items
+            var dagon = GetDagon();
+            var blink = me.Inventory.Items.FirstOrDefault(x => x.Name == "item_blink");
+            var ethereal = me.Inventory.Items.FirstOrDefault(x => x.Name == "item_ethereal_blade");
+            var soulring = me.Inventory.Items.FirstOrDefault(x => x.Name == "item_soul_ring");
+            var sheep = _target.ClassId == ClassId.CDOTA_Unit_Hero_Tidehunter ? null : me.Inventory.Items.FirstOrDefault(x => x.Name == "item_sheepstick");
+
+            // Cast the queue
         }
 
         static bool HasCombo()
@@ -103,11 +114,6 @@ namespace TinkerMadness
             return items.Any(x => x.Name == "item_blink") && items.Any(x => x.Name == "item_sheepstick");
         }
 
-        static Item GetItem(string name)
-        {
-            return EntityList.GetLocalPlayer().Hero.Inventory.Items.ToList().FirstOrDefault(x => x.Name == name);
-        }
-
         static Item GetDagon()
         {
             return EntityList.GetLocalPlayer().Hero.Inventory.Items.ToList().FirstOrDefault(x => x.Name.Substring(0,10) == "item_dagon");
@@ -117,8 +123,6 @@ namespace TinkerMadness
         {
             var mousePosition = Game.MousePosition;
             var enemies = EntityList.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.Team != EntityList.Player.Team && !x.UnitState.HasFlag(UnitState.MagicImmune)).ToList();
-            //enemies.Sort((h1, h2) => Vector3.DistanceSquared(mousePosition, h1.Position).CompareTo
-            //    ((Vector3.DistanceSquared(mousePosition, h2.Position))));
 
             var minimumDistance = float.MaxValue;
             Hero result = null;
