@@ -228,17 +228,13 @@ namespace JungleStack
             var bestDistance = float.MaxValue;
             foreach (var creep in creeps)
             {
-                if (bestCreep == null)
-                    bestCreep = creep;
-                else
+                var distance = GetDistance2DFast(_pullCreep, creep);
+                if (bestCreep == null || distance < bestDistance)
                 {
-                    var distance = GetDistance2DFast(_pullCreep,creep);
-                    if (distance < bestDistance)
-                    {
-                        bestDistance = distance;
-                        bestCreep = creep;
-                    }
+                    bestDistance = distance;
+                    bestCreep = creep;
                 }
+                
             }
             return bestCreep;
         }
