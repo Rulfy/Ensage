@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using Ensage;
 using SharpDX;
-using SharpDX.Direct3D9;
 
 namespace TinkerMadness
 {
@@ -31,7 +26,8 @@ namespace TinkerMadness
         /// <param name="args"></param>
         static void Entity_OnIntegerPropertyChange(Entity sender, EntityIntegerPropertyChangeEventArgs args)
         {
-            if (args.Property == "" && Game.IsInGame) // TODO: Add event name
+            // Equals to: if (args.Property == "m_nGameState" && (((GameState)args.NewValue) == GameState.Prestart || ((GameState)args.NewValue) == GameState.Started))
+            if (args.Property == "m_nGameState" && Game.IsInGame ) 
             {
                 var me = EntityList.Hero;
                 _activated = me != null && me.ClassId == ClassId.CDOTA_Unit_Hero_Tinker;
@@ -65,6 +61,9 @@ namespace TinkerMadness
                 _target = null;
                 return;
             }
+
+            if (!HasCombo())
+                return;
 
             // Fetch our spells
             var Q = me.Spellbook.SpellQ;
