@@ -16,43 +16,31 @@ namespace TinkerMadness
         const int WM_KEYDOWN = 0x0105;
 
         private static Hero _target;
-        private static bool activated;
+        private static bool _activated;
         static void Main(string[] args)
         {
-            // TODO: add pick callback instead of combo checker
-            Game.OnGameUpdate += ComboChecker;
+            Entity.OnIntegerPropertyChange += Entity_OnIntegerPropertyChange;
+            Game.OnUpdate += ComboTick;
+            Game.OnWndProc += Game_OnWndProc;
         }
 
         /// <summary>
-        /// Check if have the correct hero and our minimum combo available
+        /// Wait until we're ingame and picked a hero
         /// </summary>
+        /// <param name="sender"></param>
         /// <param name="args"></param>
-        static void ComboChecker(EventArgs args)
+        static void Entity_OnIntegerPropertyChange(Entity sender, EntityIntegerPropertyChangeEventArgs args)
         {
-            if (Game.IsInGame || Game.IsPaused)
-                return;
-
-            var me = EntityList.Hero;
-            if (me == null)
-                return;
-
-            // wrong hero picked, disabled our script
-            // enable on next pick again
-            if (me.ClassId != ClassId.CDOTA_Unit_Hero_Tinker)
+            if (args.Property == "" && Game.IsInGame) // TODO: Add event name
             {
-                Game.OnGameUpdate -= ComboChecker;
-                return;
-            }
-            if (HasCombo())
-            {
-                Game.OnGameUpdate -= ComboChecker;
-                Game.OnGameWndProc += Game_OnGameWndProc;
+                var me = EntityList.Hero;
+                _activated = me != null && me.ClassId == ClassId.CDOTA_Unit_Hero_Tinker;
             }
         }
 
-        static void Game_OnGameWndProc(WndProcEventArgs args)
+        static void Game_OnWndProc(WndEventArgs args)
         {
-            if (args.MsgId != WM_KEYUP || args.WParam != 'O' || Game.IsChatOpen)
+            if (!_activated || args.Msg != WM_KEYUP || args.WParam != 'O' || Game.IsChatOpen || !Game.IsInGame)
                 return;
 
             // disable
@@ -63,28 +51,18 @@ namespace TinkerMadness
             }
 
             _target = GetClosestEnemyHeroToMouse();
-            if (_target != null)
-            {
-                Game.OnGameUpdate += ComboTick;
-            }
         }
 
         static void ComboTick(EventArgs args)
         {
-            if (!Game.IsInGame)
-            {
-                Game.OnGameUpdate -= ComboTick;
-                return;
-            }
-            if (Game.IsPaused)
+            if (!_activated || !Game.IsInGame || Game.IsPaused || _target == null)
                 return;
 
             var me = EntityList.Hero;
-            // Check if we still got a valid target
-            if (_target == null || !_target.IsValid || !_target.IsAlive || !me.IsAlive || !_target.IsVisible || _target.UnitState.HasFlag(UnitState.MagicImmune))
+            // Check if we still got a valid target and we're alive
+            if ( !_target.IsValid || !_target.IsAlive || !me.IsAlive || !_target.IsVisible || _target.UnitState.HasFlag(UnitState.MagicImmune))
             {
                 _target = null;
-                Game.OnGameUpdate -= ComboTick;
                 return;
             }
 

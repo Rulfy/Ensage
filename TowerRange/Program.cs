@@ -26,7 +26,7 @@ namespace TowerRange
             var player = EntityList.GetLocalPlayer();
             if (player == null )
                 return;
-            var towers = EntityList.GetEntities<Building>().Where(x => x.IsAlive && x.ClassId == 323).ToList(); // TODO: add classes CDOTA_BaseNPC_Tower
+            var towers = EntityList.GetEntities<Building>().Where(x => x.IsAlive && x.ClassId == ClassId.CDOTA_BaseNPC_Tower).ToList();
             if (!towers.Any())
                 return;
 

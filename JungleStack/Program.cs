@@ -59,7 +59,8 @@ namespace JungleStack
             Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
-            Game.OnGameWndProc += Game_OnGameWndProc;
+            Game.OnWndProc += Game_OnGameWndProc;
+            Game.OnUpdate += Game_OnGameUpdate;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
         }
 
@@ -115,9 +116,9 @@ namespace JungleStack
             _text.OnLostDevice();
         }
 
-        static void Game_OnGameWndProc(WndProcEventArgs args)
+        static void Game_OnGameWndProc(WndEventArgs args)
         {
-            if (args.MsgId != WM_KEYUP || args.WParam != 'O' || Game.IsChatOpen) 
+            if (args.Msg != WM_KEYUP || args.WParam != 'O' || Game.IsChatOpen) 
                 return;
             
             // Deactivate script
@@ -125,7 +126,6 @@ namespace JungleStack
             {
                 Console.WriteLine("Deactivated");
                 _pullCreep = null;
-                Game.OnGameUpdate -= Game_OnGameUpdate;
                 return;
             }
             
@@ -154,24 +154,20 @@ namespace JungleStack
             {
                 _pullCreep.Move(_route.Last());
                 _orderState = -1;
-                Game.OnGameUpdate += Game_OnGameUpdate;
             }
         }
 
         static void Game_OnGameUpdate(EventArgs args)
         {
-            if (Timer.Enabled)
+            if (Timer.Enabled || !Game.IsInGame || Game.IsPaused || _pullCreep == null)
                 return;
 
-            if (!Game.IsInGame || Game.IsPaused)
-                return;
-            
-            if (_pullCreep == null || !_pullCreep.IsValid || !_pullCreep.IsAlive)
+            if (!_pullCreep.IsValid || !_pullCreep.IsAlive)
             {
                 _pullCreep = null;
-                Game.OnGameUpdate -= Game_OnGameUpdate;
                 return;
             }
+
             var seconds = ((int) Game.GameTime) % 60;
             switch (_orderState)
             {

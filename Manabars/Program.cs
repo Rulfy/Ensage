@@ -60,7 +60,7 @@ namespace Manabars
         {
             if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame)
                 return;
-            var enemies = EntityList.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && x.MaxMana != 0 && x.Team != EntityList.GetLocalPlayer().Team).ToList();
+            var enemies = EntityList.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && x.ManaMaximum != 0 && x.Team != EntityList.GetLocalPlayer().Team).ToList();
             foreach (var enemy in enemies)
             {
                 Vector2 screenPos;
@@ -69,7 +69,7 @@ namespace Manabars
                     continue;
 
                 var start = screenPos + new Vector2(-BarLength/2, -20);
-                var manaDelta = new Vector2(BarLength * enemy.Mana / enemy.MaxMana, 0);
+                var manaDelta = new Vector2(BarLength * enemy.Mana / enemy.ManaMaximum, 0);
              
                 // Draw background
                 _rectangle.Begin();
@@ -87,7 +87,7 @@ namespace Manabars
                 _frame.End();
 
                 // Draw text
-                var text = string.Format("{0}/{1}", (int)enemy.Mana, (int)enemy.MaxMana);
+                var text = string.Format("{0}/{1}", (int)enemy.Mana, (int)enemy.ManaMaximum);
                 var textSize = _text.MeasureText(null, text, FontDrawFlags.Center);
                 var textPos = start + new Vector2(BarLength/2 -textSize.Width/2, -textSize.Height/2);
                 _text.DrawText(null, text, (int)textPos.X, (int)textPos.Y, Color.White);
