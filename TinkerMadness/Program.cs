@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Windows.Forms;
 using Ensage;
 using SharpDX;
 
@@ -12,11 +13,19 @@ namespace TinkerMadness
 
         private static Hero _target;
         private static bool _activated;
+        private readonly static Timer Timer = new Timer();
+        
         static void Main(string[] args)
         {
+            Timer.Tick += Timer_Tick;
             Entity.OnIntegerPropertyChange += Entity_OnIntegerPropertyChange;
             Game.OnUpdate += ComboTick;
             Game.OnWndProc += Game_OnWndProc;
+        }
+
+        static void Timer_Tick(object sender, EventArgs e)
+        {
+            Timer.Enabled = false;
         }
 
         /// <summary>
@@ -31,27 +40,28 @@ namespace TinkerMadness
             {
                 var me = EntityList.Hero;
                 _activated = me != null && me.ClassId == ClassId.CDOTA_Unit_Hero_Tinker;
+                Console.WriteLine(_activated ? "Got tinker" : "Got the wrong hero");
             }
         }
 
         static void Game_OnWndProc(WndEventArgs args)
         {
-            if (!_activated || args.Msg != WM_KEYUP || args.WParam != 'O' || Game.IsChatOpen || !Game.IsInGame)
+            if (!_activated || args.Msg != WM_KEYUP || args.WParam != 'O' || Game.IsChatOpen || !Game.IsInGame )
                 return;
 
             // disable
             if (_target != null)
             {
                 _target = null;
+                Console.WriteLine("Script disabled");
                 return;
             }
-
             _target = GetClosestEnemyHeroToMouse();
         }
 
         static void ComboTick(EventArgs args)
         {
-            if (!_activated || !Game.IsInGame || Game.IsPaused || _target == null)
+            if (!_activated || Timer.Enabled || _target == null || !Game.IsInGame || Game.IsPaused)
                 return;
 
             var me = EntityList.Hero;
@@ -59,6 +69,7 @@ namespace TinkerMadness
             if ( !_target.IsValid || !_target.IsAlive || !me.IsAlive || !_target.IsVisible || _target.UnitState.HasFlag(UnitState.MagicImmune))
             {
                 _target = null;
+                Console.WriteLine("Target or tinker dead");
                 return;
             }
 
@@ -66,10 +77,10 @@ namespace TinkerMadness
                 return;
 
             // Fetch our spells
-            var Q = me.Spellbook.SpellQ;
-            var W = me.Spellbook.SpellW;
-            var R = me.Spellbook.SpellR;
-            if (R.IsInAbilityPhase || R.IsChanneling)
+            var qSpell = me.Spellbook.SpellQ;
+            var wSpell = me.Spellbook.SpellW;
+            var rSpell = me.Spellbook.SpellR;
+            if (rSpell.IsInAbilityPhase || rSpell.IsChanneling)
                 return;
 
             // Fetch our combo items
@@ -79,24 +90,22 @@ namespace TinkerMadness
             var soulring = me.Inventory.Items.FirstOrDefault(x => x.Name == "item_soul_ring");
             var sheep = _target.ClassId == ClassId.CDOTA_Unit_Hero_Tidehunter ? null : me.Inventory.Items.FirstOrDefault(x => x.Name == "item_sheepstick");
 
-            // Cast the queue
-
-
             // Test if we need our ulti to refresh cooldowns
             if ((sheep == null || sheep.Cooldown > 0) &&
-                ((sheep != null && R.Level < 3) || Q.Cooldown > 0 || (dagon != null && dagon.Cooldown > 0) ||
+                ((sheep != null && rSpell.Level < 3) || qSpell.Cooldown > 0 || (dagon != null && dagon.Cooldown > 0) ||
                  (ethereal != null && ethereal.Cooldown > 0))
-                && R.AbilityState == AbilityState.Ready)
+                && rSpell.AbilityState == AbilityState.Ready)
             {
-                // table.insert(castQueue,{1000+math.ceil(R:FindCastPoint()*1000),R})
+                Timer.Start(1000 + Math.Ceiling(rSpell.GetCastPoint()*1000));
+                rSpell.UseAbility();
+                Console.WriteLine("Casting ult");
                 return;
             }
 
-
             // Check if target is too far away
             var minRange = long.MaxValue;
-            if (Q.Level > 0)
-                minRange = Math.Min(minRange, Q.CastRange);
+            if (qSpell.Level > 0)
+                minRange = Math.Min(minRange, qSpell.CastRange);
             if( dagon != null )
                 minRange = Math.Min(minRange, dagon.CastRange);
             if (ethereal != null)
@@ -107,6 +116,7 @@ namespace TinkerMadness
             if (blinkRange + minRange < distance)
             {
                 // Target too far TODO: status text
+                Console.WriteLine("Target too far away");
                 return;
             }
 
@@ -114,10 +124,12 @@ namespace TinkerMadness
             if (minRange < distance)
             {
                 // Need to blink
-                if (blink.Cooldown > 0 && R.AbilityState == AbilityState.Ready)
+                if (blink.Cooldown > 0 && rSpell.AbilityState == AbilityState.Ready)
                 {
                     // Cast ulti because blink is on cooldown
-                    // table.insert(castQueue,{1000+math.ceil(R:FindCastPoint()*1000),R})
+                    Timer.Start(1000 + Math.Ceiling(rSpell.GetCastPoint()*1000));
+                    rSpell.UseAbility();
+                    Console.WriteLine("Casting ult");
                     return;
                 }
                 // Calculate blink position
@@ -134,38 +146,69 @@ namespace TinkerMadness
                     targetPosition = _target.Position;
                 }
                 if (GetDistance2D(me.Position, targetPosition) > (blinkRange - 100))
-                    targetPosition = (targetPosition - me.Position)*(blinkRange - 100) / GetDistance2D(targetPosition, me.Position) + me.Position;
+                    targetPosition = (targetPosition - me.Position)*(blinkRange - 100)/
+                                     GetDistance2D(targetPosition, me.Position) + me.Position;
 
-                var turn = (Math.Max(Math.Abs(FindAngleR(me) - DegreeToRadian(FindAngleBetween(me.Position, _target.Position))) - 0.69f, 0) / (0.6f * (1 / 0.03f))) * 1000.0f;
+                var turn =
+                    (Math.Max(
+                        Math.Abs(FindAngleR(me) - DegreeToRadian(FindAngleBetween(me.Position, _target.Position))) -
+                        0.69f, 0)/(0.6f*(1/0.03f)))*1000.0f;
                 // insert in queue
-                // table.insert(castQueue,{math.ceil(blink:FindCastPoint()*1000 + turn),blink,tpos})
-
-                /*
-                 -- soul ring
-table.insert(castQueue,{100,soulring})
--- now the rest of our combo: tp -> [[blink] -> sheep -> ethereal -> dagon -> W -> Q -> R
-local linkens = target:IsLinkensProtected()
-if linkens and dagon and dagon:CanBeCasted() then
-table.insert(castQueue,{math.ceil(dagon:FindCastPoint()*1000),dagon,target,true})
-end
-if sheep and sheep:CanBeCasted() then
-table.insert(castQueue,{math.ceil(sheep:FindCastPoint()*1000),sheep,target})
-end
-if ethereal and ethereal:CanBeCasted() and not linkens then
-table.insert(castQueue,{math.ceil(ethereal:FindCastPoint()*1000 + ((GetDistance2D(tpos,target)-50)/1200)*1000 - dagon:FindCastPoint()*1000 - client.latency),"item_ethereal_blade",target})
-elseif linkens then
-table.insert(castQueue,{math.ceil(ethereal:FindCastPoint()*1000 + ((GetDistance2D(tpos,target)-50)/1200)*1000 - W:FindCastPoint()*1000 - ((GetDistance2D(tpos,target)-50)/900)*1000 - client.latency),"item_ethereal_blade",target})
-end
-if dagon and not linkens and dagon:CanBeCasted() then
-table.insert(castQueue,{math.ceil(dagon:FindCastPoint()*1000),dagon,target})
-end
-if W.level > 0 and W:CanBeCasted() then
-table.insert(castQueue,{100,W})
-end
-if Q.level > 0 and (not sheep or R.level == 3) and Q:CanBeCasted() then
-table.insert(castQueue,{math.ceil(Q:FindCastPoint()*1000),Q,target})
-end
-casted = true*/
+                Timer.Start(Math.Ceiling(blink.GetCastPoint()*1000 + turn));
+                blink.UseAbility(targetPosition);
+                Console.WriteLine("blinking to enemy");
+                return;
+            }
+            var delay = 0.0;
+            var casted = false;
+            if (soulring != null && soulring.AbilityState == AbilityState.Ready)
+            {
+                soulring.UseAbility();
+                casted = true;
+                delay += 100;
+            }
+            var linkens = _target.Modifiers.Any(x => x.Name == "modifier_item_sphere_target") || _target.Inventory.Items.Any(x => x.Name == "item_sphere");
+            // if the enemy has linkens, we should break it first with dagon
+            if (linkens && dagon != null && dagon.AbilityState == AbilityState.Ready)
+            {
+                dagon.UseAbility(_target, casted);
+                casted = true;
+                delay += Math.Ceiling(dagon.GetCastPoint()*1000);
+            }
+            if (sheep != null && sheep.AbilityState == AbilityState.Ready)
+            {
+                sheep.UseAbility(_target, casted);
+                casted = true;
+                delay += Math.Ceiling(sheep.GetCastPoint() * 1000);
+            }
+            if (ethereal != null && ethereal.AbilityState == AbilityState.Ready)
+            {
+                ethereal.UseAbility(_target, casted);
+                casted = true;
+                delay += Math.Ceiling(ethereal.GetCastPoint() * 1000);
+            }
+            if( !linkens && dagon != null && dagon.AbilityState == AbilityState.Ready)
+            {
+                dagon.UseAbility(_target, casted);
+                casted = true;
+                delay += Math.Ceiling(dagon.GetCastPoint() * 1000);
+            }
+            if ( wSpell.Level > 0 && wSpell.AbilityState == AbilityState.Ready)
+            {
+                wSpell.UseAbility(casted);
+                casted = true;
+                delay += Math.Ceiling(wSpell.GetCastPoint() * 1000);
+            }
+            if (qSpell.Level > 0 && qSpell.AbilityState == AbilityState.Ready)
+            {
+                qSpell.UseAbility(_target, casted);
+                casted = true;
+                delay += Math.Ceiling(qSpell.GetCastPoint() * 1000);
+            }
+            if (casted)
+            {
+                Timer.Start(delay);
+                Console.WriteLine("casting combo with total delay of: " + delay);
             }
         }
 
