@@ -96,7 +96,7 @@ namespace TinkerMadness
                  (ethereal != null && ethereal.Cooldown > 0))
                 && rSpell.AbilityState == AbilityState.Ready)
             {
-                Timer.Start(1000 + Math.Ceiling(rSpell.GetCastPoint()*1000));
+                Timer.Start(1000 + Math.Ceiling(rSpell.CastPoint * 1000));
                 rSpell.UseAbility();
                 Console.WriteLine("Casting ult");
                 return;
@@ -127,7 +127,7 @@ namespace TinkerMadness
                 if (blink.Cooldown > 0 && rSpell.AbilityState == AbilityState.Ready)
                 {
                     // Cast ulti because blink is on cooldown
-                    Timer.Start(1000 + Math.Ceiling(rSpell.GetCastPoint()*1000));
+                    Timer.Start(1000 + Math.Ceiling(rSpell.CastPoint * 1000));
                     rSpell.UseAbility();
                     Console.WriteLine("Casting ult");
                     return;
@@ -154,7 +154,7 @@ namespace TinkerMadness
                         Math.Abs(FindAngleR(me) - DegreeToRadian(FindAngleBetween(me.Position, _target.Position))) -
                         0.69f, 0)/(0.6f*(1/0.03f)))*1000.0f;
                 // insert in queue
-                Timer.Start(Math.Ceiling(blink.GetCastPoint()*1000 + turn));
+                Timer.Start(Math.Ceiling(blink.CastPoint * 1000 + turn));
                 blink.UseAbility(targetPosition);
                 Console.WriteLine("blinking to enemy");
                 return;
@@ -173,37 +173,37 @@ namespace TinkerMadness
             {
                 dagon.UseAbility(_target, casted);
                 casted = true;
-                delay += Math.Ceiling(dagon.GetCastPoint()*1000);
+                delay += Math.Ceiling(dagon.CastPoint * 1000);
             }
             if (sheep != null && sheep.AbilityState == AbilityState.Ready)
             {
                 sheep.UseAbility(_target, casted);
                 casted = true;
-                delay += Math.Ceiling(sheep.GetCastPoint() * 1000);
+                delay += Math.Ceiling(sheep.CastPoint * 1000);
             }
             if (ethereal != null && ethereal.AbilityState == AbilityState.Ready)
             {
                 ethereal.UseAbility(_target, casted);
                 casted = true;
-                delay += Math.Ceiling(ethereal.GetCastPoint() * 1000);
+                delay += Math.Ceiling(ethereal.CastPoint * 1000);
             }
             if( !linkens && dagon != null && dagon.AbilityState == AbilityState.Ready)
             {
                 dagon.UseAbility(_target, casted);
                 casted = true;
-                delay += Math.Ceiling(dagon.GetCastPoint() * 1000);
+                delay += Math.Ceiling(dagon.CastPoint * 1000);
             }
             if ( wSpell.Level > 0 && wSpell.AbilityState == AbilityState.Ready)
             {
                 wSpell.UseAbility(casted);
                 casted = true;
-                delay += Math.Ceiling(wSpell.GetCastPoint() * 1000);
+                delay += Math.Ceiling(wSpell.CastPoint * 1000);
             }
             if (qSpell.Level > 0 && qSpell.AbilityState == AbilityState.Ready)
             {
                 qSpell.UseAbility(_target, casted);
                 casted = true;
-                delay += Math.Ceiling(qSpell.GetCastPoint() * 1000);
+                delay += Math.Ceiling(qSpell.CastPoint * 1000);
             }
             if (casted)
             {
