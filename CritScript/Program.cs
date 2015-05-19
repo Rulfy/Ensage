@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Ensage;
+using SharpDX;
 
 namespace CritScript
 {
@@ -14,6 +15,8 @@ namespace CritScript
         /// Currently toggled on or off by hotkey?
         /// </summary>
         private static bool _enabled;
+
+        private const int HeroDistance = 500;
 
         private static readonly ClassId[] ValidHeroes = {
             ClassId.CDOTA_Unit_Hero_Juggernaut,
@@ -68,9 +71,34 @@ namespace CritScript
                     if (args.NewValue == 424)
                         me.Hold();
                     else if (args.NewValue == 419)
-                        me.Attack(Game.MousePosition);
+                    {
+                        var target = GetClosestEnemyHeroToMouse();
+                        if (target == null)
+                            me.Attack(Game.MousePosition);
+                        else
+                            me.Attack(target);
+                    }
                 }
             }
+        }
+
+        static Hero GetClosestEnemyHeroToMouse()
+        {
+            var mousePosition = Game.MousePosition;
+            var enemies = EntityList.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.Team != EntityList.Player.Team && !x.UnitState.HasFlag(UnitState.MagicImmune)).ToList();
+
+            var minimumDistance = float.MaxValue;
+            Hero result = null;
+            foreach (var hero in enemies)
+            {
+                var distance = Vector3.DistanceSquared(mousePosition, hero.Position);
+                if (result == null || distance < minimumDistance)
+                {
+                    minimumDistance = distance;
+                    result = hero;
+                }
+            }
+            return minimumDistance > HeroDistance ? null : result;
         }
     }
 }
