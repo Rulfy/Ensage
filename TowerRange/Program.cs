@@ -1,56 +1,74 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using SharpDX;
 
 namespace TowerRange
 {
-    class Program
+    internal class Program
     {
         private const bool OwnTowers = true;
         private const bool EnemyTowers = true;
+        private static readonly List<ParticleEffect> Effects = new List<ParticleEffect>(); // keep references
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            Drawing.OnEndScene += Drawing_OnEndScene;
+            Entity.OnIntegerPropertyChange += Entity_OnIntegerPropertyChange;
+            CheckTowers();
         }
 
-        static void Drawing_OnEndScene(EventArgs args)
+        private static void Entity_OnIntegerPropertyChange(Entity sender, EntityIntegerPropertyChangeEventArgs args)
         {
-            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame )
+            if (args.Property != "m_nGameState")
+                return;
+            if (!Game.IsInGame)
+                Effects.Clear();
+            else
+                CheckTowers();
+        }
+
+        private static void CheckTowers()
+        {
+            if (!Game.IsInGame)
                 return;
 
-            if (!OwnTowers && !EnemyTowers)
-                return;
+            Effects.Clear();
 
             var player = EntityList.GetLocalPlayer();
-            if (player == null )
+            if (player == null)
                 return;
-            var towers = EntityList.GetEntities<Building>().Where(x => x.IsAlive && x.ClassId == ClassId.CDOTA_BaseNPC_Tower).ToList();
+            var towers =
+                EntityList.GetEntities<Building>()
+                    .Where(x => x.IsAlive && x.ClassId == ClassId.CDOTA_BaseNPC_Tower)
+                    .ToList();
             if (!towers.Any())
                 return;
 
             if (player.Team == Team.Observer)
             {
-                foreach (var tower in towers)
+                foreach (var effect in towers.Select(tower => tower.AddParticleEffect("range_display")))
                 {
-                    Circle.DrawCircle(tower.Position, 850, Color.Red, 1);
+                    effect.SetVector(0, new Vector3(850, 0, 0));
+                    Effects.Add(effect);
                 }
             }
             else
             {
                 if (EnemyTowers)
                 {
-                    foreach (var tower in towers.Where(x => x.Team != player.Team))
+                    foreach (var effect in towers.Where(x => x.Team != player.Team).Select(tower => tower.AddParticleEffect("range_display")))
                     {
-                        Circle.DrawCircle(tower.Position, 850, Color.Red, 1);
+                        effect.SetVector(0, new Vector3(850, 0, 0));
+                        Effects.Add(effect);
                     }
                 }
                 if (OwnTowers)
                 {
-                    foreach (var tower in towers.Where(x => x.Team == player.Team))
+                    foreach (var effect in towers.Where(x => x.Team == player.Team).Select(tower => tower.AddParticleEffect("range_display")))
                     {
-                        Circle.DrawCircle(tower.Position, 850, Color.Green, 1);
+                        effect.SetVector(0, new Vector3(850, 0, 0));
+                        Effects.Add(effect);
                     }
                 }
             }
