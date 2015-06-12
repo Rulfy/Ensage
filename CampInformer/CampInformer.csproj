@@ -41,11 +41,9 @@
     <Reference Include="Ensage.NET">
       <HintPath>..\..\..\Visual Studio 2013\Projects\ensage\Release\Ensage.NET.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX">
-      <HintPath>..\..\..\Visual Studio 2013\Libraries\SharpDX\Bin\DirectX11_2-Signed-net40\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D9">
-      <HintPath>..\..\..\Visual Studio 2013\Libraries\SharpDX\Bin\DirectX11_2-Signed-net40\SharpDX.Direct3D9.dll</HintPath>
+    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Visual Studio 2013\Libraries\SharpDX\SignedDlls\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />

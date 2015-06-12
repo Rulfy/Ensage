@@ -51,7 +51,7 @@ namespace JungleStack
                new FontDescription
                {
                    FaceName = "Calibri",
-                   Height = 10,
+                   Height = 13,
                    OutputPrecision = FontPrecision.Default,
                    Quality = FontQuality.Default
                });
