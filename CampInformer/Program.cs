@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using SharpDX;
-using SharpDX.Direct3D9;
 
 namespace CampInformer
 {
     class Program
     {
         private static List<string> _creepNames;
-        private static Font _textFont;
 
         static void Main(string[] args)
         {
@@ -20,44 +18,17 @@ namespace CampInformer
                 "forest_troll_high_priest", "ghost", "granite_golem", "gnoll_assassin", "harpy_storm", "mud_golem", "ogre_magi", 
                 "polar_furbolg_ursa_warrior", "satyr_hellcaller", "satyr_soulstealer", "kobold_taskmaster"
             };
-            _textFont = new Font(
-                    Drawing.Direct3DDevice,
-                    new FontDescription
-                    {
-                        FaceName = "Calibri",
-                        Height = 14,
-                        OutputPrecision = FontPrecision.Default,
-                        Quality = FontQuality.Default
-                    });
-
-            Drawing.OnPreReset += Drawing_OnPreReset;
-            Drawing.OnPostReset += Drawing_OnPostReset;
-            Drawing.OnEndScene += Drawing_OnEndScene;
-
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+            Drawing.OnDraw += Drawing_OnDraw;      
         }
 
-        static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        static void Drawing_OnDraw(EventArgs args)
         {
-            _textFont.Dispose();
-        }
-
-        static void Drawing_OnPostReset(EventArgs args)
-        {
-            _textFont.OnResetDevice();
-        }
-
-        static void Drawing_OnPreReset(EventArgs args)
-        {
-            _textFont.OnLostDevice();
-        }
-
-        static void Drawing_OnEndScene(EventArgs args)
-        {
-            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame)
+            if (!Game.IsInGame)
                 return;
-            //foreach (var creep in _creeps)
-            var creeps = EntityList.GetEntities<Creep>().Where(x => x.IsWaitingToSpawn && x.Team == Team.Neutral).ToList();
+
+            var creeps = EntityList.GetEntities<Creep>().Where(x => x.IsWaitingToSpawn && x.Team == Team.Neutral).OrderBy(x => x.CreateTime).ToList();
+
+            var drawList = new List<List<Creep>>();
             // Check if these creeps are in our namelist
             foreach (
                 var creep in
@@ -69,13 +40,42 @@ namespace CampInformer
                 Vector2 screenPos;
                 if (Drawing.WorldToScreen(creep.Position, out screenPos))
                 {
-                    var text = Game.Localize(creep.Name);
-                    var textSize = _textFont.MeasureText(null, text, FontDrawFlags.Center);
-                    var x = (int)screenPos.X - textSize.Width / 2;
-                    var y = (int)screenPos.Y - textSize.Height / 2;
-                    _textFont.DrawText(null, text, x, y, Color.White);
+                    // Add creeps to lists to detect stacks
+                    var found = false;
+                    foreach (var l in drawList)
+                    {
+                        if (l.Any(c => GetDistance(c.Position, creep.Position) < 300))
+                        {
+                            l.Add(creep);
+                            found = true;
+                            break;
+                        }
+                    }
+                    // Create new list if new stack has been found
+                    if( !found )
+                        drawList.Add(new List<Creep>{creep});
                 }
             }
+            foreach (var l in drawList)
+            {
+                var counter = 1;
+                foreach (var creep in l)
+                {
+                    Vector2 screenPos;
+                    if (Drawing.WorldToScreen(creep.Position, out screenPos))
+                    {
+                        var text = string.Format("{0} - {1}", counter++, Game.Localize(creep.Name));
+                        var textSize = Drawing.MeasureText(text, "Arial", Drawing.DefaultTextSize, FontFlags.DropShadow);
+                        Drawing.DrawText(text, new Vector2(screenPos.X - textSize.X/2, screenPos.Y - textSize.Y/2),
+                            Color.White, FontFlags.DropShadow);
+                    }
+                }
+            }
+        }
+
+        static float GetDistance(Vector3 v1, Vector3 v2)
+        {
+            return (float)Math.Sqrt(Math.Pow(v1.X - v2.X, 2) + Math.Pow(v1.Y - v2.Y, 2));
         }
     }
 }
