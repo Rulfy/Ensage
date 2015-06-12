@@ -2,63 +2,19 @@
 using System.Linq;
 using Ensage;
 using SharpDX;
-using SharpDX.Direct3D9;
 
 namespace Manabars
 {
     class Program
     {
-        // Length of manabar
-        private const int BarLength = 100;
-
-        private static Line _rectangle, _frame;
-        private static Font _text;
         static void Main(string[] args)
         {
-            _rectangle = new Line(Drawing.Direct3DDevice) { Width = 7 };
-            _frame = new Line(Drawing.Direct3DDevice) { Width = 1 };
-            _text = new Font(
-                Drawing.Direct3DDevice,
-                new FontDescription
-                {
-                    FaceName = "Calibri",
-                    Height = 10,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-
-
-            Drawing.OnEndScene += Drawing_OnEndScene;
-            Drawing.OnPreReset += Drawing_OnPreReset;
-            Drawing.OnPostReset += Drawing_OnPostReset;
-
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+            Drawing.OnDraw += Drawing_OnDraw;
         }
 
-        static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        static void Drawing_OnDraw(EventArgs args)
         {
-            _text.Dispose();
-            _rectangle.Dispose();
-            _frame.Dispose();
-        }
-
-        static void Drawing_OnPostReset(EventArgs args)
-        {
-            _rectangle.OnResetDevice();
-            _text.OnResetDevice();
-            _frame.OnResetDevice();
-        }
-
-        static void Drawing_OnPreReset(EventArgs args)
-        {
-            _rectangle.OnLostDevice();
-            _text.OnLostDevice();
-            _frame.OnLostDevice();
-        }
-
-        static void Drawing_OnEndScene(EventArgs args)
-        {
-            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame)
+            if (!Game.IsInGame)
                 return;
             var enemies = EntityList.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && x.ManaMaximum != 0 && x.Team != EntityList.GetLocalPlayer().Team).ToList();
             foreach (var enemy in enemies)
@@ -68,29 +24,20 @@ namespace Manabars
                 if (!Drawing.WorldToScreen(enemyPos, out screenPos))
                     continue;
 
-                var start = screenPos + new Vector2(-BarLength/2, -20);
-                var manaDelta = new Vector2(BarLength * enemy.Mana / enemy.ManaMaximum, 0);
+                var start = screenPos + new Vector2(-51, -22);
+                var manaDelta = new Vector2(100*enemy.Mana/enemy.ManaMaximum, 0);
              
                 // Draw background
-                _rectangle.Begin();
-                _rectangle.Draw(new[] { start + manaDelta, start + new Vector2(BarLength, 0) }, Color.DarkBlue);
+                Drawing.DrawRect(start + manaDelta, new Vector2(101, 5) - manaDelta, new Color(0xE4,0xDD,0xDD,0x20));
                 // Draw manabar
-                _rectangle.Draw(new[] { start, start + manaDelta }, Color.DodgerBlue);
-                _rectangle.End();
+                Drawing.DrawRect(start, manaDelta + new Vector2(0, 5), Color.RoyalBlue);
                 // Draw frame
-                var topLeft = start + new Vector2(0, -3);
-                var topRight = start + new Vector2(BarLength, -3);
-                var botRight = topRight + new Vector2(0, 7);
-                var botLeft = topLeft + new Vector2(0, 7);
-                _frame.Begin();
-                _frame.Draw(new[]{topLeft,topRight,botRight,botLeft,topLeft},Color.Black);
-                _frame.End();
-
+                Drawing.DrawRect(start + new Vector2(-1, -1), new Vector2(102, 7), Color.DarkBlue, true);
                 // Draw text
-                var text = string.Format("{0}/{1}", (int)enemy.Mana, (int)enemy.ManaMaximum);
-                var textSize = _text.MeasureText(null, text, FontDrawFlags.Center);
-                var textPos = start + new Vector2(BarLength/2 -textSize.Width/2, -textSize.Height/2);
-                _text.DrawText(null, text, (int)textPos.X, (int)textPos.Y, Color.White);
+                var text = string.Format("{0} / {1}", (int)enemy.Mana, (int)enemy.ManaMaximum);
+                var textSize = Drawing.MeasureText(text, "Arial", new Vector2(10, 150), FontFlags.None);
+                var textPos = start + new Vector2(51 -textSize.X/2, -textSize.Y/2 + 2);
+                Drawing.DrawText(text, textPos, new Vector2(10, 150), Color.White, FontFlags.AntiAlias | FontFlags.DropShadow);
             }
         }
     }
