@@ -41,10 +41,6 @@
     <Reference Include="Ensage.NET">
       <HintPath>..\..\..\Visual Studio 2013\Projects\ensage\Release\Ensage.NET.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Visual Studio 2013\Libraries\SharpDX\SignedDlls\SharpDX.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
