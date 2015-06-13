@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Ensage;
 using SharpDX;
 
@@ -6,7 +6,7 @@ namespace VisibleByEnemy
 {
     class Program
     {
-        private static ParticleEffect _effect;
+        private static Dictionary<Entity,ParticleEffect> _effects = new Dictionary<Entity, ParticleEffect>();
         public static void Main(string[] args)
         {
             Entity.OnIntegerPropertyChange += Entity_OnIntegerPropertyChange;
@@ -14,23 +14,29 @@ namespace VisibleByEnemy
 
         static void Entity_OnIntegerPropertyChange(Entity sender, EntityIntegerPropertyChangeEventArgs args)
         {
-            var me = EntityList.Hero;
-            if (me != null && sender.Equals(me) && args.Property == "m_iTaggedAsVisibleByTeam")
+            var player = EntityList.Player;
+            if (player == null || sender == null)
+                return;
+
+            var hero = sender as Hero;
+            if (hero != null && hero.Team == player.Team && args.Property == "m_iTaggedAsVisibleByTeam")
             {
-                if (me.IsVisibleToEnemies)
+                if (hero.IsVisibleToEnemies)
                 {
-                    if (_effect == null)
+                    ParticleEffect effect;
+                    if (!_effects.TryGetValue(hero, out effect))
                     {
-                        _effect = me.AddParticleEffect("aura_shivas");
-                        _effect.SetVector(0, new Vector3(0, 0, 0));
+                        effect = hero.AddParticleEffect("aura_shivas");
+                        effect.SetVector(0, new Vector3(0, 0, 0));
                     }
                 }
                 else
                 {
-                    if (_effect != null)
+                    ParticleEffect effect;
+                    if (_effects.TryGetValue(hero, out effect))
                     {
-                        _effect.Dispose();
-                        _effect = null;
+                        effect.Dispose();
+                        _effects.Remove(sender);
                     }
                 }
             }
