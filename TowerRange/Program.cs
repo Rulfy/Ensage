@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using SharpDX;
@@ -10,9 +9,10 @@ namespace TowerRange
     {
         private const bool OwnTowers = true;
         private const bool EnemyTowers = true;
+        // ReSharper disable once CollectionNeverQueried.Local
         private static readonly List<ParticleEffect> Effects = new List<ParticleEffect>(); // keep references
 
-        private static void Main(string[] args)
+        private static void Main()
         {
             Entity.OnIntegerPropertyChange += Entity_OnIntegerPropertyChange;
             CheckTowers();
@@ -49,7 +49,7 @@ namespace TowerRange
             {
                 foreach (var effect in towers.Select(tower => tower.AddParticleEffect("range_display")))
                 {
-                    effect.SetVector(0, new Vector3(850, 0, 0));
+                    effect.SetVector(1, new Vector3(850, 0, 0));
                     Effects.Add(effect);
                 }
             }
@@ -59,7 +59,7 @@ namespace TowerRange
                 {
                     foreach (var effect in towers.Where(x => x.Team != player.Team).Select(tower => tower.AddParticleEffect("range_display")))
                     {
-                        effect.SetVector(0, new Vector3(850, 0, 0));
+                        effect.SetVector(1, new Vector3(850, 0, 0));
                         Effects.Add(effect);
                     }
                 }
@@ -67,7 +67,7 @@ namespace TowerRange
                 {
                     foreach (var effect in towers.Where(x => x.Team == player.Team).Select(tower => tower.AddParticleEffect("range_display")))
                     {
-                        effect.SetVector(0, new Vector3(850, 0, 0));
+                        effect.SetVector(1, new Vector3(850, 0, 0));
                         Effects.Add(effect);
                     }
                 }
