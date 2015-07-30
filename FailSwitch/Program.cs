@@ -10,6 +10,7 @@ namespace FailSwitch
         // TODO: if preventing a fail action -> notify the player!
 
         private static int _lastTowerKillTick = 0;
+        private static int _powerTreadsRestore = 0;
         static void Main(string[] args)
         {
             Player.OnExecuteAction += Player_OnExecuteAction;
@@ -32,22 +33,30 @@ namespace FailSwitch
                         args.Process = false;
                     break;
                 case Order.AbilityTarget:
-                {
-                    var unit = args.Target as Unit;
-                    if( unit != null && args.Ability != null)
-                        TargetSpellCheck(args);
-                    break;
-                }
+                    {
+                        var unit = args.Target as Unit;
+                        if (unit != null && args.Ability != null)
+                            TargetSpellCheck(args);
+                        break;
+                    }
                 case Order.AbilityLocation:
-                {
-                    AreaSpellCheck(args);
-                    break;
-                }
+                    {
+                        AreaSpellCheck(args);
+                        break;
+                    }
                 case Order.Ability:
-                {
-                    AbilityCheck(args);
-                    break;
-                }
+                    {
+                        AbilityCheck(args);
+                        break;
+                    }
+            }
+            if (_powerTreadsRestore != 0)
+            {
+                var powerTreads =
+                    (ItemPowerTreads) EntityList.Hero.Inventory.Items.FirstOrDefault(x => x is ItemPowerTreads);
+                for( var i = 0; i < _powerTreadsRestore; ++i )
+                    powerTreads.ToggleAbility(true);
+
             }
         }
 
@@ -82,6 +91,8 @@ namespace FailSwitch
                     return;
                 }
             }
+            if (PowerTreadsIntCheck(args))
+                args.Ability.UseAbility(true);
         }
 
         static void TargetSpellCheck(ExecuteActionEventArgs args)
@@ -119,6 +130,8 @@ namespace FailSwitch
                     return;
                 }
             }
+            if (PowerTreadsIntCheck(args))
+                args.Ability.UseAbility(unit, true);
         }
 
 
@@ -157,6 +170,36 @@ namespace FailSwitch
                 args.Process = false;
                 return;
             }
+            if (PowerTreadsIntCheck(args))
+                args.Ability.UseAbility(args.TargetPosition, true);
+        }
+
+        static bool PowerTreadsIntCheck(ExecuteActionEventArgs args)
+        {
+            var powerTreads = (ItemPowerTreads)EntityList.Hero.Inventory.Items.FirstOrDefault(
+                    x => x is ItemPowerTreads && ((ItemPowerTreads)x).State != AttributeState.Intelligance);
+            // No powertreads or already set to int-attribute
+            if (powerTreads == null)
+            {
+                _powerTreadsRestore = 0;
+                return false;
+            }
+
+            args.Process = false;
+
+            // agility -> strength -> int
+            if (powerTreads.State == AttributeState.Agility)
+            {
+                powerTreads.ToggleAbility();
+                powerTreads.ToggleAbility(true);
+                _powerTreadsRestore = 1;
+            }
+            else
+            {
+                powerTreads.ToggleAbility();
+                _powerTreadsRestore = 2;
+            }
+            return true;
         }
     }
 }
