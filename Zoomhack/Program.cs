@@ -9,35 +9,34 @@ namespace Zoomhack
 		// TODO: make config and set zoomhack on load
 		// TODO: make key configurable
 		private static readonly uint WM_MOUSEWHEEL = 0x020A;
+	    private static readonly uint VK_CTRL = 0x11;
+        private static readonly ConVar ZoomVar = Game.GetConsoleVar("dota_camera_distance");
   
 		static void Main()
 		{
-			Game.OnWndProc += Game_OnWndProc;
+            ZoomVar.RemoveFlags(ConVarFlags.Cheat);
+            Game.OnWndProc += Game_OnWndProc;
 		}
 
 		private static void Game_OnWndProc(WndEventArgs args)
 		{
+            
 			if (args.Msg == WM_MOUSEWHEEL && Game.IsInGame )
 			{
-				if (Game.IsKeyDown(Key.LeftCtrl))
+                if (Game.IsKeyDown(VK_CTRL))
 				{
-					// Find zoomhack console variable
-					var zoomVar = Game.GetConsoleVar("dota_camera_distance");
-					if (zoomVar != null)
-					{
-						// Get HIWORD(wParam)
-						var delta = (short)((args.WParam >> 16) & 0xFFFF);
-						// GetValue
-						var zoomValue = zoomVar.GetInt();
-						if (delta < 0)
-							zoomValue += 50;
-						else
-							zoomValue -= 50;
-						// Set updated value
-						zoomVar.SetValue(zoomValue);
-						// Block processed input from game
-						args.Process = false;
-					}
+					// Get HIWORD(wParam)
+					var delta = (short)((args.WParam >> 16) & 0xFFFF);
+					// GetValue
+					var zoomValue = ZoomVar.GetInt();
+					if (delta < 0)
+						zoomValue += 50;
+					else
+						zoomValue -= 50;
+                    // Set updated value
+                    ZoomVar.SetValue(zoomValue);
+					// Block processed input from game
+					args.Process = false;
 				}
 			}
 		}
