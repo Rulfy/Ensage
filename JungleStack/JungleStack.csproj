@@ -35,8 +35,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Ensage.NET">
-      <HintPath>..\..\..\Visual Studio 2013\Projects\ensage\Release\Ensage.NET.dll</HintPath>
+    <Reference Include="Ensage">
+      <HintPath>..\..\..\..\..\..\EnsageSharp\System\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

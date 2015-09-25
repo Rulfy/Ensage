@@ -47,7 +47,7 @@ namespace JungleStack
         {
             Timer.Tick += Timer_Tick;
             _text = new Font(
-               Drawing.Direct3DDevice,
+               Drawing.Direct3DDevice9,
                new FontDescription
                {
                    FaceName = "Calibri",
@@ -76,7 +76,7 @@ namespace JungleStack
 
         static void Drawing_OnEndScene(EventArgs args)
         {
-            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed || !Game.IsInGame)
+            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame)
                 return;
 
             if (_pullCreep == null)
@@ -130,7 +130,7 @@ namespace JungleStack
             }
             
             // Activate script
-            var player = EntityList.GetLocalPlayer();
+            var player = ObjectMgr.LocalPlayer;
             if (player == null) 
                 return;
             switch (player.Team)
@@ -217,7 +217,7 @@ namespace JungleStack
         private static Unit GetNearestCreepToPull()
         {
             var creeps =
-                EntityList.GetEntities<Creep>()
+                ObjectMgr.GetEntities<Creep>()
                     .Where(x => x.IsAlive && x.IsVisible && x.IsSpawned && x.IsAncient)
                     .ToList();
             Unit bestCreep = null;
