@@ -218,7 +218,7 @@ namespace JungleStack
         {
             var creeps =
                 ObjectMgr.GetEntities<Creep>()
-                    .Where(x => x.IsAlive && x.IsVisible && x.IsSpawned && x.IsAncient)
+                    .Where(x => x.IsAlive && x.IsSpawned && x.IsAncient && x.IsVisible)
                     .ToList();
             Unit bestCreep = null;
             var bestDistance = float.MaxValue;
