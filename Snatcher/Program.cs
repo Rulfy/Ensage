@@ -48,7 +48,11 @@ namespace Snatcher
 
         static void Drawing_OnEndScene(EventArgs args)
         {
-            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame)
+            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame )
+                return;
+
+            var player = ObjectMgr.LocalPlayer;
+            if( player == null || player.Team == Team.Observer)
                 return;
 
             if (_enabled)
@@ -76,7 +80,7 @@ namespace Snatcher
             // check for runes
             var runes =
                 ObjectMgr.GetEntities<Rune>()
-                    .Where(x => GetDistance2D(x.NetworkPosition, hero.NetworkPosition) < 400).ToList();
+                    .Where(x => x.IsVisible && GetDistance2D(x.NetworkPosition, hero.NetworkPosition) < 400).ToList();
             if (runes.Any())
             {
                 hero.PickUpRune(runes.First());
@@ -88,7 +92,7 @@ namespace Snatcher
             {
                 var items =
                     ObjectMgr.GetEntities<PhysicalItem>()
-                        .Where(x => GetDistance2D(x.NetworkPosition, hero.NetworkPosition) < 400 /*&& x.IsVisible*/
+                        .Where(x => x.IsVisible && GetDistance2D(x.NetworkPosition, hero.NetworkPosition) < 400
                                     && (x.Item.Name == "item_aegis" || x.Item.Name == "item_cheese")).ToList();
                 if (items.Any())
                 {

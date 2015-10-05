@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TowerRange</RootNamespace>
     <AssemblyName>TowerRange</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PreBuildEvent />
     <PostBuildEvent />
@@ -26,7 +26,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
@@ -41,12 +41,12 @@
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Ensage.NET">
-      <HintPath>C:\Users\Rulfy\Desktop\Ensage.NET\System\Ensage.NET.dll</HintPath>
+    <Reference Include="Ensage">
+      <HintPath>C:\EnsageSharp\System\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Users\Rulfy\Desktop\Ensage.NET\System\SharpDX.dll</HintPath>
+      <HintPath>C:\EnsageSharp\System\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>

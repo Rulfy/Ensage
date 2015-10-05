@@ -79,6 +79,10 @@ namespace JungleStack
             if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame)
                 return;
 
+            var player = ObjectMgr.LocalPlayer;
+            if( player == null || player.Team == Team.Observer)
+                return;
+
             if (_pullCreep == null)
             {
                 _text.DrawText(null, "StackScript: Select a ranged creep and press \"O\".", 5, 50, Color.White);
@@ -131,7 +135,7 @@ namespace JungleStack
             
             // Activate script
             var player = ObjectMgr.LocalPlayer;
-            if (player == null) 
+            if (player == null || player.Team == Team.Observer) 
                 return;
             switch (player.Team)
             {
