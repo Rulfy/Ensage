@@ -24,7 +24,6 @@ namespace FailSwitch
         {
             if (args.GameEvent.Name == "dota_tower_kill") // TODO: Test if own tower died and not enemy ones / maybe also for baracks
                 _lastTowerKillTick = Environment.TickCount;
-            Console.WriteLine(args.GameEvent.Name);
         }
 
         static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
