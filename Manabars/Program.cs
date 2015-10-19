@@ -20,7 +20,7 @@ namespace Manabars
             if (player == null || player.Team == Team.Observer)
                 return;
 
-            var enemies = ObjectMgr.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && x.MaximumMana != 0 && x.Team != player.Team).ToList();
+            var enemies = ObjectMgr.GetEntities<Hero>().Where(x => x.IsVisible && x.IsAlive && x.MaximumMana != 0 && !x.IsIllusion && x.Team != player.Team).ToList();
             foreach (var enemy in enemies)
             {
                 Vector2 screenPos;
