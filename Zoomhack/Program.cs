@@ -21,7 +21,7 @@ namespace Zoomhack
 		private static void Game_OnWndProc(WndEventArgs args)
 		{
             
-			if (args.Msg == WM_MOUSEWHEEL/* && Game.IsInGame*/ )
+			if (args.Msg == WM_MOUSEWHEEL)
 			{
                 if (Game.IsKeyDown(VK_CTRL))
 				{
