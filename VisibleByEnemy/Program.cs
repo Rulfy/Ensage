@@ -1,16 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Ensage;
+using Ensage.Common.Menu;
 
 namespace VisibleByEnemy
 {
     class Program
     {
+        private static readonly Menu Menu = new Menu("VisibleByEnemy", "visibleByEnemy", true);
+
         private static readonly Dictionary<Unit, ParticleEffect> Effects = new Dictionary<Unit, ParticleEffect>();
         public static void Main(string[] args)
         {
-            Game.OnUpdate += Game_OnUpdate;
+            MenuItem item;
+
+            item = new MenuItem("heroes", "Check allied heroes").SetValue(true);
+            item.ValueChanged += Item_ValueChanged;
+            Menu.AddItem(item);
+
+            item = new MenuItem("wards", "Check wards").SetValue(true);
+            item.ValueChanged += Item_ValueChanged;
+            Menu.AddItem(item);
+
+            item = new MenuItem("mines", "Check techies mines").SetValue(true);
+            item.ValueChanged += Item_ValueChanged;
+            Menu.AddItem(item);
+
+            item = new MenuItem("units", "Check controlled units (not lane creeps)").SetValue(true);
+            item.ValueChanged += Item_ValueChanged;
+            Menu.AddItem(item);
+
+            item = new MenuItem("buildings", "Check buildings").SetValue(true);
+            item.ValueChanged += Item_ValueChanged;
+            Menu.AddItem(item);
+
+            Menu.AddToMainMenu();
+
+            Game.OnIngameUpdate += Game_OnUpdate;
+        }
+
+        // ReSharper disable once InconsistentNaming
+        private static void Item_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            foreach (var particleEffect in Effects.Values)
+            {
+                particleEffect.Dispose();
+            }
+            Effects.Clear();
         }
 
         private static void Game_OnUpdate(System.EventArgs args)
@@ -19,22 +55,28 @@ namespace VisibleByEnemy
             if (player == null || player.Team == Team.Observer)
                 return;
             // check allied heroes
-            var heroes = ObjectMgr.GetEntities<Hero>().Where(x => x.Team == player.Team);
-            foreach (var hero in heroes)
+            var units = ObjectMgr.GetEntities<Unit>().Where(
+                x =>
+                // heroes
+                (Menu.Item("heroes").GetValue<bool>() && x is Hero && x.Team == player.Team)
+                // wards
+                || (Menu.Item("wards").GetValue<bool>()
+                    && (x.ClassID == ClassID.CDOTA_NPC_Observer_Ward
+                        || x.ClassID == ClassID.CDOTA_NPC_Observer_Ward_TrueSight) && x.Team == player.Team)
+                // techies mines
+                || (Menu.Item("mines").GetValue<bool>() && x.ClassID == ClassID.CDOTA_NPC_TechiesMines
+                    && x.Team == player.Team)
+                // units
+                || (Menu.Item("units").GetValue<bool>() && !(x is Hero) && !(x is Building) && x.ClassID != ClassID.CDOTA_BaseNPC_Creep_Lane
+                    && x.ClassID != ClassID.CDOTA_NPC_TechiesMines && x.ClassID != ClassID.CDOTA_NPC_Observer_Ward
+                    && x.ClassID != ClassID.CDOTA_NPC_Observer_Ward_TrueSight && x.Team == player.Team)
+                // buildings
+                || (Menu.Item("buildings").GetValue<bool>() && x is Building && x.Team == player.Team)).ToList();
+
+
+            foreach (var unit in units)
             {
-                HandleEffect(hero);
-            }
-            // check wards
-            var wards =
-                ObjectMgr.GetEntities<Unit>()
-                    .Where(
-                        x =>
-                            x.Team == player.Team &&
-                             (x.ClassID == ClassID.CDOTA_NPC_Observer_Ward ||
-                             x.ClassID == ClassID.CDOTA_NPC_Observer_Ward_TrueSight));
-            foreach (var ward in wards)
-            {
-                HandleEffect(ward);
+                HandleEffect(unit);
             }
         }
 

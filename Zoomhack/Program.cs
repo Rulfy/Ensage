@@ -13,7 +13,7 @@ namespace Zoomhack
   
 		static void Main()
 		{
-			var slider = new MenuItem("distance", "Default camera distance").SetValue(new Slider(1134, 1134, 2500));
+			var slider = new MenuItem("distance", "Default camera distance").SetValue(new Slider(1134, 1134, 3000));
 			slider.ValueChanged += Slider_ValueChanged;
 			Menu.AddItem(slider);
 
@@ -48,6 +48,7 @@ namespace Zoomhack
 						zoomValue -= 50;
 					// Set updated value
 					ZoomVar.SetValue(zoomValue);
+				    Menu.Item("distance").SetValue(new Slider(zoomValue, 1134, 3000));
 					// Block processed input from game
 					args.Process = false;
 				}
