@@ -33,7 +33,7 @@ namespace FailSwitch
             {
                 case Order.GlyphOfFortification:
                     // Test if tower just died a second ago and prevent glyph
-                    if (_lastTowerKillTick + 1000 < Environment.TickCount)
+                    if (_lastTowerKillTick + 1000 > Environment.TickCount)
                         args.Process = false;
                     break;
                 case Order.AbilityTarget:
