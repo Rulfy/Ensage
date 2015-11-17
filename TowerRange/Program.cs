@@ -1,23 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Ensage;
+using Ensage.Common.Menu;
 using SharpDX;
 
 namespace TowerRange
 {
     internal class Program
     {
-        // TODO: config stuff
-        private const bool OwnTowers = true;
-        private const bool EnemyTowers = true;
+        private static bool ownTowers = true;
+        private static bool enemyTowers = true;
+        private static readonly Menu Menu = new Menu("TowerRange", "towerRange", true);
         // ReSharper disable once CollectionNeverQueried.Local
         private static readonly List<ParticleEffect> Effects = new List<ParticleEffect>(); // keep references
 
         private static void Main()
         {
+            var ally = new MenuItem("ownTowers", "Range of allied towers").SetValue(true);
+            var enemy = new MenuItem("enemyTowers", "Range of enemy towers").SetValue(true);
+
+            ownTowers = ally.GetValue<bool>();
+            enemyTowers = enemy.GetValue<bool>();
+
+            ally.ValueChanged += MenuItem_ValueChanged;
+            enemy.ValueChanged += MenuItem_ValueChanged;
+
+            Menu.AddItem(ally);
+            Menu.AddItem(enemy);
+
+            Menu.AddToMainMenu();
+
             HandleTowers();
             Game.OnFireEvent += Game_OnFireEvent;
+        }
+
+        // ReSharper disable once InconsistentNaming
+        private static void MenuItem_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            var item = sender as MenuItem;
+
+            // ReSharper disable once PossibleNullReferenceException
+            if (item.Name == "ownTowers") ownTowers = e.GetNewValue<bool>();
+            else enemyTowers = e.GetNewValue<bool>();
+
+            HandleTowers();
         }
 
         private static void Game_OnFireEvent(FireEventEventArgs args)
@@ -61,7 +87,7 @@ namespace TowerRange
             }
             else
             {
-                if (EnemyTowers)
+                if (enemyTowers)
                 {
                     foreach (var effect in towers.Where(x => x.Team != player.Team).Select(tower => tower.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf")))
                     {
@@ -69,7 +95,7 @@ namespace TowerRange
                         Effects.Add(effect);
                     }
                 }
-                if (OwnTowers)
+                if (ownTowers)
                 {
                     foreach (var effect in towers.Where(x => x.Team == player.Team).Select(tower => tower.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf")))
                     {
