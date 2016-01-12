@@ -79,9 +79,10 @@ namespace TowerRange
             
             if (player.Team == Team.Observer)
             {
-                foreach (var effect in towers.Select(tower => tower.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf")))
+                foreach (var effect in towers.Select(tower => tower.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf")))
                 {
-                    effect.SetControlPoint(1, new Vector3(850, 0, 0));
+                    effect.SetControlPoint(1, new Vector3(0, 255, 0));
+                    effect.SetControlPoint(2, new Vector3(950, 255, 0));
                     Effects.Add(effect);
                 }
             }
@@ -89,17 +90,19 @@ namespace TowerRange
             {
                 if (enemyTowers)
                 {
-                    foreach (var effect in towers.Where(x => x.Team != player.Team).Select(tower => tower.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf")))
+                    foreach (var effect in towers.Where(x => x.Team != player.Team).Select(tower => tower.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf")))
                     {
-                        effect.SetControlPoint(1, new Vector3(850, 0, 0));
+                        effect.SetControlPoint(1, new Vector3(255, 0, 0));
+                        effect.SetControlPoint(2, new Vector3(950, 255, 0));
                         Effects.Add(effect);
                     }
                 }
                 if (ownTowers)
                 {
-                    foreach (var effect in towers.Where(x => x.Team == player.Team).Select(tower => tower.AddParticleEffect(@"particles\ui_mouseactions\range_display.vpcf")))
+                    foreach (var effect in towers.Where(x => x.Team == player.Team).Select(tower => tower.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf")))
                     {
-                        effect.SetControlPoint(1, new Vector3(850, 0, 0));
+                        effect.SetControlPoint(1, new Vector3(0, 255, 0));
+                        effect.SetControlPoint(2, new Vector3(950, 255, 0));
                         Effects.Add(effect);
                     }
                 }
