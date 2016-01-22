@@ -62,6 +62,10 @@ namespace VisibleByEnemy
 
         private static void HandleEffect(Unit unit)
         {
+            if (!unit.IsValid)
+            {
+                return;
+            }
             if (unit.IsVisibleToEnemies && unit.IsAlive)
             {
                 ParticleEffect effect;
