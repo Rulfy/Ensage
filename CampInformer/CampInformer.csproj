@@ -44,7 +44,7 @@
     <Reference Include="Ensage">
       <HintPath>C:\EnsageSharp\Release1\System\Ensage.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+    <Reference Include="SharpDX">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\EnsageSharp\Release1\System\SharpDX.dll</HintPath>
     </Reference>

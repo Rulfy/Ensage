@@ -44,14 +44,14 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\PlaySharp - Kopie\System\Ensage.dll</HintPath>
+      <HintPath>C:\PlaySharp\System\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\PlaySharp - Kopie\System\Ensage.Common.dll</HintPath>
+      <HintPath>C:\PlaySharp\System\Ensage.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+    <Reference Include="SharpDX">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\PlaySharp - Kopie\System\SharpDX.dll</HintPath>
+      <HintPath>C:\PlaySharp\System\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>

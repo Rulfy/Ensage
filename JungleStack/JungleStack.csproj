@@ -40,18 +40,18 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharp\System\Ensage.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\PlaySharp\System\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharp\System\Ensage.Common.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\PlaySharp\System\Ensage.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+    <Reference Include="SharpDX">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharp\System\SharpDX.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\PlaySharp\System\SharpDX.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Direct3D9, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
+    <Reference Include="SharpDX.Direct3D9">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharp\System\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\PlaySharp\System\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
