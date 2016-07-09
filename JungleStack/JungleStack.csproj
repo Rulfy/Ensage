@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>JungleStack</RootNamespace>
     <AssemblyName>JungleStack</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <PreBuildEvent />
@@ -42,6 +42,9 @@
     <Reference Include="Ensage">
       <HintPath>C:\EnsageSharp\System\Ensage.dll</HintPath>
     </Reference>
+    <Reference Include="Ensage.Common">
+      <HintPath>C:\EnsageSharp\System\Ensage.Common.dll</HintPath>
+    </Reference>
     <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=b4dcf0f35e5521f1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\EnsageSharp\System\SharpDX.dll</HintPath>
@@ -57,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,111 +1,71 @@
 ﻿using System;
 using System.Linq;
 using Ensage;
-using SharpDX;
-using SharpDX.Direct3D9;
+using Ensage.Common.Menu;
 
 namespace Snatcher
 {
+    using Ensage.Common.Extensions;
+
     class Program
     {
-        const int WM_KEYUP = 0x0101;
-
-        private static int _sleeptick = 0;
-        private static Font _text;
-        private static bool _enabled = true;
+        private static int sleeptick;
+        private static readonly Menu Menu = new Menu("Snatcher", "snatcher", true);
 
         static void Main(string[] args)
         {
-            _text = new Font(
-               Drawing.Direct3DDevice9,
-               new FontDescription
-               {
-                   FaceName = "Calibri",
-                   Height = 13,
-                   OutputPrecision = FontPrecision.Default,
-                   Quality = FontQuality.Default
-               });
+            var hotkey = new MenuItem("hotkey", "Toggle hotkey").SetValue(
+                new KeyBind('P', KeyBindType.Toggle));
+            Menu.AddItem(hotkey);
 
-            Drawing.OnPreReset += Drawing_OnPreReset;
-            Drawing.OnPostReset += Drawing_OnPostReset;
-            Drawing.OnEndScene += Drawing_OnEndScene;
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
-            Game.OnUpdate += Game_OnUpdate;
-            Game.OnWndProc += Game_OnWndProc;
-        }
-
-        private static void Game_OnWndProc(WndEventArgs args)
-        {
-            if (args.Msg != WM_KEYUP || args.WParam != 'P' || Game.IsChatOpen)
-                return;
-            _enabled = !_enabled;
-        }
-
-        static void CurrentDomain_DomainUnload(object sender, EventArgs e)
-        {
-            _text.Dispose();
-        }
-
-        static void Drawing_OnEndScene(EventArgs args)
-        {
-            if (Drawing.Direct3DDevice9 == null || Drawing.Direct3DDevice9.IsDisposed || !Game.IsInGame )
-                return;
-
-            var player = ObjectMgr.LocalPlayer;
-            if( player == null || player.Team == Team.Observer)
-                return;
-
-            if (_enabled)
-                _text.DrawText(null, "Snatcher: Enabled, \"P\" for toggle.", 5, 64, Color.White);
-            else
-                _text.DrawText(null, "Snatcher: Disabled, \"P\" for toggle.", 5, 64, Color.White);
-        }
-
-        static void Drawing_OnPostReset(EventArgs args)
-        {
-            _text.OnResetDevice();
-        }
-
-        static void Drawing_OnPreReset(EventArgs args)
-        {
-            _text.OnLostDevice();
+            Menu.AddItem(new MenuItem("aegis", "Grab aegis").SetValue(true));
+            Menu.AddItem(new MenuItem("cheese", "Grab cheese").SetValue(true));
+            Menu.AddItem(new MenuItem("rune", "Grab rune").SetValue(true));
+            
+           
+            Menu.AddToMainMenu();
+        
+            Game.OnIngameUpdate += Game_OnUpdate;
         }
 
         private static void Game_OnUpdate(EventArgs args)
         {
             var tick = Environment.TickCount;
             var hero = ObjectMgr.LocalHero;
-            if (hero == null || tick < _sleeptick || !_enabled)
+            if (hero == null || tick < sleeptick || !Menu.Item("hotkey").GetValue<KeyBind>().Active)
                 return;
             // check for runes
-            var runes =
-                ObjectMgr.GetEntities<Rune>()
-                    .Where(x => x.IsVisible && GetDistance2D(x.NetworkPosition, hero.NetworkPosition) < 400).ToList();
-            if (runes.Any())
+            if (Menu.Item("rune").GetValue<bool>())
             {
-                hero.PickUpRune(runes.First());
-                _sleeptick = tick + 125;
-                return;
+                var runes =
+                    ObjectMgr.GetEntities<Rune>()
+                        .Where(x => x.IsVisible && x.Distance2D(hero) < 400)
+                        .ToList();
+                if (runes.Any())
+                {
+                    hero.PickUpRune(runes.First());
+                    sleeptick = tick + 125;
+                    return;
+                }
             }
             // check for aegis and cheese
             if (hero.Inventory.FreeSlots.Any())
             {
+                var aegis = Menu.Item("aegis").GetValue<bool>();
+                var cheese = Menu.Item("cheese").GetValue<bool>();
+                if (!aegis && !cheese)
+                    return;
+
                 var items =
                     ObjectMgr.GetEntities<PhysicalItem>()
-                        .Where(x => x.IsVisible && GetDistance2D(x.NetworkPosition, hero.NetworkPosition) < 400
-                                    && (x.Item.Name == "item_aegis" || x.Item.Name == "item_cheese")).ToList();
+                        .Where(x => x.IsVisible && x.Distance2D(hero) < 400
+                                    && ((aegis && x.Item.Name == "item_aegis") || (cheese && x.Item.Name == "item_cheese"))).ToList();
                 if (items.Any())
                 {
                     hero.PickUpItem(items.First());
-                    _sleeptick = tick + 125;
-                    return;
+                    sleeptick = tick + 125;
                 }
             }
-        }
-
-        private static float GetDistance2D(Vector3 p1, Vector3 p2)
-        {
-            return (float)Math.Sqrt(Math.Pow(p1.X - p2.X, 2) + Math.Pow(p1.Y - p2.Y, 2));
         }
     }
 }

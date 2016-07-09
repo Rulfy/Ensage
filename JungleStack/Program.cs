@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Windows.Forms;
 using Ensage;
+using Ensage.Common.Menu;
 using SharpDX;
 using SharpDX.Direct3D9;
 
@@ -9,8 +9,7 @@ namespace JungleStack
 {
     class Program
     {
-        const int WM_KEYUP = 0x0101;
-        const int WM_KEYDOWN = 0x0105;
+        private static readonly Menu Menu = new Menu("JungleStack", "jungleStack", true);
 
         private static readonly Vector3[] StackRouteRadiant =
         {
@@ -33,20 +32,35 @@ namespace JungleStack
         private const int AttackTimeDire = 52;
 
 
-        private static Unit _pullCreep;
-        private static Font _text;
-        private static int _orderState = -1;
-        private static int _attackTime;
-        private static int _startTime;
-        private static Vector3[] _route;
-        private static bool _noCreep;
-        private static readonly Timer Timer = new Timer();
+        private static Unit pullCreep;
+        private static Font text;
+        private static int orderState = -1;
+        private static int attackTime;
+        private static int startTime;
+        private static Vector3[] route;
+        private static bool noCreep;
+        private static readonly System.Windows.Forms.Timer Timer = new System.Windows.Forms.Timer();
 
 
         static void Main(string[] args)
         {
+            var hotkey = new MenuItem("hotkey", "Toggle hotkey").SetValue(
+               new KeyBind('O', KeyBindType.Toggle));
+            hotkey.ValueChanged += Hotkey_ValueChanged;
+            Menu.AddItem(hotkey);
+
+            Menu.AddItem(new MenuItem("positionX", "X-Position").SetValue(
+              new Slider(5, 0, Drawing.Width)));
+
+            Menu.AddItem(new MenuItem("positionY", "Y-Position").SetValue(
+              new Slider(50, 0, Drawing.Height)));
+
+            Menu.AddToMainMenu();
+
+            ChangeToggleValue(false);
+
             Timer.Tick += Timer_Tick;
-            _text = new Font(
+            text = new Font(
                Drawing.Direct3DDevice9,
                new FontDescription
                {
@@ -59,19 +73,64 @@ namespace JungleStack
             Drawing.OnPreReset += Drawing_OnPreReset;
             Drawing.OnPostReset += Drawing_OnPostReset;
             Drawing.OnEndScene += Drawing_OnEndScene;
-            Game.OnWndProc += Game_OnGameWndProc;
             Game.OnUpdate += Game_OnGameUpdate;
             AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
         }
+        // ReSharper disable once InconsistentNaming
+        private static void Hotkey_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            var newVal = e.GetNewValue<KeyBind>().Active;
+            if (newVal != e.GetOldValue<KeyBind>().Active)
+            {
+                // Deactivate script
+                if (!newVal)
+                {
+                    pullCreep = null;
+                }
+                else
+                {
+                    // Activate script
+                    var player = ObjectMgr.LocalPlayer;
+                    if (player == null || player.Team == Team.Observer)
+                        return;
+                    switch (player.Team)
+                    {
+                        case Team.Radiant:
+                            startTime = StartTimeRadiant;
+                            attackTime = AttackTimeRadiant;
+                            route = StackRouteRadiant;
+                            break;
+                        case Team.Dire:
+                            startTime = StartTimeDire;
+                            attackTime = AttackTimeDire;
+                            route = StackRouteDire;
+                            break;
+                        default:
+                            e.Process = false;
+                            return;
+                    }
+                    var units = player.Selection.ToList();
+                    pullCreep = (Unit)units.FirstOrDefault(unit => unit is Unit && ((Unit)unit).IsControllable && ((Unit)unit).IsRanged);
+                    if (pullCreep != null)
+                    {
+                        pullCreep.Move(route.Last());
+                        orderState = -1;
+                    }
+                    else e.Process = false;
+                }
+            }
+        }
 
+        // ReSharper disable once InconsistentNaming
         static void Timer_Tick(object sender, EventArgs e)
         {
             Timer.Enabled = false;
         }
 
+        // ReSharper disable once InconsistentNaming
         static void CurrentDomain_DomainUnload(object sender, EventArgs e)
         {
-            _text.Dispose();
+            text.Dispose();
         }
 
         static void Drawing_OnEndScene(EventArgs args)
@@ -83,28 +142,30 @@ namespace JungleStack
             if( player == null || player.Team == Team.Observer)
                 return;
 
-            if (_pullCreep == null)
+            int x = Menu.Item("positionX").GetValue<Slider>().Value, y = Menu.Item("positionY").GetValue<Slider>().Value;
+            if (pullCreep == null)
             {
-                _text.DrawText(null, "StackScript: Select a ranged creep and press \"O\".", 5, 50, Color.White);
+                var key = (char)Menu.Item("hotkey").GetValue<KeyBind>().Key;
+                text.DrawText(null, "StackScript: Select a ranged creep and press \""+key+"\".", x, y, Color.White);
             }
             else
             {
-                switch (_orderState)
+                switch (orderState)
                 {
                     case -1:
-                        _text.DrawText(null, "StackScript: moving to wait location", 5, 50, Color.White);
+                        text.DrawText(null, "StackScript: moving to wait location", x, y, Color.White);
                         break;
                     case 0:
-                        _text.DrawText(null,
-                            _noCreep
+                        text.DrawText(null,
+                            noCreep
                                 ? "StackScript: found no creep for pulling."
-                                : "StackScript: waiting for next pull.", 5, 50, Color.White);
+                                : "StackScript: waiting for next pull.", x, y, Color.White);
                         break;
                     case 1:
-                        _text.DrawText(null, "StackScript: waiting for attack order.", 5, 50, Color.White);
+                        text.DrawText(null, "StackScript: waiting for attack order.", x, y, Color.White);
                         break;
                     case 2:
-                        _text.DrawText(null, "StackScript: pulling.", 5, 50, Color.White);
+                        text.DrawText(null, "StackScript: pulling.", x, y, Color.White);
                         break;
                 }
             }
@@ -112,105 +173,71 @@ namespace JungleStack
 
         static void Drawing_OnPostReset(EventArgs args)
         {
-            _text.OnResetDevice();
+            text.OnResetDevice();
         }
 
         static void Drawing_OnPreReset(EventArgs args)
         {
-            _text.OnLostDevice();
+            text.OnLostDevice();
         }
 
-        static void Game_OnGameWndProc(WndEventArgs args)
+        static void ChangeToggleValue(bool newValue)
         {
-            if (args.Msg != WM_KEYUP || args.WParam != 'O' || Game.IsChatOpen) 
-                return;
-            
-            // Deactivate script
-            if (_pullCreep != null)
-            {
-                Console.WriteLine("Deactivated");
-                _pullCreep = null;
-                return;
-            }
-            
-            // Activate script
-            var player = ObjectMgr.LocalPlayer;
-            if (player == null || player.Team == Team.Observer) 
-                return;
-            switch (player.Team)
-            {
-                case Team.Radiant:
-                    _startTime = StartTimeRadiant;
-                    _attackTime = AttackTimeRadiant;
-                    _route = StackRouteRadiant;
-                    break;
-                case Team.Dire:
-                    _startTime = StartTimeDire;
-                    _attackTime = AttackTimeDire;
-                    _route = StackRouteDire;
-                    break;
-                default:
-                    return;
-            }
-            var units = player.Selection.ToList();
-            _pullCreep = (Unit)units.FirstOrDefault(unit => unit is Unit && ((Unit)unit).IsControllable && ((Unit)unit).IsRanged);
-            if (_pullCreep != null)
-            {
-                _pullCreep.Move(_route.Last());
-                _orderState = -1;
-            }
+            var oldVal = Menu.Item("hotkey").GetValue<KeyBind>();
+            Menu.Item("hotkey").SetValue(new KeyBind(oldVal.Key, KeyBindType.Toggle, newValue));
         }
 
         static void Game_OnGameUpdate(EventArgs args)
         {
-            if (Timer.Enabled || !Game.IsInGame || Game.IsPaused || _pullCreep == null)
+            if (Timer.Enabled || !Game.IsInGame || Game.IsPaused || pullCreep == null)
                 return;
 
-            if (!_pullCreep.IsValid || !_pullCreep.IsAlive)
+            if (!pullCreep.IsValid || !pullCreep.IsAlive)
             {
-                _pullCreep = null;
+                ChangeToggleValue(false);
+                pullCreep = null;
                 return;
             }
 
             var seconds = ((int) Game.GameTime) % 60;
-            switch (_orderState)
+            switch (orderState)
             {
                 case -1:
-                    if (GetDistance2D(_pullCreep.Position, _route.Last()) < 3)
-                        _orderState = 0;
+                    if (GetDistance2D(pullCreep.Position, route.Last()) < 3)
+                        orderState = 0;
                     break;
                 case 0:
-                    if (seconds >= _startTime)
+                    if (seconds >= startTime)
                     {
                         Console.WriteLine("Move to route 0");
-                        _pullCreep.Move(_route[0]);
-                        _orderState = 1;
+                        pullCreep.Move(route[0]);
+                        orderState = 1;
                     }
                     break;
                 case 1:
-                    if (seconds >= _attackTime)
+                    if (seconds >= attackTime)
                     {
                         var attackme = GetNearestCreepToPull();
-                        _noCreep = attackme == null;
-                        if (_noCreep)
+                        noCreep = attackme == null;
+                        if (noCreep)
                         {
-                            _pullCreep.Move(_route.Last());
-                            _orderState = 0;
+                            pullCreep.Move(route.Last());
+                            orderState = 0;
 
                             Timer.Interval = 10*1000; // wait until next minute starts
                             Timer.Start();
                             return;
                         }
-                        _pullCreep.Attack(attackme);
-                        _orderState = 2;
+                        pullCreep.Attack(attackme);
+                        orderState = 2;
                         Timer.Interval = 1650; // Wait until attack starts
                         Timer.Start();
                     }
                     break;
                 case 2:
-                    _pullCreep.Move(_route[1]);
-                    _pullCreep.Move(_route[2],true);
-                    _orderState = 0;
+                    pullCreep.Move(route[1]);
+                    pullCreep.Move(route[2],true);
+                    orderState = 0;
 
                     Timer.Interval = 10*1000; // wait until next minute starts
                     Timer.Start();
@@ -228,7 +255,7 @@ namespace JungleStack
             var bestDistance = float.MaxValue;
             foreach (var creep in creeps)
             {
-                var distance = GetDistance2DFast(_pullCreep, creep);
+                var distance = GetDistance2DFast(pullCreep, creep);
                 if (bestCreep == null || distance < bestDistance)
                 {
                     bestDistance = distance;
