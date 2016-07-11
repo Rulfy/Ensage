@@ -13,6 +13,8 @@
 // </copyright>
 namespace Zoomhack
 {
+    using System;
+
     using Ensage;
     using Ensage.Common;
     using Ensage.Common.Menu;
@@ -90,6 +92,23 @@ namespace Zoomhack
 
             Game.GetConsoleVar("r_farz").SetValue(18000);
             Game.OnWndProc += zoomHack.Game_OnWndProc;
+
+            Events.OnLoad += zoomHack.Events_OnLoad;
+        }
+
+        /// <summary>
+        /// The events_ on load.
+        /// </summary>
+        /// <param name="sender">
+        /// The sender.
+        /// </param>
+        /// <param name="e">
+        /// The e.
+        /// </param>
+        private void Events_OnLoad(object sender, EventArgs e)
+        {
+            this.zoomVar.SetValue(this.zoomSlider.GetValue<Slider>().Value);
+            Game.GetConsoleVar("r_farz").SetValue(18000);
         }
 
         /// <summary>
