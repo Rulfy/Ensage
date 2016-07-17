@@ -37,13 +37,15 @@ namespace Evade
         private bool pathingAborted;
         private List<Vector3> forcePath;
 
+        private List<uint> obstaclesIDs = new List<uint>(), obstaclesPredictedIDs = new List<uint>();
+
         public Evade()
         {
             Game.OnIngameUpdate += Game_OnIngameUpdate;
             Unit.OnModifierAdded += Unit_OnModifierAdded;
             Unit.OnModifierRemoved += Unit_OnModifierRemoved;
             //Entity.OnFloatPropertyChange += Entity_OnFloatPropertyChange;
-            Entity.OnBoolPropertyChange += Entity_OnBoolPropertyChange;
+            //Entity.OnBoolPropertyChange += Entity_OnBoolPropertyChange;
             //Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
             //Entity.OnInt64PropertyChange += Entity_OnInt64PropertyChange;
             Player.OnExecuteOrder += Player_OnExecuteOrder;
@@ -152,13 +154,18 @@ namespace Evade
             // test if it's a known obstacle which is getting removed
             if (entry == null) return;
 
+            if (obstaclesIDs.Contains(entry.ID) || obstaclesPredictedIDs.Contains(entry.ID))
+            {
+                forcePath = null;
+                myHero.Move(movePosition);
+            }
             pathfinding.RemoveObstacle(entry.ID);
             obstacles.Remove(entry);
         }
 
         private void Unit_OnModifierAdded(Unit sender, ModifierChangedEventArgs args)
         {
-            Console.WriteLine("Added {0}: {1} {2} {3}", sender.Handle, args.Modifier.Name, args.Modifier.RemainingTime, args.Modifier.Duration);
+          // Cosole.WriteLine("Added {0}: {1} {2} {3}", sender.Handle, args.Modifier.Name, args.Modifier.RemainingTime, args.Modifier.Duration);
 
             if (!(sender is Hero) && sender.Owner == null) return;
 
@@ -191,10 +198,9 @@ namespace Evade
 
                 pathfinding.UpdateNavMesh();
 
-                var obstaclesIDs = pathfinding.GetIntersectingObstacleIDs(myHero.Position, myHero.HullRadius).ToList();
-                var obstaclesPredictedIDs = pathfinding.GetIntersectingObstacleIDs(myHero.Predict(300), myHero.HullRadius).ToList();
-
-
+                obstaclesIDs = pathfinding.GetIntersectingObstacleIDs(myHero.Position, myHero.HullRadius).ToList();
+                obstaclesPredictedIDs = pathfinding.GetIntersectingObstacleIDs(myHero.BasePredict(350), myHero.HullRadius).ToList();
+               
                 bool tried = false;
                 bool completed = false;
                 List<Vector3> path = null;
@@ -203,36 +209,40 @@ namespace Evade
                 {
                     tried = true;
                     movePosition = GetValidMovePosition(movePosition);
-                    float maxDistance = (movePosition - myHero.Position).Length() * 4;
-
                     float turnRate =
                         Game.FindKeyValues(myHero.Name + "/MovementTurnRate", KeyValueSource.Hero).FloatValue;
                     float timeLeft = TimeLeftFromObstacles( obstacles.Where( x => obstaclesIDs.Any(y => y == x.ID)).ToList() );
 
-                    var path1 = pathfinding.CalculatePathFromObstacle(
+                    Console.WriteLine("Using obstacle algo with time: {0} and distance: {1}",timeLeft, myHero.MovementSpeed*timeLeft/1000.0f);
+
+                    path = pathfinding.CalculatePathFromObstacle(
                         myHero.Position,
                         movePosition,
                         myHero.RotationRad,
                         myHero.MovementSpeed,
                         turnRate,
                         timeLeft,
+                        true,
+                        out completed).ToList();
+                    if (completed)
+                    {
+                        float maxDistance = (movePosition - myHero.Position).Length() * 4;
+                        var toTarget = pathfinding.CalculateLongPath(
+                        path.Last(),
+                        movePosition,
                         maxDistance,
                         true,
                         out completed).ToList();
 
-                    path = pathfinding.CalculateLongPath(
-                       myHero.Position,
-                       movePosition,
-                       maxDistance,
-                       true,
-                       out completed).ToList();
+                        if (completed) path = path.Concat(toTarget).ToList();
+                    }
                 }
                 else if (obstaclesPredictedIDs.Any())
                 {
                     tried = true;
                     movePosition = GetValidMovePosition(movePosition);
                     float maxDistance = (movePosition - myHero.Position).Length() * 4;
-
+                    Console.WriteLine("Using normal algo with distance: {0}", maxDistance);
                     path = pathfinding.CalculateLongPath(
                         myHero.Position,
                         movePosition,
@@ -256,16 +266,20 @@ namespace Evade
                         // test if we guessed a position to go
                         if (!isPositionKnown)
                             pathingMoved = true;
-
-                        foreach (var vector3 in path)
-                        {
-                            Console.WriteLine(vector3);
-                        }
                     }
                     else
                     {
                         // maybe we are at the spawn and enemy exactly tried to attack there
-                        Console.WriteLine("can't run ! panic!! -> use spells");
+                       
+                        if (!obstaclesIDs.Any())
+                        {
+                            myHero.Stop();
+                            Console.WriteLine("stopping to be safe");
+                        }
+                        else
+                        {
+                            Console.WriteLine("can't run ! panic!! -> use spells");
+                        }
                     }
                 }
                
@@ -360,16 +374,16 @@ namespace Evade
             var heroPos = hero.Position;
             // Drawing the navmesh grid
             const int CellCount = 40;
-            for (int x = 0; x < CellCount; ++x)
+            for (int i = 0; i < CellCount; ++i)
             {
-                for (int y = 0; y < CellCount; ++y)
+                for (int j = 0; j < CellCount; ++j)
                 {
                     Vector2 p;
-                    p.X = pathfinding.CellSize * (x - CellCount / 2) + heroPos.X;
-                    p.Y = pathfinding.CellSize * (y - CellCount / 2) + heroPos.Y;
+                    p.X = pathfinding.CellSize * (i - CellCount / 2) + heroPos.X;
+                    p.Y = pathfinding.CellSize * (j - CellCount / 2) + heroPos.Y;
 
                     Color c;
-                    if (x == CellCount / 2 && y == CellCount / 2)
+                    if (i == CellCount / 2 && j == CellCount / 2)
                         c = Color.Blue;
                     else
                     {
@@ -388,8 +402,24 @@ namespace Evade
                         else
                             c = Color.Red;
                     }
-                    Drawing.DrawRect(new Vector2(x * 10, 50 + (CellCount - y - 1) * 10), new Vector2(9, 9), c, false);
+                    Drawing.DrawRect(new Vector2(i * 10, 50 + (CellCount - j - 1) * 10), new Vector2(9, 9), c, false);
                 }
+            }
+            // Draw predicted Hero Pos
+            int x, y;
+            pathfinding.GetCellPosition(myHero.BasePredict(350) - heroPos, out x, out y);
+            x += CellCount / 2;
+            y += CellCount / 2;
+            Drawing.DrawRect(new Vector2(x * 10, 50 + (CellCount - y - 1) * 10), new Vector2(9, 9), Color.AliceBlue, false);
+
+            Vector2 screenPos;
+            if (Drawing.WorldToScreen(myHero.Position, out screenPos))
+            {
+                Drawing.DrawCircle(screenPos, (uint)myHero.HullRadius, 24, Color.Red);
+            }
+            if (Drawing.WorldToScreen(myHero.BasePredict(300), out screenPos))
+            {
+                Drawing.DrawCircle(screenPos, (uint)myHero.HullRadius, 24, Color.Red);
             }
         }
     }
