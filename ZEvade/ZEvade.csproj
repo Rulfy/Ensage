@@ -56,8 +56,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BoolEventArgs.cs" />
+    <Compile Include="Debugging.cs" />
     <Compile Include="Evade.cs" />
     <Compile Include="EvadeData\SupportedModifier.cs" />
+    <Compile Include="EvadeMenu.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Obstacles\IObstacle.cs" />

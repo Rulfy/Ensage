@@ -12,16 +12,12 @@ namespace Evade
     class Program
     {
         private static Evade evade = null;
-        internal static readonly Menu Menu = new Menu("ZEvade", "zevade", true);
+
+        public static EvadeMenu Menu;
 
         static void Main(string[] args)
         {
-            var debugMenu = new Menu("Debug Features", "debugMenu", false);
-            debugMenu.AddItem(new MenuItem("debugDraw", "Debug Drawings").SetValue(true));
-            debugMenu.AddItem(new MenuItem("debugBotAttack", "Bots auto attack").SetValue(false));
-            Menu.AddSubMenu(debugMenu);
-
-            Menu.AddToMainMenu();
+            Menu = new EvadeMenu(); 
 
             Ensage.Common.Events.OnLoad += Events_OnLoad;
             Ensage.Common.Events.OnClose += Events_OnClose;

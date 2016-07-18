@@ -10,6 +10,7 @@ namespace Evade
     using System.Linq;
 
     using Ensage.Common.Extensions;
+    using Ensage.Common.Objects.UtilityObjects;
 
     using SharpDX;
 
@@ -28,7 +29,7 @@ namespace Evade
             //new SupportedModifier("modifier_faceless_void_chronosphere_speed", ClassID.CDOTA_Ability_FacelessVoid_Chronosphere, false),
         };
         private readonly List<IObstacle> obstacles = new List<IObstacle>();
-        private readonly Dictionary<Unit,ObstacleUnit> obstacleUnits = new Dictionary<Unit, ObstacleUnit>();
+        private Dictionary<Unit, ObstacleUnit> obstacleUnits = new Dictionary<Unit, ObstacleUnit>();
 
         private readonly Hero myHero = ObjectManager.LocalHero;
 
@@ -39,6 +40,17 @@ namespace Evade
         private List<Vector3> forcePath;
 
         private List<uint> obstaclesIDs = new List<uint>(), obstaclesPredictedIDs = new List<uint>();
+
+        private Orbwalker orbwalker;
+
+        // menu controlled
+        private bool autoEvade;
+        private bool evadePressed;
+        private bool orbwalkerPressed;
+        private bool evadeMovePressed;
+
+       
+
         public Evade()
         {
             foreach (var unit in ObjectManager.GetEntities<Unit>().Where(x => x.IsAlive && !Equals(x, myHero) && x.NetworkPosition != Vector3.Zero))
@@ -46,6 +58,8 @@ namespace Evade
                 var id = pathfinding.AddObstacle(unit.NetworkPosition, unit.HullRadius);
                 obstacleUnits.Add(unit, new ObstacleUnit(id, unit));
             }
+
+            orbwalker = new Orbwalker(myHero);
 
             Game.OnIngameUpdate += Game_OnIngameUpdate;
             Unit.OnModifierAdded += Unit_OnModifierAdded;
@@ -58,32 +72,36 @@ namespace Evade
             ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
             ObjectManager.OnRemoveEntity += ObjectManager_OnRemoveEntity;
 
-            // Debug
-            var debugMenu = Program.Menu.Children.First(x => x.Name == "debugMenu");
-            // Drawing
-            var debugDraw = debugMenu.Items.First(x => x.Name == "debugDraw");
-            if(debugDraw.GetValue<bool>())
-                Drawing.OnDraw += Drawing_OnDebugDraw;
 
-            debugDraw.ValueChanged += (sender,args) =>
-                    {
-                        if (args.GetNewValue<bool>())
-                            Drawing.OnDraw += Drawing_OnDebugDraw;
-                        else
-                            Drawing.OnDraw -= Drawing_OnDebugDraw;
-                    };
-            // AutoAttacking
-            var debugAttack = debugMenu.Items.First(x => x.Name == "debugBotAttack");
-            if (debugAttack.GetValue<bool>())
+            autoEvade = Program.Menu.IsAutoEvadeEnabled;
+            Program.Menu.AutoEvadeChanged += (sender, args) =>
+                { autoEvade = args.Value; };
+            Program.Menu.EvadePressed += (sender, args) =>
+                { evadePressed = args.Value; };
+            Program.Menu.OrbwalkerPressed += (sender, args) =>
+                { orbwalkerPressed = args.Value; };
+            Program.Menu.EvadeMovePressed += (sender, args) =>
+                { evadeMovePressed = args.Value; };
+
+            // Debug
+            if (Program.Menu.IsDebugDrawEnabled)
+                Drawing.OnDraw += Drawing_OnDebugDraw;
+            Program.Menu.DebugDrawChanged += (sender, args) =>
+                {
+                    if (args.Value) Drawing.OnDraw += Drawing_OnDebugDraw;
+                    else Drawing.OnDraw -= Drawing_OnDebugDraw;
+                };
+
+            if (Program.Menu.IsBotAutoAttackEnabled)
                 Game.OnIngameUpdate += Game_OnBotAttackTick;
-            debugAttack.ValueChanged += (sender, args) =>
-            {
-                if (args.GetNewValue<bool>())
-                    Game.OnIngameUpdate += Game_OnBotAttackTick;
-                else
-                    Game.OnIngameUpdate -= Game_OnBotAttackTick;
-            };
+            Program.Menu.BotAutoAttackChanged += (sender, args) =>
+                {
+                    if (args.Value) Game.OnIngameUpdate += Game_OnBotAttackTick;
+                    else Game.OnIngameUpdate -= Game_OnBotAttackTick;
+                };
         }
+
+
 
         private void ObjectManager_OnRemoveEntity(EntityEventArgs args)
         {
@@ -100,7 +118,7 @@ namespace Evade
             if (unit != null)
             {
                 var id = pathfinding.AddObstacle(unit.NetworkPosition, unit.HullRadius);
-                obstacleUnits.Add(unit, new ObstacleUnit(id,unit) );
+                obstacleUnits.Add(unit, new ObstacleUnit(id, unit));
             }
         }
 
@@ -112,7 +130,7 @@ namespace Evade
                 if (!args.NewValue)
                 {
                     //isPositionKnown = false;
-                    Console.WriteLine("Stopping and not known");
+                    Debugging.WriteLine("Stopping and not known");
                 }
                 // get some position where we can evade to
                 else if (!isPositionKnown)
@@ -124,7 +142,7 @@ namespace Evade
 
         private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
-            if(!args.Entities.Contains(myHero))
+            if (!args.Entities.Contains(myHero))
                 return;
             switch (args.Order)
             {
@@ -158,7 +176,7 @@ namespace Evade
         private void Entity_OnInt64PropertyChange(Entity sender, Int64PropertyChangeEventArgs args)
         {
             if (!(sender is Hero)) return;
-            Console.WriteLine("64 - {0}: {1}", sender.Name, args.PropertyName);
+            Debugging.WriteLine("64 - {0}: {1}", sender.Name, args.PropertyName);
         }
 
         private void Entity_OnInt32PropertyChange(Entity sender, Int32PropertyChangeEventArgs args)
@@ -176,7 +194,7 @@ namespace Evade
                             ? unit.NetworkPosition
                             : new Vector3(float.MinValue, float.MinValue, float.MinValue));
                 }
-                else if (args.PropertyName == "m_iHealth" && args.NewValue <= 0 )
+                else if (args.PropertyName == "m_iHealth" && args.NewValue <= 0)
                 {
                     pathfinding.RemoveObstacle(obstacleUnit.ID);
                     obstacleUnits.Remove(unit);
@@ -205,7 +223,7 @@ namespace Evade
                 //    default:
                 //        return;
                 //}
-                //Console.WriteLine("<{3}> {0}: {1} - {2}",unit.Name,unit.NetworkPosition,newPos,args.PropertyName);
+                //Debugging.WriteLine("<{3}> {0}: {1} - {2}",unit.Name,unit.NetworkPosition,newPos,args.PropertyName);
                 pathfinding.UpdateObstacle(obstacleUnit.ID, newPos);
             }
         }
@@ -227,7 +245,7 @@ namespace Evade
 
         private void Unit_OnModifierAdded(Unit sender, ModifierChangedEventArgs args)
         {
-          // Cosole.WriteLine("Added {0}: {1} {2} {3}", sender.Handle, args.Modifier.Name, args.Modifier.RemainingTime, args.Modifier.Duration);
+            // Debugging.WriteLine("Added {0}: {1} {2} {3}", sender.Handle, args.Modifier.Name, args.Modifier.RemainingTime, args.Modifier.Duration);
 
             if (!(sender is Hero) && sender.Owner == null) return;
 
@@ -249,12 +267,23 @@ namespace Evade
             obstacles.Add(new ObstacleModifier(id, sender, args.Modifier));
         }
 
-        
 
-        
+
+
         private void Game_OnIngameUpdate(EventArgs args)
         {
-            if (Utils.SleepCheck("evadeupdate"))
+            if (Utils.SleepCheck("unitcleanup"))
+            {
+                Utils.Sleep(1000 * 10, "unitcleanup");
+                Dictionary<Unit, ObstacleUnit> updatedList = new Dictionary<Unit, ObstacleUnit>();
+                foreach (var unit in obstacleUnits)
+                {
+                    if (unit.Key.IsValid && unit.Key.Health > 0) updatedList.Add(unit.Key, unit.Value);
+                    else pathfinding.RemoveObstacle(unit.Value.ID);
+                }
+                obstacleUnits = updatedList;
+            }
+            if ((autoEvade || evadePressed || orbwalkerPressed || evadeMovePressed) && Utils.SleepCheck("evadeupdate"))
             {
                 Utils.Sleep(125, "evadeupdate");
 
@@ -262,7 +291,13 @@ namespace Evade
 
                 obstaclesIDs = pathfinding.GetIntersectingObstacleIDs(myHero.Position, myHero.HullRadius).ToList();
                 obstaclesPredictedIDs = pathfinding.GetIntersectingObstacleIDs(myHero.BasePredict(350), myHero.HullRadius).ToList();
-               
+
+                if (orbwalkerPressed || evadeMovePressed)
+                {
+                    movePosition = Game.MousePosition;
+                    isPositionKnown = true;
+                }
+
                 bool tried = false;
                 bool completed = false;
                 List<Vector3> path = null;
@@ -271,11 +306,12 @@ namespace Evade
                 {
                     tried = true;
                     movePosition = GetValidMovePosition(movePosition);
+
                     float turnRate =
                         Game.FindKeyValues(myHero.Name + "/MovementTurnRate", KeyValueSource.Hero).FloatValue;
-                    float timeLeft = TimeLeftFromObstacles( obstacles.Where( x => obstaclesIDs.Any(y => y == x.ID)).ToList() );
+                    float timeLeft = TimeLeftFromObstacles(obstacles.Where(x => obstaclesIDs.Any(y => y == x.ID)).ToList());
 
-                    Console.WriteLine("Using obstacle algo with time: {0} and distance: {1}",timeLeft, myHero.MovementSpeed*timeLeft/1000.0f);
+                    Debugging.WriteLine("Using obstacle algo with time: {0} and distance: {1}", timeLeft, myHero.MovementSpeed * timeLeft / 1000.0f);
 
                     path = pathfinding.CalculatePathFromObstacle(
                         myHero.Position,
@@ -296,7 +332,7 @@ namespace Evade
                         true,
                         out completed).ToList();
 
-                        if (completed) path = path.Concat(toTarget).ToList();
+                        if (completed && toTarget.Any() ) path = path.Concat(toTarget).ToList();
                     }
                 }
                 else if (obstaclesPredictedIDs.Any())
@@ -304,7 +340,7 @@ namespace Evade
                     tried = true;
                     movePosition = GetValidMovePosition(movePosition);
                     float maxDistance = (movePosition - myHero.Position).Length() * 4;
-                    Console.WriteLine("Using normal algo with distance: {0}", maxDistance);
+                    Debugging.WriteLine("Using normal algo with distance: {0}", maxDistance);
                     path = pathfinding.CalculateLongPath(
                         myHero.Position,
                         movePosition,
@@ -332,25 +368,25 @@ namespace Evade
                     else
                     {
                         // maybe we are at the spawn and enemy exactly tried to attack there
-                       
+
                         if (!obstaclesIDs.Any())
                         {
                             myHero.Stop();
-                            Console.WriteLine("stopping to be safe");
+                            Debugging.WriteLine("stopping to be safe");
                         }
                         else
                         {
-                            Console.WriteLine("can't run ! panic!! -> use spells");
+                            Debugging.WriteLine("can't run ! panic!! -> use spells");
                         }
                     }
                 }
-               
+
             }
 
-            if (pathingAborted && forcePath != null && forcePath.Any() )
+            if (pathingAborted && forcePath != null && forcePath.Any())
             {
                 myHero.Move(forcePath[0]);
-                for (int i = 1; i < Math.Min(forcePath.Count,32); ++i)
+                for (int i = 1; i < Math.Min(forcePath.Count, 32); ++i)
                 {
                     myHero.Move(forcePath[i], true);
                 }
@@ -360,7 +396,16 @@ namespace Evade
             {
                 pathingMoved = false;
                 myHero.Stop();
-                Console.WriteLine("STOP {0} - {1}", forcePath!=null, pathingAborted);
+                Debugging.WriteLine("STOP {0} - {1}", forcePath != null, pathingAborted);
+            }
+            if ((evadeMovePressed||orbwalkerPressed) && (forcePath == null || !pathingMoved) )
+            {
+                var target = evadeMovePressed ? null : TargetSelector.ClosestToMouse(ObjectManager.LocalHero);
+                if(target != null )
+                    orbwalker.OrbwalkOn(target);
+                else
+                    myHero.Move(Game.MousePosition);
+                
             }
 
         }
@@ -376,7 +421,7 @@ namespace Evade
         }
         Vector3 GetValidMovePosition(Vector3 currentTarget)
         {
-            
+
             var dir = (currentTarget - myHero.Position);
             dir.Normalize();
 
@@ -394,7 +439,7 @@ namespace Evade
             }
 
             // well no luck?
-            Console.WriteLine("Couldn't find a valid target position which is safe :(");
+            Debugging.WriteLine("Couldn't find a valid target position which is safe :(");
             return GetValidMovePosition();
         }
 
@@ -403,7 +448,7 @@ namespace Evade
         private void Game_OnBotAttackTick(EventArgs args)
         {
             if (!Utils.SleepCheck("onBotAttack")) return;
-            Utils.Sleep(125,"onBotAttack");
+            Utils.Sleep(125, "onBotAttack");
 
             const int RndDistance = 750;
             var rnd = new Random();
@@ -416,7 +461,7 @@ namespace Evade
                 {
                     var spellSleepName = $"onBotAttack_{enemy.Handle}_{validSpell.ClassID}";
                     if (!Utils.SleepCheck(spellSleepName)) continue;
-                    Utils.Sleep(1000+rnd.Next(2000), spellSleepName);
+                    Utils.Sleep(1000 + rnd.Next(2000), spellSleepName);
 
                     var targetPos = myHero.Position;
                     targetPos.X += rnd.NextFloat(-RndDistance, +RndDistance);
@@ -436,12 +481,12 @@ namespace Evade
             //foreach (ObstacleUnit unit in obstacleUnits.Values)
             //{
             //    if( myHero.Distance2D(unit.Unit) < 1000)
-            //    Console.WriteLine(unit.Unit.Name);   
+            //    Debugging.WriteLine(unit.Unit.Name);   
             //}
             //foreach (ObstacleModifier unit in obstacles)
             //{
             //    if (myHero.Distance2D(unit.Owner) < 1000)
-            //        Console.WriteLine(unit.Owner.Name);
+            //        Debugging.WriteLine(unit.Owner.Name);
             //}
 
             var heroPos = hero.Position;
@@ -496,5 +541,5 @@ namespace Evade
             }
         }
     }
-#endregion
+    #endregion
 }
