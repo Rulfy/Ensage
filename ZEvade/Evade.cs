@@ -28,6 +28,7 @@ namespace Evade
             //new SupportedModifier("modifier_faceless_void_chronosphere_speed", ClassID.CDOTA_Ability_FacelessVoid_Chronosphere, false),
         };
         private readonly List<IObstacle> obstacles = new List<IObstacle>();
+        private readonly Dictionary<Unit,ObstacleUnit> obstacleUnits = new Dictionary<Unit, ObstacleUnit>();
 
         private readonly Hero myHero = ObjectManager.LocalHero;
 
@@ -38,17 +39,24 @@ namespace Evade
         private List<Vector3> forcePath;
 
         private List<uint> obstaclesIDs = new List<uint>(), obstaclesPredictedIDs = new List<uint>();
-
         public Evade()
         {
+            foreach (var unit in ObjectManager.GetEntities<Unit>().Where(x => x.IsAlive && !Equals(x, myHero) && x.NetworkPosition != Vector3.Zero))
+            {
+                var id = pathfinding.AddObstacle(unit.NetworkPosition, unit.HullRadius);
+                obstacleUnits.Add(unit, new ObstacleUnit(id, unit));
+            }
+
             Game.OnIngameUpdate += Game_OnIngameUpdate;
             Unit.OnModifierAdded += Unit_OnModifierAdded;
             Unit.OnModifierRemoved += Unit_OnModifierRemoved;
-            //Entity.OnFloatPropertyChange += Entity_OnFloatPropertyChange;
+            Entity.OnFloatPropertyChange += Entity_OnFloatPropertyChange;
             //Entity.OnBoolPropertyChange += Entity_OnBoolPropertyChange;
-            //Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
+            Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
             //Entity.OnInt64PropertyChange += Entity_OnInt64PropertyChange;
             Player.OnExecuteOrder += Player_OnExecuteOrder;
+            ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
+            ObjectManager.OnRemoveEntity += ObjectManager_OnRemoveEntity;
 
             // Debug
             var debugMenu = Program.Menu.Children.First(x => x.Name == "debugMenu");
@@ -77,7 +85,24 @@ namespace Evade
             };
         }
 
-        
+        private void ObjectManager_OnRemoveEntity(EntityEventArgs args)
+        {
+            var unit = args.Entity as Unit;
+            if (unit != null)
+            {
+                obstacleUnits.Remove(unit);
+            }
+        }
+
+        private void ObjectManager_OnAddEntity(EntityEventArgs args)
+        {
+            var unit = args.Entity as Unit;
+            if (unit != null)
+            {
+                var id = pathfinding.AddObstacle(unit.NetworkPosition, unit.HullRadius);
+                obstacleUnits.Add(unit, new ObstacleUnit(id,unit) );
+            }
+        }
 
         private void Entity_OnBoolPropertyChange(Entity sender, BoolPropertyChangeEventArgs args)
         {
@@ -138,14 +163,51 @@ namespace Evade
 
         private void Entity_OnInt32PropertyChange(Entity sender, Int32PropertyChangeEventArgs args)
         {
-            if (!(sender is Hero) || !Equals(sender, myHero) || args.PropertyName != "m_NetworkActivity") return;
-            Console.WriteLine("32 - {0}: {1} [{2} -> {3}]", sender.Name, args.PropertyName, (NetworkActivity)args.OldValue, (NetworkActivity)args.NewValue);
+            var unit = sender as Unit;
+            ObstacleUnit obstacleUnit;
+            if (unit != null && obstacleUnits.TryGetValue(unit, out obstacleUnit))
+            {
+                if (args.PropertyName == "m_iTaggedAsVisibleByTeam")
+                {
+                    // "remove" obstacle if unit not visible
+                    pathfinding.UpdateObstacle(
+                        obstacleUnit.ID,
+                        args.NewValue == 0x1E
+                            ? unit.NetworkPosition
+                            : new Vector3(float.MinValue, float.MinValue, float.MinValue));
+                }
+                else if (args.PropertyName == "m_iHealth" && args.NewValue <= 0 )
+                {
+                    pathfinding.RemoveObstacle(obstacleUnit.ID);
+                    obstacleUnits.Remove(unit);
+                }
+            }
         }
 
         private void Entity_OnFloatPropertyChange(Entity sender, FloatPropertyChangeEventArgs args)
         {
-            if (!(sender is Hero) || args.PropertyName == "m_flStartSequenceCycle") return;
-            Console.WriteLine("Fl - {0}: {1}", sender.Name, args.PropertyName);
+            var unit = sender as Unit;
+            ObstacleUnit obstacleUnit;
+            if (unit != null && obstacleUnits.TryGetValue(unit, out obstacleUnit))
+            {
+                var newPos = obstacleUnit.Unit.NetworkPosition;
+                //switch (args.PropertyName)
+                //{
+                //    case "m_vecX":
+                //        newPos.X = args.NewValue;
+                //        break;
+                //    case "m_vecY":
+                //        newPos.Y = args.NewValue;
+                //        break;
+                //    case "m_vecZ":
+                //        newPos.Z = args.NewValue;
+                //        break;
+                //    default:
+                //        return;
+                //}
+                //Console.WriteLine("<{3}> {0}: {1} - {2}",unit.Name,unit.NetworkPosition,newPos,args.PropertyName);
+                pathfinding.UpdateObstacle(obstacleUnit.ID, newPos);
+            }
         }
 
         private void Unit_OnModifierRemoved(Unit sender, ModifierChangedEventArgs args)
@@ -183,7 +245,7 @@ namespace Evade
 
             // TODO test if ability actually does damage? magic immune? pure?
 
-            var id = pathfinding.AddObstacle(sender.Position, ability.GetRadius(ability.Name));
+            var id = pathfinding.AddObstacle(sender.NetworkPosition, ability.GetRadius(ability.Name));
             obstacles.Add(new ObstacleModifier(id, sender, args.Modifier));
         }
 
@@ -288,7 +350,7 @@ namespace Evade
             if (pathingAborted && forcePath != null && forcePath.Any() )
             {
                 myHero.Move(forcePath[0]);
-                for (int i = 1; i < forcePath.Count; ++i)
+                for (int i = 1; i < Math.Min(forcePath.Count,32); ++i)
                 {
                     myHero.Move(forcePath[i], true);
                 }
@@ -370,6 +432,17 @@ namespace Evade
             var hero = ObjectManager.LocalHero;
             if (hero == null)
                 return;
+
+            //foreach (ObstacleUnit unit in obstacleUnits.Values)
+            //{
+            //    if( myHero.Distance2D(unit.Unit) < 1000)
+            //    Console.WriteLine(unit.Unit.Name);   
+            //}
+            //foreach (ObstacleModifier unit in obstacles)
+            //{
+            //    if (myHero.Distance2D(unit.Owner) < 1000)
+            //        Console.WriteLine(unit.Owner.Name);
+            //}
 
             var heroPos = hero.Position;
             // Drawing the navmesh grid

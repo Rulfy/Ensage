@@ -61,6 +61,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Obstacles\IObstacle.cs" />
+    <Compile Include="Obstacles\ObstacleUnit.cs" />
     <Compile Include="Obstacles\ObstacleModifier.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
