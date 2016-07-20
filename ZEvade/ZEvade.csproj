@@ -64,8 +64,16 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="Obstacles\IObstacle.cs" />
+    <Compile Include="Obstacles\ObstacleParticle.cs" />
     <Compile Include="Obstacles\ObstacleUnit.cs" />
     <Compile Include="Obstacles\ObstacleModifier.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleCarrionSwarm.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleEarthSpike.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleEMP.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleFireSpirit.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleHook.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleIceBlast.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticlePowershot.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

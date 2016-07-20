@@ -10,6 +10,7 @@ namespace Evade
     using System.Linq;
 
     using Ensage.Common.Extensions;
+    using Ensage.Common.Extensions.SharpDX;
     using Ensage.Common.Objects.UtilityObjects;
 
     using SharpDX;
@@ -30,6 +31,7 @@ namespace Evade
         };
         private readonly List<IObstacle> obstacles = new List<IObstacle>();
         private Dictionary<Unit, ObstacleUnit> obstacleUnits = new Dictionary<Unit, ObstacleUnit>();
+        private List<ObstacleParticle> obstacleParticles = new List<ObstacleParticle>();
 
         private readonly Hero myHero = ObjectManager.LocalHero;
 
@@ -41,7 +43,7 @@ namespace Evade
 
         private List<uint> obstaclesIDs = new List<uint>(), obstaclesPredictedIDs = new List<uint>();
 
-        private Orbwalker orbwalker;
+        private readonly Orbwalker orbwalker;
 
         // menu controlled
         private bool autoEvade;
@@ -49,7 +51,9 @@ namespace Evade
         private bool orbwalkerPressed;
         private bool evadeMovePressed;
 
-       
+        // particle effects
+        private ParticleEffect testParticle;
+
 
         public Evade()
         {
@@ -61,17 +65,18 @@ namespace Evade
 
             orbwalker = new Orbwalker(myHero);
 
-            Game.OnIngameUpdate += Game_OnIngameUpdate;
-            Unit.OnModifierAdded += Unit_OnModifierAdded;
-            Unit.OnModifierRemoved += Unit_OnModifierRemoved;
+            Game.OnIngameUpdate += OnEvadePathUpdate;
+            Game.OnIngameUpdate += OnParticleObstaclesUpdate;
+            Unit.OnModifierAdded += OnObstacleModifierAdded;
+            Unit.OnModifierRemoved += OnObstacleModifierRemoved;
             Entity.OnFloatPropertyChange += Entity_OnFloatPropertyChange;
             //Entity.OnBoolPropertyChange += Entity_OnBoolPropertyChange;
             Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
             //Entity.OnInt64PropertyChange += Entity_OnInt64PropertyChange;
+            Entity.OnParticleEffectAdded += OnObstacleParticleAdded;
             Player.OnExecuteOrder += Player_OnExecuteOrder;
-            ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
-            ObjectManager.OnRemoveEntity += ObjectManager_OnRemoveEntity;
-
+            ObjectManager.OnAddEntity += OnObstacleUnitAdded;
+            ObjectManager.OnRemoveEntity += OnObstacleUnitRemoved;
 
             autoEvade = Program.Menu.IsAutoEvadeEnabled;
             Program.Menu.AutoEvadeChanged += (sender, args) =>
@@ -92,6 +97,14 @@ namespace Evade
                     else Drawing.OnDraw -= Drawing_OnDebugDraw;
                 };
 
+            if (Program.Menu.IsDebugDrawMapEnabled)
+                Drawing.OnDraw += OnDebugDrawOnMap;
+            Program.Menu.DebugDrawMapChanged += (sender, args) =>
+            {
+                if (args.Value) Drawing.OnDraw += OnDebugDrawOnMap;
+                else Drawing.OnDraw -= OnDebugDrawOnMap;
+            };
+
             if (Program.Menu.IsBotAutoAttackEnabled)
                 Game.OnIngameUpdate += Game_OnBotAttackTick;
             Program.Menu.BotAutoAttackChanged += (sender, args) =>
@@ -102,8 +115,135 @@ namespace Evade
         }
 
 
+        private void OnParticleObstaclesUpdate(EventArgs args)
+        {
+            var updatedList = new List<ObstacleParticle>();
+            foreach (ObstacleParticle obstacleParticle in obstacleParticles)
+            {
+                //Console.WriteLine("{0} - {1} - {2} - {3} - {4} - {5}", obstacleParticle.ParticleEffect.GetControlPoint(0)
+                //    , obstacleParticle.ParticleEffect.GetControlPoint(1)
+                //    , obstacleParticle.ParticleEffect.GetControlPoint(2)
+                //    , obstacleParticle.ParticleEffect.GetControlPoint(3)
+                //    , obstacleParticle.ParticleEffect.GetControlPoint(4)
+                //    , obstacleParticle.ParticleEffect.GetControlPoint(5));
+                if (obstacleParticle.IsValid)
+                {
+                    if (obstacleParticle.IsLine)
+                    {
+                        pathfinding.UpdateObstacle(
+                            obstacleParticle.ID,
+                            obstacleParticle.Position,
+                            obstacleParticle.EndPosition);
+                    }
+                    else
+                    {
+                        pathfinding.UpdateObstacle(obstacleParticle.ID, obstacleParticle.Position);
+                    }
 
-        private void ObjectManager_OnRemoveEntity(EntityEventArgs args)
+                    updatedList.Add(obstacleParticle);
+                }
+                else
+                {
+                    pathfinding.RemoveObstacle(obstacleParticle.ID);
+                }
+            }
+            obstacleParticles = updatedList;
+        }
+
+        private void OnObstacleParticleAdded(Entity sender, ParticleEffectAddedEventArgs args)
+        {
+            //if (sender.Team == myHero.Team) return;
+
+            // Pudge
+            if (args.Name == "particles/units/heroes/hero_pudge/pudge_meathook.vpcf")
+                obstacleParticles.Add(
+                    new Obstacles.Particles.ObstacleParticleHook(pathfinding, sender, args.ParticleEffect));
+            // Invoker
+            else if (args.Name == "particles/units/heroes/hero_invoker/invoker_emp.vpcf")
+                obstacleParticles.Add(
+                    new Obstacles.Particles.ObstacleParticleEMP(pathfinding, sender, args.ParticleEffect));
+            // Death Prophet
+            else if (args.Name == "particles/units/heroes/hero_death_prophet/death_prophet_carrion_swarm.vpcf")
+                obstacleParticles.Add(
+                    new Obstacles.Particles.ObstacleParticleCarrionSwarm(pathfinding, sender, args.ParticleEffect));
+            // Windrunner -> dodge by npc
+            //else if (args.Name == "particles/units/heroes/hero_windrunner/windrunner_spell_powershot_channel.vpcf")
+            //    obstacleParticles.Add(new Obstacles.Particles.ObstacleParticlePowershot(pathfinding,sender,args.ParticleEffect));
+            // Lion
+            //else if (args.Name == "particles/units/heroes/hero_lion/lion_spell_impale_staff.vpcf")
+            //    obstacleParticles.Add(
+            //        new Obstacles.Particles.ObstacleParticleEarthSpike(pathfinding, sender, args.ParticleEffect));
+            // Pheonix
+            else if (args.Name == "particles/units/heroes/hero_phoenix/phoenix_fire_spirit_launch.vpcf")
+                obstacleParticles.Add(
+                    new Obstacles.Particles.ObstacleParticleFireSpirit(pathfinding, sender, args.ParticleEffect));
+            // Ancient
+            else if(args.Name == "particles/units/heroes/hero_ancient_apparition/ancient_apparition_ice_blast_final.vpcf")
+                obstacleParticles.Add(new Obstacles.Particles.ObstacleParticleIceBlast(pathfinding,sender,args.ParticleEffect));
+
+
+            // particles/units/heroes/hero_elder_titan/elder_titan_echo_stomp_cast_combined.vpcf
+            /*
+             * ElderTitan
+             * particles/units/heroes/hero_elder_titan/elder_titan_echo_stomp_cast_combined.vpcf
+             * particles/units/heroes/hero_elder_titan/elder_titan_earth_splitter.vpcf
+             * 
+             * BloodSyka
+             * particles/units/heroes/hero_bloodseeker/bloodseeker_bloodritual_ring.vpcf
+             * 
+             * Gyro
+             * particles/units/heroes/hero_gyrocopter/gyro_calldown_first.vpcf
+             * particles/units/heroes/hero_gyrocopter/gyro_calldown_second.vpcf
+             * 
+             * Invoker
+             * particles/units/heroes/hero_invoker/invoker_chaos_meteor_fly.vpcf
+             * 
+    
+             * Clock
+             * particles/units/heroes/hero_rattletrap/rattletrap_hookshot.vpcf vs particles/generic_hero_status/status_invisibility_start.vpcf
+             * particles/units/heroes/hero_rattletrap/rattletrap_cog_deploy.vpcf vs particles/units/heroes/hero_rattletrap/rattletrap_cog_ambient.vpc
+             * 
+             * Ancient
+             * particles/units/heroes/hero_ancient_apparition/ancient_apparition_ice_blast_marker.vpcf
+                particles/units/heroes/hero_ancient_apparition/ancient_apparition_ice_blast_final.vpcf
+                particles/units/heroes/hero_ancient_apparition/ancient_apparition_ice_blast_debuff.vpcf
+                particles/status_fx/status_effect_iceblast.vpcf
+                particles/units/heroes/hero_ancient_apparition/ancient_apparition_ice_blast_explode.vpcf
+
+        
+
+            Timber
+            particles/generic_hero_status/status_invisibility_start.vpcf
+            particles/units/heroes/hero_shredder/shredder_timberchain.vpcf
+            particles/units/heroes/hero_shredder/shredder_timber_chain_trail.vpcf
+            particles/units/heroes/hero_shredder/shredder_timber_chain_tree.vpcf
+            particles/units/heroes/hero_shredder/shredder_tree_dmg.vpcf
+
+            particles/units/heroes/hero_shredder/shredder_chakram_stay.vpcf
+
+            Veno
+            particles/units/heroes/hero_venomancer/venomancer_venomous_gale_mouth.vpcf
+
+            particles/units/heroes/hero_venomancer/venomancer_poison_nova.vpcf
+            particles/units/heroes/hero_venomancer/venomancer_poison_nova_cast.vpcf
+
+
+*/
+            //if (args.Name == "particles/units/heroes/hero_pudge/pudge_meathook.vpcf")
+            //{
+            //    hook = args.ParticleEffect;
+            //}
+            //else if (args.Name == "particles/units/heroes/hero_mirana/mirana_spell_arrow_fx.vpcf")
+            //{
+            //    arrow = args.ParticleEffect;
+            //}
+            //else
+            {
+                Debugging.WriteLine(args.Name);
+            }
+        }
+
+        private void OnObstacleUnitRemoved(EntityEventArgs args)
         {
             var unit = args.Entity as Unit;
             if (unit != null)
@@ -112,7 +252,7 @@ namespace Evade
             }
         }
 
-        private void ObjectManager_OnAddEntity(EntityEventArgs args)
+        private void OnObstacleUnitAdded(EntityEventArgs args)
         {
             var unit = args.Entity as Unit;
             if (unit != null)
@@ -228,7 +368,7 @@ namespace Evade
             }
         }
 
-        private void Unit_OnModifierRemoved(Unit sender, ModifierChangedEventArgs args)
+        private void OnObstacleModifierRemoved(Unit sender, ModifierChangedEventArgs args)
         {
             var entry = obstacles.Find(x => x.GetHandle() == sender.Handle && x is ObstacleModifier) as ObstacleModifier;
             // test if it's a known obstacle which is getting removed
@@ -243,7 +383,7 @@ namespace Evade
             obstacles.Remove(entry);
         }
 
-        private void Unit_OnModifierAdded(Unit sender, ModifierChangedEventArgs args)
+        private void OnObstacleModifierAdded(Unit sender, ModifierChangedEventArgs args)
         {
             // Debugging.WriteLine("Added {0}: {1} {2} {3}", sender.Handle, args.Modifier.Name, args.Modifier.RemainingTime, args.Modifier.Duration);
 
@@ -270,7 +410,7 @@ namespace Evade
 
 
 
-        private void Game_OnIngameUpdate(EventArgs args)
+        private void OnEvadePathUpdate(EventArgs args)
         {
             if (Utils.SleepCheck("unitcleanup"))
             {
@@ -332,7 +472,7 @@ namespace Evade
                         true,
                         out completed).ToList();
 
-                        if (completed && toTarget.Any() ) path = path.Concat(toTarget).ToList();
+                        if (completed && toTarget.Any()) path = path.Concat(toTarget).ToList();
                     }
                 }
                 else if (obstaclesPredictedIDs.Any())
@@ -359,7 +499,6 @@ namespace Evade
                     {
                         forcePath = path;
                         pathingAborted = true;
-                        // TODO: get intersecting obstacle ids need!
 
                         // test if we guessed a position to go
                         if (!isPositionKnown)
@@ -398,14 +537,14 @@ namespace Evade
                 myHero.Stop();
                 Debugging.WriteLine("STOP {0} - {1}", forcePath != null, pathingAborted);
             }
-            if ((evadeMovePressed||orbwalkerPressed) && (forcePath == null || !pathingMoved) )
+            if ((evadeMovePressed || orbwalkerPressed) && (forcePath == null || !pathingMoved))
             {
                 var target = evadeMovePressed ? null : TargetSelector.ClosestToMouse(ObjectManager.LocalHero);
-                if(target != null )
+                if (target != null)
                     orbwalker.OrbwalkOn(target);
                 else
                     myHero.Move(Game.MousePosition);
-                
+
             }
 
         }
@@ -539,7 +678,75 @@ namespace Evade
             {
                 Drawing.DrawCircle(screenPos, (uint)myHero.HullRadius, 24, Color.Red);
             }
+            // Draw particles
+            //if (hook != null && hook.IsValid)
+            //{
+            //    Drawing.WorldToScreen(hook.GetControlPoint(0), out screenPos);
+            //    Drawing.WorldToScreen(hook.GetControlPoint(1), out screenPos2);
+            //    Drawing.DrawLine(screenPos, screenPos2, Color.Red);
+            //}
+            //if (arrow != null && arrow.IsValid)
+            //{
+            //    Drawing.WorldToScreen(arrow.GetControlPoint(0), out screenPos);
+            //    Drawing.WorldToScreen(arrow.GetControlPoint(3), out screenPos2);
+            //    Drawing.DrawLine(screenPos, screenPos2, Color.Red);
+            //}
+
         }
+
+        private void OnDebugDrawOnMap(EventArgs args)
+        {
+            foreach (ObstacleParticle obstacleParticle in obstacleParticles)
+            {
+                if (!obstacleParticle.IsValid) continue;
+
+                if (obstacleParticle.IsLine)
+                {
+                    Vector2 startPos, endPos;
+                    //Debugging.WriteLine("Len {0}", (obstacleParticle.EndPosition - obstacleParticle.Position).Length());
+
+                    var visible = Drawing.WorldToScreen(obstacleParticle.Position, out startPos);
+                    visible |= Drawing.WorldToScreen(obstacleParticle.EndPosition, out endPos);
+                    if (visible)
+                    {
+                        var ortho = (obstacleParticle.EndPosition - obstacleParticle.Position);
+                        ortho = ortho.Rotated(MathUtil.DegreesToRadians(90));
+                        ortho.Normalize();
+                        ortho *= obstacleParticle.Radius;
+
+                        var a = obstacleParticle.Position + ortho;
+                        var b = obstacleParticle.Position - ortho;
+                        var c = obstacleParticle.EndPosition - ortho;
+                        var d = obstacleParticle.EndPosition + ortho;
+
+                        Vector2 sa, sb, sc, sd;
+                        Drawing.WorldToScreen(a, out sa);
+                        Drawing.WorldToScreen(b, out sb);
+                        Drawing.WorldToScreen(c, out sc);
+                        Drawing.WorldToScreen(d, out sd);
+                        Drawing.DrawLine(sa, sb, Color.Blue);
+                        Drawing.DrawLine(sb, sc, Color.Blue);
+                        Drawing.DrawLine(sc, sd, Color.Blue);
+                        Drawing.DrawLine(sd, sa, Color.Blue);
+                    }
+                }
+                else
+                {
+                    Vector2 screenPos;
+                    if (Drawing.WorldToScreen(obstacleParticle.EndPosition, out screenPos))
+                    {
+                        Vector2 radiusPos;
+                        var tmp = obstacleParticle.EndPosition;
+                        tmp.X += obstacleParticle.Radius;
+                        Drawing.WorldToScreen(tmp, out radiusPos);
+                        Drawing.DrawCircle(screenPos, (uint)(radiusPos-screenPos).Length(), 24, Color.Red);
+                    }
+                }
+            }
+        }
+
+
+        #endregion
     }
-    #endregion
+
 }

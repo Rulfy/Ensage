@@ -10,7 +10,7 @@ namespace Evade
     {
         public static bool OutputEnabled { get; set; }
 
-        public static void WriteLine(string line)
+        public static void WriteLine(object line)
         {
             if(OutputEnabled)
                 Console.WriteLine(line);
@@ -26,6 +26,12 @@ namespace Evade
         {
             if (OutputEnabled)
                 Console.WriteLine(line, p1, p2);
+        }
+
+        public static void WriteLine(string line, object p1, object p2, object p3)
+        {
+            if (OutputEnabled)
+                Console.WriteLine(line, p1, p2, p3);
         }
 
     }

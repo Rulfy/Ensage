@@ -18,6 +18,7 @@ namespace Evade
 
         public event EventHandler<BoolEventArgs> DebugDrawChanged;
         public event EventHandler<BoolEventArgs> BotAutoAttackChanged;
+        public event EventHandler<BoolEventArgs> DebugDrawMapChanged;
 
         // direct entries
         private readonly MenuItem autoEvadeItem;
@@ -36,6 +37,7 @@ namespace Evade
         private readonly MenuItem debugDraw;
         private readonly MenuItem debugBotAttack;
         private readonly MenuItem debugConsoleOutput;
+        private readonly MenuItem debugDrawMap;
 
 
         private bool settingValue;
@@ -80,6 +82,11 @@ namespace Evade
             debugDraw.Tooltip = "Draws information about obstacles around your hero.";
             debugMenu.AddItem(debugDraw);
 
+            debugDrawMap = new MenuItem("debugDrawMap", "Draws obstacles on map").SetValue(true);
+            debugDrawMap.ValueChanged += DebugDrawMap_ValueChanged;
+            debugDrawMap.Tooltip = "Draws obstacles on the map.";
+            debugMenu.AddItem(debugDrawMap);
+
             debugBotAttack = new MenuItem("debugBotAttack", "Bots auto attack").SetValue(false);
             debugBotAttack.ValueChanged += DebugBotAttack_ValueChanged;
             debugBotAttack.Tooltip = "Sunstrike Artillery!";
@@ -94,6 +101,11 @@ namespace Evade
 
             // finish
             Menu.AddToMainMenu();
+        }
+
+        private void DebugDrawMap_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+           OnDebugDrawMapChanged(new BoolEventArgs(e.GetNewValue<bool>()));
         }
 
         private void DebugConsoleOutput_ValueChanged(object sender, OnValueChangeEventArgs e)
@@ -187,9 +199,16 @@ namespace Evade
         public bool IsBotAutoAttackEnabled => debugBotAttack.GetValue<bool>();
         public bool IsAutoEvadeEnabled => autoEvadeItem.GetValue<bool>();
 
+        public bool IsDebugDrawMapEnabled => debugDrawMap.GetValue<bool>();
+
         private void OnEvadeMovePressed(BoolEventArgs e)
         {
             EvadeMovePressed?.Invoke(this, e);
+        }
+
+        private void OnDebugDrawMapChanged(BoolEventArgs e)
+        {
+            DebugDrawMapChanged?.Invoke(this, e);
         }
     }
 }
