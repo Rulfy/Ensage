@@ -38,7 +38,7 @@ namespace Evade
         private readonly MenuItem debugBotAttack;
         private readonly MenuItem debugConsoleOutput;
         private readonly MenuItem debugDrawMap;
-
+        private readonly MenuItem debugDrawPath;
 
         private bool settingValue;
 
@@ -97,6 +97,12 @@ namespace Evade
             debugConsoleOutput.Tooltip = "Outputs debugging info in the console";
             Debugging.OutputEnabled = debugConsoleOutput.GetValue<bool>();
             debugMenu.AddItem(debugConsoleOutput);
+
+            debugDrawPath = new MenuItem("debugDrawPath", "Draws the calculated path").SetValue(false);
+            debugDrawPath.Tooltip = "\"Debug Drawings\" needs to be active too.";
+            debugMenu.AddItem(debugDrawPath);
+
+            
             Menu.AddSubMenu(debugMenu);
 
             // finish
@@ -136,11 +142,6 @@ namespace Evade
         private void EvadeHotkey_ValueChanged(object sender, OnValueChangeEventArgs e)
         {
             OnEvadePressed(new BoolEventArgs(e.GetNewValue<KeyBind>().Active));
-        }
-
-        private void OrbwalkEvade_ValueChanged(object sender, OnValueChangeEventArgs e)
-        {
-            OnOrbwalkerPressed(new BoolEventArgs(e.GetNewValue<bool>()));
         }
 
         private void AutoEvadeItem_ValueChanged(object sender, OnValueChangeEventArgs e)
@@ -200,6 +201,8 @@ namespace Evade
         public bool IsAutoEvadeEnabled => autoEvadeItem.GetValue<bool>();
 
         public bool IsDebugDrawMapEnabled => debugDrawMap.GetValue<bool>();
+
+        public bool IsDebugDrawPathEnabled => debugDrawPath.GetValue<bool>();
 
         private void OnEvadeMovePressed(BoolEventArgs e)
         {

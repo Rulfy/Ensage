@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Evade.Obstacles
+﻿namespace Evade.Obstacles
 {
     using Ensage;
 
@@ -17,6 +11,7 @@ namespace Evade.Obstacles
             ID = id;
             Entity = owner;
             ParticleEffect = particleEffect;
+            Started = Game.RawGameTime;
         }
 
 
@@ -26,13 +21,16 @@ namespace Evade.Obstacles
         }
 
         public uint ID { get;  protected set; }
-
+        protected float Started { get; }
         public Entity Entity { get; }
         public ParticleEffect ParticleEffect { get; }
         public abstract bool IsLine { get; }
         public abstract Vector3 Position { get; }
         public virtual Vector3 EndPosition => Position;
+        public virtual Vector3 CurrentPosition => Position;
         public abstract float Radius { get; }
         public virtual bool IsValid => ParticleEffect.IsValid;
+        public virtual float TimeLeft => 1;
+        public virtual bool UseCurrentPosition => true;
     }
 }

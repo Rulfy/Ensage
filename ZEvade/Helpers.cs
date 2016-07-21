@@ -39,10 +39,21 @@ namespace Evade
 
         public static float TimeLeftFromObstacles(List<IObstacle> obstacleList)
         {
-            float result = float.MaxValue;
-            foreach (ObstacleModifier obstacleModifier in obstacleList)
+            var result = float.MaxValue;
+            foreach (var obstacle in obstacleList)
             {
-                result = Math.Min(result, obstacleModifier.Modifier.RemainingTime * 1000);
+                var obstacleModifier = obstacle as ObstacleModifier;
+                if (obstacleModifier != null)
+                {
+                    result = Math.Min(result, obstacleModifier.Modifier.RemainingTime * 1000);
+                    continue;
+                }
+                var obstacleParticle = obstacle as ObstacleParticle;
+                if (obstacleParticle != null)
+                {
+                    result = Math.Min(result, obstacleParticle.TimeLeft * 1000);
+                    continue;
+                }
             }
             return result;
         }

@@ -1,18 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Evade
 {
-    using Ensage;
-    using Ensage.Common.Menu;
-
     class Program
     {
-        private static Evade evade = null;
-
+        // ReSharper disable once NotAccessedField.Local
+        private static Evade _evade;
         public static EvadeMenu Menu;
 
         static void Main(string[] args)
@@ -38,12 +31,12 @@ namespace Evade
 
         private static void Events_OnClose(object sender, EventArgs e)
         {
-            evade = null;
+            _evade = null;
         }
 
         private static void Events_OnLoad(object sender, EventArgs e)
         {
-            evade = new Evade();
+            _evade = new Evade();
         }
     }
 }

@@ -8,37 +8,39 @@ namespace Evade.Obstacles.Particles
 
     using SharpDX;
 
-    public sealed class ObstacleParticleHook : ObstacleParticle
+    public sealed class ObstacleParticleEarthSplitter : ObstacleParticle
     {
         /*
          * Control Points
          * 0 == StartPosition
          * 1 == EndPosition
          */
-        public ObstacleParticleHook( NavMeshPathfinding pathfinding, Entity owner, ParticleEffect particleEffect)
+        public ObstacleParticleEarthSplitter( NavMeshPathfinding pathfinding, Entity owner, ParticleEffect particleEffect)
             : base(0, owner, particleEffect)
         {
             var ability =
                 ObjectManager.GetEntities<Ability>()
-                    .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Ability_Pudge_MeatHook);
-            Radius = ability?.GetRadius(ability.Name) + 8 ?? 108;
+                    .FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Ability_Elder_Titan_EarthSplitter);
+            Radius = ability?.GetRadius(ability.Name) ?? 300;
             if (ability != null && ability.Level > 0)
             {
                 _range = ability.GetRange(ability.Level - 1) + Radius;
             }
             
-            var special = ability?.AbilitySpecialData.FirstOrDefault(x => x.Name == "hook_speed");
+            var special = ability?.AbilitySpecialData.FirstOrDefault(x => x.Name == "speed");
             if (special != null)
             {
                 _speed = special.Value;
             }
+            _delay = _range / _speed;
 
             ID = pathfinding.AddObstacle(Position, EndPosition, Radius);
-            Debugging.WriteLine("Adding Hook particle: {0} - {1}", Radius, _range);
+            Debugging.WriteLine("Adding EarthSplitter particle: {0} - {1}", Radius, _range);
         }
 
+        private readonly float _delay;
         private readonly float _range = 700;
-        private readonly float _speed = 1600;
+        private readonly float _speed = 910;
         public override bool IsLine => true;
 
         public override Vector3 Position => ParticleEffect.GetControlPoint(0);
@@ -65,12 +67,15 @@ namespace Evade.Obstacles.Particles
                 direction.Normalize();
                 direction *= _speed * (Game.RawGameTime - Started);
                 result += direction;
-                return result;
+                return (result - Position).LengthSquared() <= (EndPosition - Position).LengthSquared() ? result : EndPosition;
             }
         }
 
         public override float Radius { get; }
 
         public override float TimeLeft => Math.Max(0, (Started + _range/_speed) - Game.RawGameTime);
+        public override bool IsValid => base.IsValid && Game.RawGameTime < Started + _delay;
+
+        public override bool UseCurrentPosition => false;
     }
 }

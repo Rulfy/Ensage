@@ -15,7 +15,7 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -25,7 +25,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -67,13 +67,20 @@
     <Compile Include="Obstacles\ObstacleParticle.cs" />
     <Compile Include="Obstacles\ObstacleUnit.cs" />
     <Compile Include="Obstacles\ObstacleModifier.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleCallDown.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleEchoStomp.cs" />
     <Compile Include="Obstacles\Particles\ObstacleParticleCarrionSwarm.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleBloodRitual.cs" />
     <Compile Include="Obstacles\Particles\ObstacleParticleEarthSpike.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleChakram.cs" />
     <Compile Include="Obstacles\Particles\ObstacleParticleEMP.cs" />
     <Compile Include="Obstacles\Particles\ObstacleParticleFireSpirit.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleEarthSplitter.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleHookShot.cs" />
     <Compile Include="Obstacles\Particles\ObstacleParticleHook.cs" />
     <Compile Include="Obstacles\Particles\ObstacleParticleIceBlast.cs" />
     <Compile Include="Obstacles\Particles\ObstacleParticlePowershot.cs" />
+    <Compile Include="Obstacles\Particles\ObstacleParticleTimberChain.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
