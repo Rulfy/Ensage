@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace VisibleByEnemy
 {
@@ -41,6 +42,8 @@ namespace VisibleByEnemy
             Menu.AddItem(item);
 
             Menu.AddToMainMenu();
+
+            LoopEntities();
             Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
         }
 
@@ -109,6 +112,49 @@ namespace VisibleByEnemy
             else if (sender is Building && Menu.Item("buildings").GetValue<bool>())
             {
                 HandleEffect(unit, visible);
+            }
+        }
+
+        private static void LoopEntities()
+        {
+            var player = ObjectManager.LocalPlayer;
+            if (player == null || player.Team == Team.Observer )
+                return;
+            var units = ObjectManager.GetEntities<Unit>().Where(x => x.Team == player.Team).ToList();
+            if (Menu.Item("heroes").GetValue<bool>())
+            {
+                foreach (var hero in units.Where(x => x is Hero).ToList())
+                {
+                    HandleEffect(hero, hero.IsVisibleToEnemies);
+                }
+            }
+            if ( Menu.Item("wards").GetValue<bool>())
+            {
+                foreach (var ward in units.Where(IsWard).ToList())
+                {
+                    HandleEffect(ward, ward.IsVisibleToEnemies);
+                }
+            }
+            if (Menu.Item("mines").GetValue<bool>())
+            {
+                foreach (var mine in units.Where(IsMine).ToList())
+                {
+                    HandleEffect(mine, mine.IsVisibleToEnemies);
+                }
+            }
+            if (Menu.Item("units").GetValue<bool>())
+            {
+                foreach (var unit in units.Where(IsUnit).ToList())
+                {
+                    HandleEffect(unit, unit.IsVisibleToEnemies);
+                }
+            }
+            if (Menu.Item("buildings").GetValue<bool>())
+            {
+                foreach (var building in units.Where(x => x is Building).ToList())
+                {
+                    HandleEffect(building, building.IsVisibleToEnemies);
+                }
             }
         }
 
