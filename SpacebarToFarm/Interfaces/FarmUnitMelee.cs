@@ -48,7 +48,7 @@ namespace SpacebarToFarm.Interfaces
         protected override float GetTimeTilAttack(Unit target)
         {
             float distance = target.Distance2D(ControlledUnit) - ControlledUnit.AttackRange;
-            return (distance / ControlledUnit.MovementSpeed) + ((float)ControlledUnit.AttackPoint() * 10)+ (float)ControlledUnit.GetTurnTime(target);
+            return (distance / ControlledUnit.MovementSpeed) + ((float)ControlledUnit.AttackPoint() * 10) + (float)ControlledUnit.GetTurnTime(target);
         }
 
         public override void AddRangeEffect()
@@ -73,7 +73,7 @@ namespace SpacebarToFarm.Interfaces
                     if (ControlledUnit.IsIllusion)
                     {
                         var abilitySpecialData = diffusal.AbilitySpecialData.FirstOrDefault(x => x.Name == "feedback_mana_burn_illusion_melee");
-                        if ( abilitySpecialData != null)
+                        if (abilitySpecialData != null)
                             damageBonus += Math.Min(abilitySpecialData.Value, target.Mana);
                     }
                     else
@@ -90,32 +90,56 @@ namespace SpacebarToFarm.Interfaces
 
         public override void LastHit()
         {
-            if (!Utils.SleepCheck($"lasthit_{ControlledUnit.Handle}"))
-                return;
-
             if (LastTarget != null && !IsLastTargetValid)
             {
-                if(FarmMenu.IsAutoStopEnabled)
+                if (FarmMenu.IsAutoStopEnabled)
                     ControlledUnit.Stop();
                 LastTarget = null;
             }
 
-            var couldKill = InfoCentral.EnemyCreeps.Where(x => x.Distance2D(ControlledUnit) < FarmMenu.MeleeRange 
-            && GetPseudoHealth(x) <= (GetAttackDamage(x) * 1.25f)).OrderBy(x => x.Distance2D(ControlledUnit)).FirstOrDefault();
-
-            if (couldKill == null)
+            if (!Utils.SleepCheck($"lasthit_{ControlledUnit.Handle}"))
                 return;
 
-            LastTarget = couldKill;
-
-            if ( ControlledUnit.IsAttacking() && GetPseudoHealth(couldKill) > GetAttackDamage(couldKill) )
+            if (FarmMenu.IsLasthittingActive)
             {
-                ControlledUnit.Stop();
-                Utils.Sleep((ControlledUnit.AttackPoint()*500), $"lasthit_{ControlledUnit.Handle}");
+                var couldKill = InfoCentral.EnemyCreeps.Where(x => x.Distance2D(ControlledUnit) < FarmMenu.MeleeRange
+                                                                   && GetPseudoHealth(x) <= (GetAttackDamage(x)*1.25f))
+                    .OrderBy(x => x.Distance2D(ControlledUnit))
+                    .FirstOrDefault();
+
+                if (couldKill != null)
+                {
+                    LastTarget = couldKill;
+
+                    if (ControlledUnit.IsAttacking() && GetPseudoHealth(couldKill) > GetAttackDamage(couldKill))
+                    {
+                        ControlledUnit.Stop();
+                        Utils.Sleep((ControlledUnit.AttackPoint()*500), $"lasthit_{ControlledUnit.Handle}");
+                    }
+
+                    ControlledUnit.Attack(couldKill);
+                    Utils.Sleep((ControlledUnit.AttackPoint()*500), $"lasthit_{ControlledUnit.Handle}");
+                }
             }
 
-            ControlledUnit.Attack(couldKill);
-            Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
+            if (!FarmMenu.IsDenyModeActive)
+                return;
+
+            var couldDeny = InfoCentral.AlliedCreeps.Where(x => x.Distance2D(ControlledUnit) < FarmMenu.MeleeRange
+                                                                && GetPseudoHealth(x) <= (GetAttackDamage(x) * 1.25f))
+                .OrderBy(x => x.Distance2D(ControlledUnit))
+                .FirstOrDefault();
+            if (couldDeny != null)
+            {
+                if (ControlledUnit.IsAttacking() && GetPseudoHealth(couldDeny) > GetAttackDamage(couldDeny))
+                {
+                    ControlledUnit.Stop();
+                    Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
+                }
+
+                ControlledUnit.Attack(couldDeny);
+                Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
+            }
         }
 
         public override void LaneClear()

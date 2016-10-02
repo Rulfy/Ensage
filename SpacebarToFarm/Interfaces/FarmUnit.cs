@@ -45,7 +45,12 @@ namespace SpacebarToFarm.Interfaces
                 return target.Health;
             }
 
-            float health = target.Health;
+            float health;
+            var latestEntry = infoList.Where(x => x.Time > Game.RawGameTime).OrderByDescending(x => x.Time).FirstOrDefault();
+            if (latestEntry != null)
+                health = latestEntry.Health;
+            else
+                health = target.Health;
 
             float time = GetTimeTilAttack(target);
             float pastTime = Game.RawGameTime - time;

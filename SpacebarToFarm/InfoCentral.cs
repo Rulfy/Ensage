@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 
 namespace SpacebarToFarm
 {
@@ -17,9 +18,46 @@ namespace SpacebarToFarm
         {
             EnemyCreeps = new List<Creep>(256);
             AlliedCreeps = new List<Creep>(256);
+
             Events.OnClose += Events_OnClose;
             Game.OnIngameUpdate += Game_OnIngameUpdate;
             Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
+            ObjectManager.OnAddTrackingProjectile += ObjectManager_OnAddTrackingProjectile;
+
+        }
+
+        private static void ObjectManager_OnAddTrackingProjectile(TrackingProjectileEventArgs args)
+        {
+            var source = args.Projectile.Source as Unit;
+            var creep = args.Projectile.Target as Creep;
+            if (creep == null || source == null)
+                return;
+
+            var damage = (source.MinimumDamage + source.MaximumDamage)/2 + source.BonusDamage;
+            var time = source.Distance2D(creep) / args.Projectile.Speed;
+            if (damage > 0 && time > 0)
+            {
+                return;
+            }
+
+            List<HealthEntry> healthInfo;
+            if (!HealthInformation.TryGetValue(creep, out healthInfo))
+            {
+                healthInfo = new List<HealthEntry>();
+                HealthInformation.Add(creep, healthInfo);
+            }
+
+            var latestEntry = healthInfo.Where(x => x.Time > Game.RawGameTime).OrderByDescending(x => x.Time).FirstOrDefault();
+
+            int latestHealth;
+            if (latestEntry != null)
+                latestHealth = latestEntry.Health;
+            else
+                latestHealth = (int)creep.Health;
+            
+            healthInfo.Add(new HealthEntry(latestHealth - damage,time));
+            if (healthInfo.Count > 100)
+                healthInfo.RemoveRange(0, healthInfo.Count - 100);
         }
 
         private static void Events_OnClose(object sender, EventArgs e)
@@ -59,21 +97,24 @@ namespace SpacebarToFarm
 
         private static void Game_OnIngameUpdate(EventArgs args)
         {
+            if (!Utils.SleepCheck("lastHitCreepRefresh"))
+            {
+                return;
+            }
+                          
+
             var player = ObjectManager.LocalPlayer;
             if (player == null)
                 return;
 
-            if (Utils.SleepCheck("lastHitCreepRefresh"))
-            {
-                EnemyCreeps = ObjectManager.GetEntities<Creep>()
-                   .Where(x => x.IsAlive && x.IsSpawned && x.Team != player.Team )
-                   .ToList();
-                //AlliedCreeps = ObjectManager.GetEntities<Creep>()
-                //  .Where(x => x.IsAlive && x.IsSpawned && x.Team == player.Team)
-                //  .ToList();
+            EnemyCreeps = ObjectManager.GetEntities<Creep>()
+                .Where(x => x.IsAlive && x.IsSpawned && x.Team != player.Team )
+                .ToList();
+            AlliedCreeps = ObjectManager.GetEntities<Creep>()
+              .Where(x => x.IsAlive && x.IsSpawned && x.Team == player.Team)
+              .ToList();
 
-                Utils.Sleep(250, "lastHitCreepRefresh");
-            }
+            Utils.Sleep(250, "lastHitCreepRefresh");
         }
     }
 }

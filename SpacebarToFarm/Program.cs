@@ -21,6 +21,7 @@ namespace SpacebarToFarm
         static void Main()
         {
             FarmMenu.Initialize();
+
             Events.OnClose += Events_OnClose;
 
             FarmMenu.FarmPressed += FarmMenu_FarmPressed;

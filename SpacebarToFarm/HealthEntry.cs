@@ -10,6 +10,12 @@ namespace SpacebarToFarm
             Time = Game.RawGameTime;
         }
 
+        public HealthEntry(int health, float time)
+        {
+            Health = health;
+            Time = time;
+        }
+
         public int Health { get; }
         public float Time { get; }
     }

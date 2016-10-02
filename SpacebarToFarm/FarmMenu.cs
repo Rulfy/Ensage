@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Menu;
+using SharpDX;
 
 namespace SpacebarToFarm
 {
@@ -17,6 +18,8 @@ namespace SpacebarToFarm
         // general entries
         private static readonly Menu GeneralMenu;
 
+        private static readonly MenuItem LasthitModeItem;
+        private static readonly MenuItem DenyModeItem;
         private static readonly MenuItem AutoStop;
         private static readonly MenuItem MeleeRangeItem;
         private static readonly MenuItem RangedBonusItem;
@@ -47,6 +50,14 @@ namespace SpacebarToFarm
             // general entries
             GeneralMenu = new Menu("General settings", "generalSettings");
 
+            LasthitModeItem = new MenuItem("autoLasthit", "Lasthit creeps").SetValue(true);
+            LasthitModeItem.Tooltip = "This is what this assembly is about, isn't it? (except as a support)";
+            GeneralMenu.AddItem(LasthitModeItem);
+
+            DenyModeItem = new MenuItem("autoDeny", "Deny creeps").SetValue(true);
+            DenyModeItem.Tooltip = "Will automatically deny creeps whenever no lasthit is possible.";
+            GeneralMenu.AddItem(DenyModeItem);
+
             AutoStop = new MenuItem("autoStop", "Stop after lasthit").SetValue(true);
             AutoStop.Tooltip = "Will automatically issue a stop order after the last target has been killed.";
             GeneralMenu.AddItem(AutoStop);
@@ -70,9 +81,9 @@ namespace SpacebarToFarm
             
 
             var colorMenu = new Menu("Lasthit-range color", "colorSetting");
-            RedColorItem = new MenuItem("redColor", "Red").SetValue(new Slider(255, 0, 255));
-            GreenColorItem = new MenuItem("greenColor", "Green").SetValue(new Slider(0, 0, 255));
-            BlueColorItem = new MenuItem("BlueColor", "Blue").SetValue(new Slider(160, 0, 255));
+            RedColorItem = new MenuItem("redColor", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red);
+            GreenColorItem = new MenuItem("greenColor", "Green").SetValue(new Slider(0, 0, 255)).SetFontColor(Color.Green);
+            BlueColorItem = new MenuItem("BlueColor", "Blue").SetValue(new Slider(160, 0, 255)).SetFontColor(Color.Blue);
             colorMenu.AddItem(RedColorItem);
             colorMenu.AddItem(GreenColorItem);
             colorMenu.AddItem(BlueColorItem);
@@ -103,6 +114,8 @@ namespace SpacebarToFarm
             Events.OnClose += Events_OnClose;
         }
 
+        public static bool IsLasthittingActive => LasthitModeItem.GetValue<bool>();
+        public static bool IsDenyModeActive => DenyModeItem.GetValue<bool>();
         public static bool IsAutoStopEnabled => AutoStop.GetValue<bool>();
         public static int MeleeRange => MeleeRangeItem.GetValue<Slider>().Value;
         public static int RangedBonusRange=> RangedBonusItem.GetValue<Slider>().Value;
