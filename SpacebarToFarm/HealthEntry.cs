@@ -13,7 +13,7 @@ namespace SpacebarToFarm
         public HealthEntry(int health, float time)
         {
             Health = health;
-            Time = time;
+            Time = Game.RawGameTime + time;
         }
 
         public int Health { get; }

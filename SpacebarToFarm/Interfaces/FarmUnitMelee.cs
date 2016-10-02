@@ -9,6 +9,8 @@ namespace SpacebarToFarm.Interfaces
 {
     class FarmUnitMelee : FarmUnit
     {
+        private const float DamageMultiplier = 1.25f;
+
         public FarmUnitMelee(Unit controlledUnit) : base(controlledUnit)
         {
         }
@@ -53,12 +55,12 @@ namespace SpacebarToFarm.Interfaces
 
         public override void AddRangeEffect()
         {
-            if (_rangeEffect != null || !FarmMenu.ShouldDrawLasthitRange)
+            if (RangeEffect != null || !FarmMenu.ShouldDrawLasthitRange)
                 return;
 
-            _rangeEffect = ControlledUnit.AddParticleEffect("particles/ui_mouseactions/drag_selected_ring.vpcf");
-            _rangeEffect.SetControlPoint(1, new Vector3(FarmMenu.RedColor, FarmMenu.GreenColor, FarmMenu.BlueColor)); // R G B
-            _rangeEffect.SetControlPoint(2, new Vector3(FarmMenu.MeleeRange, 255, 0));
+            RangeEffect = ControlledUnit.AddParticleEffect("particles/ui_mouseactions/drag_selected_ring.vpcf");
+            RangeEffect.SetControlPoint(1, new Vector3(FarmMenu.RedColor, FarmMenu.GreenColor, FarmMenu.BlueColor)); // R G B
+            RangeEffect.SetControlPoint(2, new Vector3(FarmMenu.MeleeRange, 255, 0));
         }
 
         protected override float GetItemBonusDamage(Unit target)
@@ -103,7 +105,7 @@ namespace SpacebarToFarm.Interfaces
             if (FarmMenu.IsLasthittingActive)
             {
                 var couldKill = InfoCentral.EnemyCreeps.Where(x => x.Distance2D(ControlledUnit) < FarmMenu.MeleeRange
-                                                                   && GetPseudoHealth(x) <= (GetAttackDamage(x)*1.25f))
+                                                                   && GetPseudoHealth(x) <= (GetAttackDamage(x)*DamageMultiplier))
                     .OrderBy(x => x.Distance2D(ControlledUnit))
                     .FirstOrDefault();
 
@@ -126,7 +128,7 @@ namespace SpacebarToFarm.Interfaces
                 return;
 
             var couldDeny = InfoCentral.AlliedCreeps.Where(x => x.Distance2D(ControlledUnit) < FarmMenu.MeleeRange
-                                                                && GetPseudoHealth(x) <= (GetAttackDamage(x) * 1.25f))
+                                                                && GetPseudoHealth(x) <= (GetAttackDamage(x)*DamageMultiplier))
                 .OrderBy(x => x.Distance2D(ControlledUnit))
                 .FirstOrDefault();
             if (couldDeny != null)

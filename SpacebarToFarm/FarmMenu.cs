@@ -14,71 +14,71 @@ namespace SpacebarToFarm
         // events
         public static event EventHandler<BoolEventArgs> AutoFarmChanged;
         public static event EventHandler<BoolEventArgs> FarmPressed;
+        public static event EventHandler<BoolEventArgs> ActiveEffectChanged;
+        public static event EventHandler<BoolEventArgs> RangeEffectChanged;
+        public static event EventHandler<EventArgs> RangeChanged;
 
         // general entries
-        private static readonly Menu GeneralMenu;
-
-        private static readonly MenuItem LasthitModeItem;
-        private static readonly MenuItem DenyModeItem;
-        private static readonly MenuItem AutoStop;
-        private static readonly MenuItem MeleeRangeItem;
-        private static readonly MenuItem RangedBonusItem;
-        private static readonly MenuItem DrawLastHitRangeItem;
-        private static readonly MenuItem ActiveEffect;
-
         private static readonly MenuItem RedColorItem;
         private static readonly MenuItem GreenColorItem;
         private static readonly MenuItem BlueColorItem;
 
-
+   
         // autofarm entries
         private static readonly Menu AutofarmEntries; // TODO: need Unit Selector
 
-        // hotkey entries
-        private static readonly Menu HotkeyMenu;
-
-        private static readonly MenuItem ToggleFarm;
-        private static readonly MenuItem FarmHotkey;
+        #region Private Helper Properties
+        private static bool _isRangeEffectActive;
+        private static bool _isEffectActiveEffectActive;
+        private static bool _isLasthitModeActive;
+        private static bool _isDenyModeActive;
+        private static bool _isAutostopActive;
+        private static int _meleeRange;
+        private static int _rangedBonusRange;
+        #endregion
 
         // helpers
-        private static bool _settingValue;
-
-        private static readonly Dictionary<Unit,MenuItem> AutoFarmEntries = new Dictionary<Unit, MenuItem>();
+        private static readonly Dictionary<Unit, MenuItem> AutoFarmEntries = new Dictionary<Unit, MenuItem>();
 
         static FarmMenu()
         {
             // general entries
-            GeneralMenu = new Menu("General settings", "generalSettings");
+            var generalMenu = new Menu("General settings", "generalSettings");
 
-            LasthitModeItem = new MenuItem("autoLasthit", "Lasthit creeps").SetValue(true);
-            LasthitModeItem.Tooltip = "This is what this assembly is about, isn't it? (except as a support)";
-            GeneralMenu.AddItem(LasthitModeItem);
+            var lasthitModeItem = new MenuItem("autoLasthit", "Lasthit creeps").SetValue(true);
+            lasthitModeItem.Tooltip = "This is what this assembly is about, isn't it? (except as a support)";
+            lasthitModeItem.ValueChanged += LasthitModeItem_ValueChanged;
+            generalMenu.AddItem(lasthitModeItem);
 
-            DenyModeItem = new MenuItem("autoDeny", "Deny creeps").SetValue(true);
-            DenyModeItem.Tooltip = "Will automatically deny creeps whenever no lasthit is possible.";
-            GeneralMenu.AddItem(DenyModeItem);
+            var denyModeItem = new MenuItem("autoDeny", "Deny creeps").SetValue(true);
+            denyModeItem.Tooltip = "Will automatically deny creeps whenever no lasthit is possible.";
+            denyModeItem.ValueChanged += DenyModeItem_ValueChanged;
+            generalMenu.AddItem(denyModeItem);
 
-            AutoStop = new MenuItem("autoStop", "Stop after lasthit").SetValue(true);
-            AutoStop.Tooltip = "Will automatically issue a stop order after the last target has been killed.";
-            GeneralMenu.AddItem(AutoStop);
+            var autoStop = new MenuItem("autoStop", "Stop after lasthit").SetValue(true);
+            autoStop.Tooltip = "Will automatically issue a stop order after the last target has been killed.";
+            autoStop.ValueChanged += AutoStop_ValueChanged;
+            generalMenu.AddItem(autoStop);
 
-            MeleeRangeItem = new MenuItem("meleeRange", "Melee lasthit range").SetValue(new Slider(600, 400, 1000));
-            MeleeRangeItem.Tooltip = "Lasthit range for melee units.";
-            GeneralMenu.AddItem(MeleeRangeItem);
+            var meleeRangeItem = new MenuItem("meleeRange", "Melee lasthit range").SetValue(new Slider(600, 400, 1000));
+            meleeRangeItem.Tooltip = "Lasthit range for melee units.";
+            meleeRangeItem.ValueChanged += MeleeRangeItem_ValueChanged;
+            generalMenu.AddItem(meleeRangeItem);
 
-            RangedBonusItem = new MenuItem("rangedBonus", "Bonus ranged lasthit range").SetValue(new Slider(400, 0, 1000));
-            RangedBonusItem.Tooltip = "Additional lasthit range for ranged units.";
-            GeneralMenu.AddItem(RangedBonusItem);
+            var rangedBonusItem = new MenuItem("rangedBonus", "Bonus ranged lasthit range").SetValue(new Slider(400, 0, 1000));
+            rangedBonusItem.Tooltip = "Additional lasthit range for ranged units.";
+            rangedBonusItem.ValueChanged += RangedBonusItem_ValueChanged;
+            generalMenu.AddItem(rangedBonusItem);
 
-            DrawLastHitRangeItem = new MenuItem("drawRange", "Draw lasthit range").SetValue(true);
-            DrawLastHitRangeItem.Tooltip = "Draws the lasthit range around every active unit.";
-            GeneralMenu.AddItem(DrawLastHitRangeItem);
+            var drawLastHitRangeItem = new MenuItem("drawRange", "Draw lasthit range").SetValue(true);
+            drawLastHitRangeItem.Tooltip = "Draws the lasthit range around every active unit.";
+            drawLastHitRangeItem.ValueChanged += DrawLastHitRangeItem_ValueChanged;
+            generalMenu.AddItem(drawLastHitRangeItem);
 
-            ActiveEffect = new MenuItem("activeEffect", "Active Effect").SetValue(true);
-            ActiveEffect.Tooltip = "Shows an effect while a unit is lasthitting.";
-            GeneralMenu.AddItem(ActiveEffect);
-
-            
+            var activeEffect = new MenuItem("activeEffect", "Active Effect").SetValue(true);
+            activeEffect.Tooltip = "Shows an effect while a unit is lasthitting.";
+            activeEffect.ValueChanged += ActiveEffect_ValueChanged;
+            generalMenu.AddItem(activeEffect);
 
             var colorMenu = new Menu("Lasthit-range color", "colorSetting");
             RedColorItem = new MenuItem("redColor", "Red").SetValue(new Slider(255, 0, 255)).SetFontColor(Color.Red);
@@ -87,9 +87,9 @@ namespace SpacebarToFarm
             colorMenu.AddItem(RedColorItem);
             colorMenu.AddItem(GreenColorItem);
             colorMenu.AddItem(BlueColorItem);
-            GeneralMenu.AddSubMenu(colorMenu);
+            generalMenu.AddSubMenu(colorMenu);
 
-            Menu.AddSubMenu(GeneralMenu);
+            Menu.AddSubMenu(generalMenu);
 
             // autofarm entries
             AutofarmEntries = new Menu("Auto Farm Entries", "autoFarmEntries");
@@ -97,35 +97,62 @@ namespace SpacebarToFarm
             //Menu.AddSubMenu(autofarmEntries); TODO:
 
             // hotkey
-            HotkeyMenu = new Menu("Hotkeys", "hotkeyMenu");
+            var hotkeyMenu = new Menu("Hotkeys", "hotkeyMenu");
 
-            ToggleFarm = new MenuItem("toggleFarmHotkey", "Toggle auto farm").SetValue(new KeyBind(0, KeyBindType.Press));
-            ToggleFarm.ValueChanged += ToggleFarm_ValueChanged;
-            ToggleFarm.Tooltip = "Toggling automatic lasthitting for the selected units.";
-            HotkeyMenu.AddItem(ToggleFarm);
+            var toggleFarm = new MenuItem("toggleFarmHotkey", "Toggle auto farm").SetValue(new KeyBind(0, KeyBindType.Press));
+            toggleFarm.ValueChanged += ToggleFarm_ValueChanged;
+            toggleFarm.Tooltip = "Toggling automatic lasthitting for the selected units.";
+            hotkeyMenu.AddItem(toggleFarm);
 
-            FarmHotkey = new MenuItem("farmHotkey", "Farm").SetValue(new KeyBind(0, KeyBindType.Press));
-            FarmHotkey.ValueChanged += FarmHotkey_ValueChanged;
-            FarmHotkey.Tooltip = "Farming with the currently selected units while this hotkey is pressed.";
-            HotkeyMenu.AddItem(FarmHotkey);
+            var farmHotkey = new MenuItem("farmHotkey", "Farm").SetValue(new KeyBind(0, KeyBindType.Press));
+            farmHotkey.ValueChanged += FarmHotkey_ValueChanged;
+            farmHotkey.Tooltip = "Farming with the currently selected units while this hotkey is pressed.";
+            hotkeyMenu.AddItem(farmHotkey);
 
-            Menu.AddSubMenu(HotkeyMenu);
+            Menu.AddSubMenu(hotkeyMenu);
 
             Events.OnClose += Events_OnClose;
+
+            _isRangeEffectActive = drawLastHitRangeItem.GetValue<bool>();
+            _isEffectActiveEffectActive = activeEffect.GetValue<bool>();
+            _isAutostopActive = autoStop.GetValue<bool>();
+            _meleeRange = meleeRangeItem.GetValue<Slider>().Value;
+            _rangedBonusRange = rangedBonusItem.GetValue<Slider>().Value;
+            _isLasthitModeActive = lasthitModeItem.GetValue<bool>();
+            _isDenyModeActive = denyModeItem.GetValue<bool>();
         }
 
-        public static bool IsLasthittingActive => LasthitModeItem.GetValue<bool>();
-        public static bool IsDenyModeActive => DenyModeItem.GetValue<bool>();
-        public static bool IsAutoStopEnabled => AutoStop.GetValue<bool>();
-        public static int MeleeRange => MeleeRangeItem.GetValue<Slider>().Value;
-        public static int RangedBonusRange=> RangedBonusItem.GetValue<Slider>().Value;
-        public static bool ShouldDrawLasthitRange => DrawLastHitRangeItem.GetValue<bool>();
+        private static void RangedBonusItem_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            _rangedBonusRange = e.GetNewValue<Slider>().Value;
+            OnRangeChanged(EventArgs.Empty);
+        }
 
-        public static bool ShouldUseActiveEffect => ActiveEffect .GetValue<bool>();
+        private static void MeleeRangeItem_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            _meleeRange = e.GetNewValue<Slider>().Value;
+            OnRangeChanged(EventArgs.Empty);
+        }
 
-        public static int RedColor => RedColorItem.GetValue<Slider>().Value;
-        public static int GreenColor => GreenColorItem.GetValue<Slider>().Value;
-        public static int BlueColor => BlueColorItem.GetValue<Slider>().Value;
+        private static void AutoStop_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            _isAutostopActive = e.GetNewValue<bool>();
+        }
+
+        private static void DenyModeItem_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            _isDenyModeActive = e.GetNewValue<bool>();
+        }
+
+        private static void LasthitModeItem_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            _isLasthitModeActive = e.GetNewValue<bool>();
+        }
+
+        public static void Initialize()
+        {
+            Menu.AddToMainMenu();
+        }
 
         private static void Events_OnClose(object sender, EventArgs e)
         {
@@ -134,7 +161,7 @@ namespace SpacebarToFarm
 
         public static void AddAutoFarmEntry(Unit unit)
         {
-          
+
         }
 
         public static void RemoveAutoFarmEntry(Unit unit)
@@ -142,39 +169,61 @@ namespace SpacebarToFarm
 
         }
 
+        #region Properties
+        public static bool IsLasthittingActive => _isLasthitModeActive;
+        public static bool IsDenyModeActive => _isDenyModeActive;
+        public static bool IsAutoStopEnabled => _isAutostopActive;
+        public static int MeleeRange => _meleeRange;
+        public static int RangedBonusRange => _rangedBonusRange;
+        public static bool ShouldDrawLasthitRange => _isRangeEffectActive;
+        public static bool ShouldUseActiveEffect => _isEffectActiveEffectActive;
+        public static int RedColor => RedColorItem.GetValue<Slider>().Value;
+        public static int GreenColor => GreenColorItem.GetValue<Slider>().Value;
+        public static int BlueColor => BlueColorItem.GetValue<Slider>().Value;
+        #endregion
+
+        #region Events
         private static void FarmHotkey_ValueChanged(object sender, OnValueChangeEventArgs e)
         {
-            if (!_settingValue)
-            {
-                _settingValue = true;
-                OnFarmPressed(new BoolEventArgs(e.GetNewValue<KeyBind>().Active));
-                _settingValue = false;
-            }
+            OnFarmPressed(new BoolEventArgs(e.GetNewValue<KeyBind>().Active));
         }
-
-        public static void Initialize()
-        {
-            Menu.AddToMainMenu();
-        }
-
         private static void ToggleFarm_ValueChanged(object sender, OnValueChangeEventArgs e)
         {
-            if (!_settingValue)
-            {
-                _settingValue = true;
-                OnAutoFarmChanged(new BoolEventArgs(e.GetNewValue<KeyBind>().Active));
-                _settingValue = false;
-            }
+            OnAutoFarmChanged(new BoolEventArgs(e.GetNewValue<KeyBind>().Active));
+        }
+        private static void DrawLastHitRangeItem_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            OnRangeEffectChanged(new BoolEventArgs(e.GetNewValue<bool>()));
+        }
+        private static void ActiveEffect_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            OnActiveEffectChanged(new BoolEventArgs(e.GetNewValue<bool>()));
         }
 
-        protected static void OnAutoFarmChanged(BoolEventArgs e)
+        private static void OnAutoFarmChanged(BoolEventArgs e)
         {
-            AutoFarmChanged?.Invoke(ToggleFarm, e);
+            AutoFarmChanged?.Invoke(null, e);
         }
-
-        protected static void OnFarmPressed(BoolEventArgs e)
+        private static void OnFarmPressed(BoolEventArgs e)
         {
-            FarmPressed?.Invoke(FarmHotkey, e);
+            FarmPressed?.Invoke(null, e);
+        }
+        private static void OnActiveEffectChanged(BoolEventArgs e)
+        {
+            _isEffectActiveEffectActive = e.Value;
+            ActiveEffectChanged?.Invoke(null, e);
+        }
+        private static void OnRangeEffectChanged(BoolEventArgs e)
+        {
+            _isRangeEffectActive = e.Value;
+            RangeEffectChanged?.Invoke(null, e);
+        }
+       
+        #endregion
+
+        private static void OnRangeChanged(EventArgs e)
+        {
+            RangeChanged?.Invoke(null, e);
         }
     }
 }

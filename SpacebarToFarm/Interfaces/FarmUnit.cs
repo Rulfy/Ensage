@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Ensage;
-using SharpDX;
 
 namespace SpacebarToFarm.Interfaces
 {
@@ -9,7 +8,7 @@ namespace SpacebarToFarm.Interfaces
     {
         public Unit ControlledUnit { get; }
         private ParticleEffect _farmActiveEffect;
-        protected ParticleEffect _rangeEffect;
+        protected ParticleEffect RangeEffect;
         protected Creep LastTarget;
 
         protected FarmUnit(Unit controlledUnit)
@@ -46,9 +45,15 @@ namespace SpacebarToFarm.Interfaces
             }
 
             float health;
-            var latestEntry = infoList.Where(x => x.Time > Game.RawGameTime).OrderByDescending(x => x.Time).FirstOrDefault();
+            var latestEntry = infoList.Where(x => x.Time > Game.RawGameTime && x.Time <= (Game.RawGameTime + GetTimeTilAttack(target))).OrderByDescending(x => x.Time).FirstOrDefault();
             if (latestEntry != null)
+            {
                 health = latestEntry.Health;
+                if (health > target.Health)
+                {
+                    health = (int)(target.Health - (health - target.Health));
+                }
+            }
             else
                 health = target.Health;
 
@@ -102,13 +107,28 @@ namespace SpacebarToFarm.Interfaces
 
         public abstract void AddRangeEffect();
 
+        public void AddEffects()
+        {
+            AddRangeEffect();
+            AddFarmActiveEffect();
+        }
+
+        public void RemoveEffects()
+        {
+            RemoveRangeEffect();
+            RemoveFarmActiveEffect();
+        }
+
         public void RemoveRangeEffect()
         {
-            if (_rangeEffect == null)
+            if (RangeEffect == null)
                 return;
 
-            _rangeEffect.Dispose();
-            _rangeEffect = null;
+            RangeEffect.Dispose();
+            RangeEffect = null;
         }
+
+        public bool IsRangeEffectActive => RangeEffect != null;
+        public bool IsFarmActiveEffectActive => _farmActiveEffect != null;
     }
 }

@@ -35,7 +35,7 @@ namespace SpacebarToFarm
 
             var damage = (source.MinimumDamage + source.MaximumDamage)/2 + source.BonusDamage;
             var time = source.Distance2D(creep) / args.Projectile.Speed;
-            if (damage > 0 && time > 0)
+            if (damage <= 0 || time <= 0)
             {
                 return;
             }
@@ -51,10 +51,16 @@ namespace SpacebarToFarm
 
             int latestHealth;
             if (latestEntry != null)
+            {
                 latestHealth = latestEntry.Health;
+                if (latestHealth > creep.Health)
+                {
+                    latestHealth = (int)(creep.Health - (latestHealth - creep.Health));
+                }
+            }
             else
-                latestHealth = (int)creep.Health;
-            
+                latestHealth = (int) creep.Health;
+
             healthInfo.Add(new HealthEntry(latestHealth - damage,time));
             if (healthInfo.Count > 100)
                 healthInfo.RemoveRange(0, healthInfo.Count - 100);
