@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using Ensage;
+using Ensage.Common.Extensions;
 using SharpDX;
 
 namespace CampInformer
@@ -26,7 +28,7 @@ namespace CampInformer
             if (!Game.IsInGame)
                 return;
 
-            var creeps = ObjectMgr.GetEntities<Creep>().Where(x => x.IsWaitingToSpawn && x.Team == Team.Neutral).OrderBy(x => x.CreateTime).ToList();
+            var creeps = ObjectManager.GetEntities<Creep>().Where(x => x.IsWaitingToSpawn && x.Team == Team.Neutral).OrderBy(x => x.CreateTime).ToList();
 
             var drawList = new List<List<Creep>>();
             // Check if these creeps are in our namelist
@@ -44,7 +46,7 @@ namespace CampInformer
                     var found = false;
                     foreach (var l in drawList)
                     {
-                        if (l.Any(c => GetDistance(c.Position, creep.Position) < 300))
+                        if (l.Any(c => c.Distance2D(creep) < 300))
                         {
                             l.Add(creep);
                             found = true;
@@ -64,18 +66,13 @@ namespace CampInformer
                     Vector2 screenPos;
                     if (Drawing.WorldToScreen(creep.Position, out screenPos))
                     {
-                        var text = string.Format("{0} - {1}", counter++, Game.Localize(creep.Name));
+                        var text = $"{counter++} - {Game.Localize(creep.Name)}";
                         var textSize = Drawing.MeasureText(text, "Arial", Drawing.DefaultTextSize, FontFlags.DropShadow);
                         Drawing.DrawText(text, new Vector2(screenPos.X - textSize.X/2, screenPos.Y - textSize.Y/2),
                             Color.White, FontFlags.DropShadow);
                     }
                 }
             }
-        }
-
-        static float GetDistance(Vector3 v1, Vector3 v2)
-        {
-            return (float)Math.Sqrt(Math.Pow(v1.X - v2.X, 2) + Math.Pow(v1.Y - v2.Y, 2));
         }
     }
 }

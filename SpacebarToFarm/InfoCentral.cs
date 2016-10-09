@@ -108,15 +108,14 @@ namespace SpacebarToFarm
                 return;
             }
                           
-
             var player = ObjectManager.LocalPlayer;
             if (player == null)
                 return;
 
-            EnemyCreeps = ObjectManager.GetEntities<Creep>()
+            EnemyCreeps = ObjectManager.GetEntitiesParallel<Creep>()
                 .Where(x => x.IsAlive && x.IsSpawned && x.Team != player.Team )
                 .ToList();
-            AlliedCreeps = ObjectManager.GetEntities<Creep>()
+            AlliedCreeps = ObjectManager.GetEntitiesParallel<Creep>()
               .Where(x => x.IsAlive && x.IsSpawned && x.Team == player.Team)
               .ToList();
 

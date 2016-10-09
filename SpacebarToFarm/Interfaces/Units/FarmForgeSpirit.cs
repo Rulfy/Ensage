@@ -14,11 +14,11 @@ namespace SpacebarToFarm.Interfaces.Units
         public FarmForgeSpirit(Unit controlledUnit) : base(controlledUnit)
         {
             _ability = 
-                    ObjectManager.GetEntities<Ability>().FirstOrDefault(x => x.Name == "invoker_forge_spirit");
+                    ObjectManager.GetEntitiesParallel<Ability>().FirstOrDefault(x => x.Name == "invoker_forge_spirit");
             _quasAbility =
-                    ObjectManager.GetEntities<Ability>().FirstOrDefault(x => x.Name == "invoker_quas");
+                    ObjectManager.GetEntitiesParallel<Ability>().FirstOrDefault(x => x.Name == "invoker_quas");
             _exortAbility=
-                    ObjectManager.GetEntities<Ability>().FirstOrDefault(x => x.Name == "invoker_exort");
+                    ObjectManager.GetEntitiesParallel<Ability>().FirstOrDefault(x => x.Name == "invoker_exort");
         }
 
         protected override float GetAttackDamage(Unit target)

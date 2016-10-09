@@ -93,7 +93,7 @@ namespace SpacebarToFarm.Interfaces
 
             if (FarmMenu.IsLasthittingActive)
             {
-                var couldKill = InfoCentral.EnemyCreeps
+                var couldKill = InfoCentral.EnemyCreeps.AsParallel()
                     .Where(x => x.Distance2D(ControlledUnit) < (AttackRange + FarmMenu.RangedBonusRange))
                     .Where(x => GetPseudoHealth(x) <= (GetAttackDamage(x)* DamageMultiplier))
                     .OrderBy(x => x.Distance2D(ControlledUnit))
@@ -109,16 +109,18 @@ namespace SpacebarToFarm.Interfaces
                 {
                     ControlledUnit.Stop();
                     Utils.Sleep((ControlledUnit.AttackPoint()*500), $"lasthit_{ControlledUnit.Handle}");
+                    return;
                 }
 
                 ControlledUnit.Attack(couldKill);
                 Utils.Sleep((ControlledUnit.AttackPoint()*500), $"lasthit_{ControlledUnit.Handle}");
+                return;
             }
 
             if (!FarmMenu.IsDenyModeActive)
                 return;
 
-            var couldDeny = InfoCentral.AlliedCreeps.Where(x => x.Distance2D(ControlledUnit) < (AttackRange + FarmMenu.RangedBonusRange)
+            var couldDeny = InfoCentral.AlliedCreeps.AsParallel().Where(x => x.Distance2D(ControlledUnit) < (AttackRange + FarmMenu.RangedBonusRange)
                                                                 && GetPseudoHealth(x) <= (GetAttackDamage(x) * DamageMultiplier))
                 .OrderBy(x => x.Distance2D(ControlledUnit))
                 .FirstOrDefault();
@@ -128,10 +130,12 @@ namespace SpacebarToFarm.Interfaces
                 {
                     ControlledUnit.Stop();
                     Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
+                    return;
                 }
 
                 ControlledUnit.Attack(couldDeny);
                 Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
+                return;
             }
         }
 
