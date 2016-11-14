@@ -34,7 +34,13 @@ namespace InvokerReborn.Abilities
         public override int Delay => (int) (Ability.AbilitySpecialData.First(x => x.Name == "delay").Value*1000); // 1.7
 
         public override float Damage
-            => Ability.AbilitySpecialData.First(x => x.Name == "damage").GetValue(_exort.Level - 1);
+        {
+            get
+            {
+                var level = _exort.Level - (Owner.HasItem(ClassID.CDOTA_Item_UltimateScepter) ? 0 : 1);
+                return (int)Ability.AbilitySpecialData.First(x => x.Name == "damage").GetValue((uint)level);
+            }
+        }
 
         // TODO: spell damage amp
 

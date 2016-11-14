@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
@@ -9,12 +10,16 @@ using Ensage.Common.Threading;
 using InvokerReborn.Abilities;
 using InvokerReborn.Combos;
 using InvokerReborn.Interfaces;
+using log4net;
 using PlaySharp.Toolkit.EventAggregator;
+using PlaySharp.Toolkit.Logging;
 
 namespace InvokerReborn
 {
     public class Core : IHandle<ChangedKeyMessage>
     {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private readonly Dictionary<string, InvokerCombo> _availableCombos = new Dictionary<string, InvokerCombo>();
         private readonly Ability _invokedBase;
         private readonly Hero _me = ObjectManager.LocalHero;
@@ -38,6 +43,7 @@ namespace InvokerReborn
             _availableCombos.Add("EulsSSMeteorBlast", new EulsSSMeteorBlast(_me, InvokerMenu.ComboKey));
             _availableCombos.Add("AlaForSnap", new AlaForSnap(_me, InvokerMenu.ComboKey));
             _availableCombos.Add("Assassination", new AssassinationCombo(_me, InvokerMenu.ComboKey));
+            _availableCombos.Add("ToEMPMetBlastRefMetBlastEMP", new ToEMPMetBlastRefMetBlastEMP(_me, InvokerMenu.ComboKey));
 
             _activeCombo = _availableCombos[InvokerMenu.CurrentlyActiveCombo];
             _activeCombo.Activate();
@@ -59,7 +65,7 @@ namespace InvokerReborn
 
         private async void GameDispatcher_OnIngameUpdate(EventArgs args)
         {
-            if (!Utils.SleepCheck("coreTick") || Game.IsPaused)
+            if (!Utils.SleepCheck("coreTick") || Game.IsPaused || _activeCombo.IsRunning)
                 return;
             Utils.Sleep(125,"coreTick");
 
@@ -80,8 +86,11 @@ namespace InvokerReborn
             if (killSteal)
             {
                 var target = heroes.Where(x => x.Health < _sunstrike.Damage).OrderBy(x => x.Health).FirstOrDefault();
-                if(target != null)
+                if (target != null)
+                {
                     await UseSunstrike(target);
+                    return;
+                }
             }
             else if (autoKill)
             {
@@ -90,13 +99,16 @@ namespace InvokerReborn
 
                 var target = heroes.Where(x => x.Health < _sunstrike.Damage && allies.All( y => x.Distance2D(y) > 500) ).OrderBy(x => x.Health).FirstOrDefault();
                 if (target != null)
+                {
                     await UseSunstrike(target);
+                    return;
+                }
             }
             if (safeCast)
             {
-                var target = heroes.Where(x => (Utils.DisableDuration(x)*1000) > _sunstrike.Delay).OrderBy(x => x.Health).FirstOrDefault();
+                var target = heroes.Where(x => (Utils.DisableDuration(x, "modifier_invoker_deafening_blast_knockback") *1000) > _sunstrike.Delay).OrderBy(x => x.Health).FirstOrDefault();
                 if (target != null)
-                    await UseSunstrike(target, (int)(Utils.DisableDuration(target)*1000) - _sunstrike.Delay); // TODO: most stuns don't need to wait until they're over (but astral, disruption) etc..)
+                    await UseSunstrike(target, (int)(Utils.DisableDuration(target, "modifier_invoker_deafening_blast_knockback") *1000) - _sunstrike.Delay); // TODO: most stuns don't need to wait until they're over (but astral, disruption) etc..)
             }
         }
 
@@ -139,6 +151,7 @@ namespace InvokerReborn
         {
             Utils.Sleep(125 + extraDelay, "coreTick");
 
+            Log.Debug($"Use Auto Sunstrike {target.Name} | {extraDelay}");
             _sunstrike.ExtraDelay = () => extraDelay;
             await _sunstrike.ExecuteAsync(target);
         }

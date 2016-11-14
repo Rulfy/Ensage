@@ -30,10 +30,23 @@ namespace InvokerReborn.Abilities
         public override bool IsSkilled => (Owner.Spellbook.SpellQ.Level > 0) && (Owner.Spellbook.SpellW.Level > 0);
 
         public override int Duration
-            => (int) Ability.AbilitySpecialData.First(x => x.Name == "lift_duration").GetValue(_quas.Level - 1);
+        {
+            get
+            {
+                var level = _quas.Level - (Owner.HasItem(ClassID.CDOTA_Item_UltimateScepter) ? 0 : 1);
+                return (int)Ability.AbilitySpecialData.First(x => x.Name == "lift_duration").GetValue((uint)level);
+            }
+        }
+       
 
         public int Distance
-            => (int) Ability.AbilitySpecialData.First(x => x.Name == "travel_distance").GetValue(_wex.Level - 1);
+        {
+            get
+            {
+                var level = _wex.Level - (Owner.HasItem(ClassID.CDOTA_Item_UltimateScepter) ? 0 : 1);
+                return (int)Ability.AbilitySpecialData.First(x => x.Name == "travel_distance").GetValue((uint)level);
+            }
+        }
 
         // "0.8 1.1 1.4 1.7 2.0 2.3 2.6 2.9"
 

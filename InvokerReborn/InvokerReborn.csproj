@@ -73,6 +73,7 @@
     <Compile Include="Abilities\Meteor.cs" />
     <Compile Include="Abilities\Tornado.cs" />
     <Compile Include="Combos\AssassinationCombo.cs" />
+    <Compile Include="Combos\ToEMPMetBlastRefMetBlastEMP.cs" />
     <Compile Include="EventArgs\BoolEventArgs.cs" />
     <Compile Include="ChangedKeyMessage.cs" />
     <Compile Include="Combos\AlaForSnap.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="Items\Euls.cs" />
     <Compile Include="Items\Refresher.cs" />
     <Compile Include="Items\Sheep.cs" />
+    <Compile Include="Prediction\Prediction.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Abilities\DeafeningBlast.cs" />
@@ -100,9 +102,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Prediction\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

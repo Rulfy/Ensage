@@ -37,6 +37,7 @@ namespace InvokerReborn.Combos
                 new AwaitBlinkOrMove(me, () => EngageRange),
                 _tornado,
                 new AwaitModifier("modifier_invoker_tornado", 3000),
+                new AwaitBlinkOrMove(me, () => (int)_meteor1.Ability.CastRange),
                 _sunstrike1,
                 _meteor1,
                 _deafeningBlast,
@@ -48,20 +49,23 @@ namespace InvokerReborn.Combos
 
         protected override int EngageRange => Math.Min(_tornado.Distance, 2400);
 
+
         private int TornadaTraveltime()
         {
-            var travelSpeed = _deafeningBlast.Ability.AbilitySpecialData.First(x => x.Name == "travel_speed").Value;
+            var travelSpeed = _tornado.Ability.AbilitySpecialData.First(x => x.Name == "travel_speed").Value;
             return (int) (Me.Distance2D(Target)/travelSpeed*1000);
         }
 
+        private int _originalTornadoTravelTime;
         private int SunstrikeDelay1()
         {
-            return _tornado.Duration + TornadaTraveltime() - _sunstrike1.Delay;
+            _originalTornadoTravelTime = TornadaTraveltime();
+            return _tornado.Duration + _originalTornadoTravelTime - _sunstrike1.Delay;
         }
 
         private int MeteorDelay1()
         {
-            return _tornado.Duration + TornadaTraveltime() - SunstrikeDelay1() - _meteor1.Delay;
+            return _tornado.Duration + _originalTornadoTravelTime - SunstrikeDelay1() - _meteor1.Delay;
         }
 
         private int BlastDelay()
@@ -69,7 +73,7 @@ namespace InvokerReborn.Combos
             var travelSpeed = _deafeningBlast.Ability.AbilitySpecialData.First(x => x.Name == "travel_speed").Value;
             var blastDelayTime = (int) (Me.Distance2D(Target)/travelSpeed*1000);
 
-            return _tornado.Duration + TornadaTraveltime() - SunstrikeDelay1() - MeteorDelay1() - blastDelayTime;
+            return _tornado.Duration + _originalTornadoTravelTime - SunstrikeDelay1() - MeteorDelay1() - blastDelayTime;
         }
     }
 }

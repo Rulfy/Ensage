@@ -1,15 +1,21 @@
 ﻿using System;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
+using Ensage.Common.Extensions;
 using Ensage.Common.Threading;
 using InvokerReborn.Interfaces;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace InvokerReborn.SequenceHelpers
 {
     internal class AwaitMoveToTarget : ISequenceEntry
     {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private readonly Func<int> _engageRange;
         private readonly Hero _me;
 
@@ -30,6 +36,10 @@ namespace InvokerReborn.SequenceHelpers
         public async Task ExecuteAsync(Vector3 target, int engageRange,
             CancellationToken tk = default(CancellationToken))
         {
+            if (_me.Distance2D(target) <= engageRange)
+                return;
+
+            Log.Debug($"Execute AwaitMoveToTarget {target} | {engageRange}");
             // try to reach the target in max 5 seconds
             var moveCt = CancellationTokenSource.CreateLinkedTokenSource(tk,
                 new CancellationTokenSource(InvokerMenu.MoveTimeout).Token);

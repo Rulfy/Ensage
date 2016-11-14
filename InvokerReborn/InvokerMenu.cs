@@ -17,7 +17,8 @@ namespace InvokerReborn
         {
             "AlaForSnap",
             "EulsSSMeteorBlast",
-            "Assassination"
+            "Assassination",
+            "ToEMPMetBlastRefMetBlastEMP"
         };
 
         private static readonly List<List<string>> ComboPictures = new List<List<string>>
@@ -41,6 +42,17 @@ namespace InvokerReborn
                 "item_refresher",
                 "invoker_chaos_meteor1",
                 "invoker_sun_strike1"
+            },
+             new List<string>
+            {
+                "invoker_tornado",
+                "invoker_emp",
+                "invoker_chaos_meteor",
+                "invoker_deafening_blast",
+                "item_refresher",
+                "invoker_chaos_meteor1",
+                "invoker_deafening_blast1",
+                "invoker_emp1",
             }
         };
 

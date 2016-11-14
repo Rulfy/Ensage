@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,5 +47,7 @@ namespace InvokerReborn.Abilities
             await Await.Delay(Math.Max(0, ExtraDelay() - invokeDelay), tk);
             Ability.UseAbility(target.NetworkPosition);
         }
+
+        public override int Delay => (int)Ability.AbilitySpecialData.First(x => x.Name == "delay").Value*1000; // 2.9
     }
 }
