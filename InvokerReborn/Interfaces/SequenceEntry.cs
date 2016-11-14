@@ -29,7 +29,7 @@ namespace InvokerReborn.Interfaces
 
     public abstract class SequenceEntry : ISequenceEntry
     {
-        protected readonly Func<int> ExtraDelay;
+        public Func<int> ExtraDelay;
 
         public bool IsOptional;
 

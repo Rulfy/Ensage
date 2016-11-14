@@ -11,7 +11,7 @@ namespace InvokerReborn.Combos
     {
         public AlaForSnap(Hero me, Key key) : base(me, key)
         {
-            AbilitySequence.Add(new BlinkOrMoveEntry(me, () => EngageRange));
+            AbilitySequence.Add(new AwaitBlinkOrMove(me, () => EngageRange));
             AbilitySequence.Add(new Alacrity(me));
             AbilitySequence.Add(new ForgeSpirit(me));
             AbilitySequence.Add(new ColdSnap(me));

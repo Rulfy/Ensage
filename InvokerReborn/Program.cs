@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
 
@@ -27,13 +25,6 @@ namespace InvokerReborn
                 return;
 
             _core = new Core();
-        }
-
-        public static async Task<int> AwaitPingDelay(int delay, CancellationToken tk = default(CancellationToken)) // TODO: mvoe to common
-        {
-            var waitTime = Math.Max((int) Game.Ping, delay);
-            await Task.Delay(waitTime, tk);
-            return waitTime;
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Windows.Input;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Combo;
+using Ensage.Common.Threading;
 
 namespace InvokerReborn.Interfaces
 {
@@ -67,7 +68,7 @@ namespace InvokerReborn.Interfaces
             var isPrepared = abilities.All(x => !x.Ability.IsHidden);
             if (isPrepared)
             {
-                await Program.AwaitPingDelay(250, tk);
+                await Await.Delay(250, tk);
                 return;
             }
 
@@ -82,18 +83,21 @@ namespace InvokerReborn.Interfaces
 
                 await invokedAbility.InvokeAbility();
                 await hiddenAbility.InvokeAbility();
-                await Program.AwaitPingDelay(250, tk);
+                await Await.Delay(250, tk);
                 return;
             }
             Console.WriteLine("invoke 2 with true");
             // need to invoke both skills
             await abilities[0].InvokeAbility(true);
             await abilities[1].InvokeAbility(true);
-            await Program.AwaitPingDelay(250, tk);
+            await Await.Delay(250, tk);
         }
 
         protected override bool CanExecute()
         {
+            if (Game.IsPaused || !Me.IsAlive)
+                return false;
+
             if (!base.CanExecute())
             {
                 _executed = false;
@@ -123,7 +127,7 @@ namespace InvokerReborn.Interfaces
             foreach (var comboAbility in AbilitySequence)
                 await comboAbility.ExecuteAsync(Target, token);
 
-            await Program.AwaitPingDelay(250, token);
+            await Await.Delay(250, token);
             _executed = true;
         }
     }

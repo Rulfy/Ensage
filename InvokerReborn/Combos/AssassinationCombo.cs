@@ -34,7 +34,7 @@ namespace InvokerReborn.Combos
 
             AbilitySequence = new List<ISequenceEntry>
             {
-                new BlinkOrMoveEntry(me, () => EngageRange),
+                new AwaitBlinkOrMove(me, () => EngageRange),
                 _tornado,
                 new AwaitModifier("modifier_invoker_tornado", 3000),
                 _sunstrike1,

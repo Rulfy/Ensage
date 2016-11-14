@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Input;
@@ -37,7 +36,7 @@ namespace InvokerReborn.Combos
 
             AbilitySequence = new List<ISequenceEntry>
             {
-                new BlinkOrMoveEntry(me, () => EngageRange),
+                new AwaitBlinkOrMove(me, () => EngageRange),
                 _euls,
                 new AwaitModifier("modifier_eul_cyclone", 250),
                 _sunstrike,
@@ -52,10 +51,9 @@ namespace InvokerReborn.Combos
         {
             get
             {
-
                 if (_euls.Ability == null)
                     return 0;
-                return (int)_euls.Ability.CastRange;
+                return (int) _euls.Ability.CastRange;
             }
         }
 

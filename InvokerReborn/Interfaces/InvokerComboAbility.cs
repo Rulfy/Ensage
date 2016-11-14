@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 
@@ -57,7 +58,7 @@ namespace InvokerReborn.Interfaces
             {
                 Log.Debug($"Invoke not ready {Invoke.Cooldown} - {Invoke.ManaCost <= Owner.Mana}");
                 //return false;
-                wait = await Program.AwaitPingDelay(100 + (int) (Invoke.Cooldown*1000), tk);
+                wait = await Await.Delay(100 + (int) (Invoke.Cooldown*1000), tk);
             }
 
 
@@ -65,14 +66,14 @@ namespace InvokerReborn.Interfaces
                 ability.UseAbility();
             Invoke.UseAbility();
             Log.Debug($"Wait after Invoke {100 + (useCooldown ? InvokeCooldown : 0)}");
-            return wait + await Program.AwaitPingDelay(100, tk);
+            return wait + await Await.Delay(100, tk);
         }
 
         protected async Task<int> UseInvokeAbilityAsync(Unit target, CancellationToken tk = default(CancellationToken))
         {
             if (Ability.IsHidden)
             {
-                var wait1 = await Program.AwaitPingDelay(100, tk);
+                var wait1 = await Await.Delay(100, tk);
                 Log.Debug($"Invoke {Ability.Name} - {100 + InvokeCooldown}- {100 + Invoke.Cooldown}");
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
                 var hasCd = Invoke.Cooldown != 0;

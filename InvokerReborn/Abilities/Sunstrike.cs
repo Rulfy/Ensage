@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Threading;
 using InvokerReborn.Interfaces;
 using log4net;
 using PlaySharp.Toolkit.Logging;
@@ -32,6 +33,11 @@ namespace InvokerReborn.Abilities
 
         public override int Delay => (int) (Ability.AbilitySpecialData.First(x => x.Name == "delay").Value*1000); // 1.7
 
+        public override float Damage
+            => Ability.AbilitySpecialData.First(x => x.Name == "damage").GetValue(_exort.Level - 1);
+
+        // TODO: spell damage amp
+
         public override async Task<int> InvokeAbility(bool useCooldown,
             CancellationToken tk = default(CancellationToken))
         {
@@ -43,7 +49,7 @@ namespace InvokerReborn.Abilities
         {
             var invokeDelay = await UseInvokeAbilityAsync(target, tk);
             Log.Debug($"Sunstrike {ExtraDelay()} - {invokeDelay}");
-            await Program.AwaitPingDelay(Math.Max(0, ExtraDelay() - invokeDelay), tk);
+            await Await.Delay(Math.Max(0, ExtraDelay() - invokeDelay), tk);
             Ability.UseAbility(target.NetworkPosition);
         }
     }

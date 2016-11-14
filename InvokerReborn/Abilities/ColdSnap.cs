@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Threading;
 using InvokerReborn.Interfaces;
 using log4net;
 using PlaySharp.Toolkit.Logging;
@@ -41,7 +42,7 @@ namespace InvokerReborn.Abilities
         {
             var invokeDelay = await UseInvokeAbilityAsync(target, tk);
             Log.Debug($"ColdSnap {ExtraDelay()} | {invokeDelay}");
-            await Program.AwaitPingDelay(Math.Max(0, ExtraDelay() - invokeDelay), tk);
+            await Await.Delay(Math.Max(0, ExtraDelay() - invokeDelay), tk);
             Ability.UseAbility(target);
         }
     }

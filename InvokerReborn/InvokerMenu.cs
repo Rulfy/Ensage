@@ -52,6 +52,10 @@ namespace InvokerReborn
         private static MenuItem _maxWalkDistance;
         private static MenuItem _moveTimeoutItem;
 
+        private static MenuItem _sunstrikeKillStealItem;
+        private static MenuItem _sunstrikeAutoKillItem;
+        private static MenuItem _sunstrikeSafeCastItem;
+
         // combo
         private static StringSwitcher _comboListItem;
         private static MenuItem _comboPicturesItem;
@@ -69,6 +73,10 @@ namespace InvokerReborn
         public static int SafeDistance => _safeDistanceItem.GetValue<Slider>().Value;
         public static int MaxWalkDistance => _maxWalkDistance.GetValue<Slider>().Value;
         public static int MoveTimeout => _moveTimeoutItem.GetValue<Slider>().Value;
+
+        public static bool SunStrikeKillSteal => _sunstrikeKillStealItem.GetValue<bool>();
+        public static bool SunStrikeAutoKill => _sunstrikeAutoKillItem.GetValue<bool>();
+        public static bool SunStrikeSafeCast => _sunstrikeSafeCastItem.GetValue<bool>();
 
         public static Key SmartComboKey => KeyInterop.KeyFromVirtualKey((int) _smartCombo.GetValue<KeyBind>().Key);
         public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int) _combo.GetValue<KeyBind>().Key);
@@ -105,6 +113,23 @@ namespace InvokerReborn
             _maxWalkDistance.Tooltip =
                 "If target is further away than this distance, then blink will be used.";
             generalMenu.AddItem(_maxWalkDistance);
+
+
+            _sunstrikeSafeCastItem = new MenuItem("ssSafeCast", "SunStrike Safe Cast").SetValue(true);
+            _sunstrikeSafeCastItem.Tooltip =
+                "Cast SunStrike as soon as an enemy is disabled for a long enough duration.";
+            generalMenu.AddItem(_sunstrikeSafeCastItem);
+
+            _sunstrikeAutoKillItem = new MenuItem("ssAutoKill", "SunStrike Auto Kill").SetValue(true);
+            _sunstrikeAutoKillItem.Tooltip =
+                "Cast SunStrike if an enemy is killable and no allies are too close.";
+            generalMenu.AddItem(_sunstrikeAutoKillItem);
+
+            _sunstrikeKillStealItem = new MenuItem("ssKillSteal", "SunStrike Kill Steal").SetValue(false);
+            _sunstrikeKillStealItem.Tooltip =
+                "Cast SunStrike as soon as an enemy is killable.";
+            generalMenu.AddItem(_sunstrikeKillStealItem);
+
 
             _menu.AddSubMenu(generalMenu);
 
@@ -151,7 +176,7 @@ namespace InvokerReborn
             nextCombo.Tooltip = "Selects the next combo.";
             hotkeyMenu.AddItem(nextCombo);
 
-            var prevCombo = new MenuItem("prevCombo", "Smart Combo").SetValue(new KeyBind(0x6D, KeyBindType.Press));
+            var prevCombo = new MenuItem("prevCombo", "Previous Combo").SetValue(new KeyBind(0x6D, KeyBindType.Press));
             prevCombo.ValueChanged += PrevCombo_ValueChanged;
             prevCombo.Tooltip = "Selects the previous combo.";
             hotkeyMenu.AddItem(prevCombo);

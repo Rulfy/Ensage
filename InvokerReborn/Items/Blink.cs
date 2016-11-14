@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Threading;
 using InvokerReborn.Interfaces;
 using SharpDX;
 
@@ -12,7 +13,6 @@ namespace InvokerReborn.Items
     internal class Blink : SequenceEntry
     {
         private readonly Func<int> _engageRange;
-        public int EngageRange => _engageRange();
 
         public Blink(Hero me, Func<int> engageRange) : this(me, () => 100, engageRange)
         {
@@ -23,6 +23,8 @@ namespace InvokerReborn.Items
             _engageRange = engageRange;
             Ability = me.FindItem("item_blink");
         }
+
+        public int EngageRange => _engageRange();
 
         public override SequenceEntryID ID { get; } = SequenceEntryID.Blink;
 
@@ -47,7 +49,7 @@ namespace InvokerReborn.Items
             if (Owner.Distance2D(target) <= EngageRange)
                 return;
 
-            await Program.AwaitPingDelay(ExtraDelay(), tk);
+            await Await.Delay(ExtraDelay(), tk);
 
             var pos = target - Owner.NetworkPosition;
             pos.Normalize();

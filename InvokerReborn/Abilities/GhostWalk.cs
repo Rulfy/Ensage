@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Threading;
 using InvokerReborn.Interfaces;
 
 namespace InvokerReborn.Abilities
@@ -37,7 +38,7 @@ namespace InvokerReborn.Abilities
         public override async Task ExecuteAsync(Unit target, CancellationToken tk = default(CancellationToken))
         {
             var invokeDelay = await UseInvokeAbilityAsync(target, tk);
-            await Program.AwaitPingDelay(Math.Max(0, ExtraDelay() - invokeDelay), tk);
+            await Await.Delay(Math.Max(0, ExtraDelay() - invokeDelay), tk);
             Ability.UseAbility();
         }
     }

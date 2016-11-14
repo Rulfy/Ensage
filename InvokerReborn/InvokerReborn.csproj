@@ -95,10 +95,13 @@
     <Compile Include="EventArgs\StringEventArgs.cs" />
     <Compile Include="SequenceHelpers\AwaitModifier.cs" />
     <Compile Include="SequenceHelpers\AwaitMoveToTarget.cs" />
-    <Compile Include="SequenceHelpers\BlinkOrMoveEntry.cs" />
+    <Compile Include="SequenceHelpers\AwaitBlinkOrMove.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Prediction\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -10,9 +10,8 @@ namespace InvokerReborn.SequenceHelpers
 {
     internal class AwaitMoveToTarget : ISequenceEntry
     {
-        private readonly Hero _me;
         private readonly Func<int> _engageRange;
-        public int EngageRange => _engageRange();
+        private readonly Hero _me;
 
 
         public AwaitMoveToTarget(Hero me, Func<int> engageRange)
@@ -20,6 +19,8 @@ namespace InvokerReborn.SequenceHelpers
             _me = me;
             _engageRange = engageRange;
         }
+
+        public int EngageRange => _engageRange();
 
         public async Task ExecuteAsync(Unit target, CancellationToken tk = default(CancellationToken))
         {

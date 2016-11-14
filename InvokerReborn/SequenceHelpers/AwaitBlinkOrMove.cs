@@ -11,20 +11,20 @@ using PlaySharp.Toolkit.Logging;
 
 namespace InvokerReborn.SequenceHelpers
 {
-    internal class BlinkOrMoveEntry : ISequenceEntry
+    internal class AwaitBlinkOrMove : ISequenceEntry
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly Blink _blink;
         private readonly AwaitMoveToTarget _move;
 
-        public BlinkOrMoveEntry(Blink blink, AwaitMoveToTarget move)
+        public AwaitBlinkOrMove(Blink blink, AwaitMoveToTarget move)
         {
             _blink = blink;
             _move = move;
         }
 
-        public BlinkOrMoveEntry(Hero me, Func<int> engageRange)
+        public AwaitBlinkOrMove(Hero me, Func<int> engageRange)
         {
             _blink = new Blink(me, engageRange);
             _move = new AwaitMoveToTarget(me, engageRange);
@@ -33,7 +33,7 @@ namespace InvokerReborn.SequenceHelpers
         public async Task ExecuteAsync(Unit target, CancellationToken tk = default(CancellationToken))
         {
             Log.Debug($"EngageRange {_blink.EngageRange}");
-            if (!_blink.IsSkilled || _blink.Ability.Cooldown > 0)
+            if (!_blink.IsSkilled || (_blink.Ability.Cooldown > 0))
             {
                 Log.Debug($"Moving to target since blink on cooldown or not bought yet");
                 await _move.ExecuteAsync(target, tk);
@@ -50,7 +50,8 @@ namespace InvokerReborn.SequenceHelpers
                 {
                     if (distance <= _blink.EngageRange + InvokerMenu.SafeDistance)
                     {
-                        Log.Debug($"Blinking to target {distance} vs {_blink.EngageRange + InvokerMenu.SafeDistance} | {_move.EngageRange * 1.1}");
+                        Log.Debug(
+                            $"Blinking to target {distance} vs {_blink.EngageRange + InvokerMenu.SafeDistance} | {_move.EngageRange*1.1}");
                         await _blink.ExecuteAsync(target, tk);
                     }
                     else
@@ -64,7 +65,7 @@ namespace InvokerReborn.SequenceHelpers
 
                         Log.Debug($"Moving and the blinking {distance} | {tooFar}");
 
-                        await _move.ExecuteAsync(targetMove, (_blink.EngageRange + InvokerMenu.SafeDistance), tk);
+                        await _move.ExecuteAsync(targetMove, _blink.EngageRange + InvokerMenu.SafeDistance, tk);
                         await _blink.ExecuteAsync(target, tk);
                     }
                 }

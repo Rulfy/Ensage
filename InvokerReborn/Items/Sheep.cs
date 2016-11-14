@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
+using Ensage.Common.Threading;
 using InvokerReborn.Interfaces;
 
 namespace InvokerReborn.Items
@@ -31,7 +32,7 @@ namespace InvokerReborn.Items
 
         public override async Task ExecuteAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            await Program.AwaitPingDelay(ExtraDelay(), tk);
+            await Await.Delay(ExtraDelay(), tk);
             Ability.UseAbility(target);
         }
     }
