@@ -18,7 +18,7 @@ namespace InvokerReborn.SequenceHelpers
             _timeout = timeout;
         }
 
-        public async Task ExecuteAsync(Unit target, CancellationToken tk = new CancellationToken())
+        public async Task ExecuteAsync(Unit target, CancellationToken tk = default(CancellationToken))
         {
             var timeoutTk = CancellationTokenSource.CreateLinkedTokenSource(tk,
                 new CancellationTokenSource(_timeout).Token);

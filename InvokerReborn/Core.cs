@@ -21,8 +21,9 @@ namespace InvokerReborn
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly Dictionary<string, InvokerCombo> _availableCombos = new Dictionary<string, InvokerCombo>();
+        private readonly GhostWalk _ghostWalk;
         private readonly Ability _invokedBase;
-        private readonly Hero _me = ObjectManager.LocalHero;
+        private readonly Hero _me;
         private readonly Sunstrike _sunstrike;
         private InvokerCombo _activeCombo;
 
@@ -30,11 +31,15 @@ namespace InvokerReborn
         {
             //AssemblyLogs.GLboal..
 
+            _me = ObjectManager.LocalHero;
+
             InvokerMenu.BuildMenu();
             InvokerMenu.EventAggregator.Subscribe(this);
             InvokerMenu.ActiveComboChanged += InvokerMenu_ActiveComboChanged;
+            InvokerMenu.GhostWalkKeyPressed += InvokerMenu_GhostWalkKeyPressed;
 
             _sunstrike = new Sunstrike(_me);
+            _ghostWalk = new GhostWalk(_me);
 
             _invokedBase =
                 _me.Spellbook.Spells.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Ability_Invoker_InvokedBase);
@@ -43,7 +48,8 @@ namespace InvokerReborn
             _availableCombos.Add("EulsSSMeteorBlast", new EulsSSMeteorBlast(_me, InvokerMenu.ComboKey));
             _availableCombos.Add("AlaForSnap", new AlaForSnap(_me, InvokerMenu.ComboKey));
             _availableCombos.Add("Assassination", new AssassinationCombo(_me, InvokerMenu.ComboKey));
-            _availableCombos.Add("ToEMPMetBlastRefMetBlastEMP", new ToEMPMetBlastRefMetBlastEMP(_me, InvokerMenu.ComboKey));
+            _availableCombos.Add("ToEMPMetBlastRefMetBlastEMP",
+                new ToEMPMetBlastRefMetBlastEMP(_me, InvokerMenu.ComboKey));
 
             _activeCombo = _availableCombos[InvokerMenu.CurrentlyActiveCombo];
             _activeCombo.Activate();
@@ -63,11 +69,24 @@ namespace InvokerReborn
                     availableCombo.Value.SetKey(message.Key);
         }
 
+        private void InvokerMenu_GhostWalkKeyPressed(object sender, BoolEventArgs e)
+        {
+            if (!e.Value)
+                return;
+            if (_me.IsAlive)
+                return;
+            if (_ghostWalk.IsSkilled && _ghostWalk.Ability.CanBeCasted() && (!_ghostWalk.Ability.IsHidden || _ghostWalk.IsInvokeReady))
+#pragma warning disable 4014
+                _ghostWalk.ExecuteAsync(null);
+#pragma warning restore 4014
+
+        }
+
         private async void GameDispatcher_OnIngameUpdate(EventArgs args)
         {
             if (!Utils.SleepCheck("coreTick") || Game.IsPaused || _activeCombo.IsRunning)
                 return;
-            Utils.Sleep(125,"coreTick");
+            Utils.Sleep(125, "coreTick");
 
             var killSteal = InvokerMenu.SunStrikeKillSteal;
             var autoKill = InvokerMenu.SunStrikeAutoKill;
@@ -76,12 +95,12 @@ namespace InvokerReborn
             if (!killSteal && !autoKill && !safeCast)
                 return;
 
-            if (!_me.IsAlive || !_sunstrike.IsSkilled || _sunstrike.Ability.Cooldown > 0)
+            if (!_me.IsAlive || !_sunstrike.IsSkilled || (_sunstrike.Ability.Cooldown > 0))
                 return;
 
             var heroes =
                 ObjectManager.GetEntitiesParallel<Hero>()
-                    .Where(x => x.IsAlive && x.IsVisible && x.Team != _me.Team);
+                    .Where(x => x.IsAlive && x.IsVisible && (x.Team != _me.Team));
 
             if (killSteal)
             {
@@ -95,9 +114,13 @@ namespace InvokerReborn
             else if (autoKill)
             {
                 var allies =
-                    ObjectManager.GetEntitiesParallel<Hero>().Where(x => x.IsAlive && x.Team == _me.Team && x != _me);
+                    ObjectManager.GetEntitiesParallel<Hero>()
+                        .Where(x => x.IsAlive && (x.Team == _me.Team) && (x != _me));
 
-                var target = heroes.Where(x => x.Health < _sunstrike.Damage && allies.All( y => x.Distance2D(y) > 500) ).OrderBy(x => x.Health).FirstOrDefault();
+                var target =
+                    heroes.Where(x => (x.Health < _sunstrike.Damage) && allies.All(y => x.Distance2D(y) > 500))
+                        .OrderBy(x => x.Health)
+                        .FirstOrDefault();
                 if (target != null)
                 {
                     await UseSunstrike(target);
@@ -106,9 +129,17 @@ namespace InvokerReborn
             }
             if (safeCast)
             {
-                var target = heroes.Where(x => (Utils.DisableDuration(x, "modifier_invoker_deafening_blast_knockback") *1000) > _sunstrike.Delay).OrderBy(x => x.Health).FirstOrDefault();
+                var target =
+                    heroes.Where(
+                        x =>
+                            Utils.DisableDuration(x, "modifier_invoker_deafening_blast_knockback")*1000 >
+                            _sunstrike.Delay).OrderBy(x => x.Health).FirstOrDefault();
                 if (target != null)
-                    await UseSunstrike(target, (int)(Utils.DisableDuration(target, "modifier_invoker_deafening_blast_knockback") *1000) - _sunstrike.Delay); // TODO: most stuns don't need to wait until they're over (but astral, disruption) etc..)
+                    await
+                        UseSunstrike(target,
+                            (int) (Utils.DisableDuration(target, "modifier_invoker_deafening_blast_knockback")*1000) -
+                            _sunstrike.Delay);
+                        // TODO: most stuns don't need to wait until they're over (but astral, disruption) etc..)
             }
         }
 
@@ -135,10 +166,7 @@ namespace InvokerReborn
             if ((ability != null) && (args.OldValue == -1) && (ability == _invokedBase)
                 
                 /*&& (args.PropertyName == "m_nQuasLevel" || args.PropertyName == "m_nWexLevel" || args.PropertyName == "m_nExortLevel")*/)
-            {
                 DelayAction.Add(250, CheckCombos);
-                return;
-            }
         }
 
         private void CheckCombos()

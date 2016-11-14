@@ -98,6 +98,7 @@
     <Compile Include="SequenceHelpers\AwaitModifier.cs" />
     <Compile Include="SequenceHelpers\AwaitMoveToTarget.cs" />
     <Compile Include="SequenceHelpers\AwaitBlinkOrMove.cs" />
+    <Compile Include="SequenceHelpers\OptionalItemAborter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

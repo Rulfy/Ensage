@@ -78,6 +78,8 @@ namespace InvokerReborn
         private static MenuItem _combo;
         private static MenuItem _smartCombo;
 
+        private static MenuItem _ghostWalkItem;
+
         // events
         public static IEventAggregator EventAggregator { get; private set; }
 
@@ -92,11 +94,13 @@ namespace InvokerReborn
 
         public static Key SmartComboKey => KeyInterop.KeyFromVirtualKey((int) _smartCombo.GetValue<KeyBind>().Key);
         public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int) _combo.GetValue<KeyBind>().Key);
+        public static Key GhostWalkKey => KeyInterop.KeyFromVirtualKey((int)_ghostWalkItem.GetValue<KeyBind>().Key);
 
         public static string CurrentlyActiveCombo => _comboListItem.GetValue<StringList>().SelectedValue;
 
         // events
         public static event EventHandler<StringEventArgs> ActiveComboChanged;
+        public static event EventHandler<BoolEventArgs> GhostWalkKeyPressed;
 
         public static void BuildMenu()
         {
@@ -193,10 +197,22 @@ namespace InvokerReborn
             prevCombo.Tooltip = "Selects the previous combo.";
             hotkeyMenu.AddItem(prevCombo);
 
+            _ghostWalkItem = new MenuItem("ghostWalk", "GhostWalk").SetValue(new KeyBind(0, KeyBindType.Press));
+            _ghostWalkItem.ValueChanged += _ghostWalkItem_ValueChanged;
+            _ghostWalkItem.Tooltip = "Invokes and uses ghostwalk if ready.";
+            hotkeyMenu.AddItem(_ghostWalkItem);
 
             _menu.AddSubMenu(hotkeyMenu);
 
             _menu.AddToMainMenu();
+        }
+
+        private static void _ghostWalkItem_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            if (e.GetNewValue<KeyBind>().Key == e.GetOldValue<KeyBind>().Key)
+            {
+                GhostWalkKeyPressed?.Invoke(null, new BoolEventArgs(e.GetNewValue<KeyBind>().Active));
+            }
         }
 
         private static void ComboListItem_ValueChanged(object sender, OnValueChangeEventArgs e)
@@ -208,7 +224,7 @@ namespace InvokerReborn
         {
             _comboPicturesItem.SetValue(new AbilityToggler(ComboPictures[index].ToDictionary(x => x, x => true)));
 
-            OnActiveComboChanged(new StringEventArgs(ComboNames[index]));
+            ActiveComboChanged?.Invoke(null, new StringEventArgs(ComboNames[index]));
         }
 
         private static void PrevCombo_ValueChanged(object sender, OnValueChangeEventArgs e)
@@ -247,11 +263,6 @@ namespace InvokerReborn
             if (e.GetNewValue<KeyBind>().Key != e.GetOldValue<KeyBind>().Key)
                 EventAggregator.PublishOnCurrentThread(new ChangedKeyMessage(SmartComboName,
                     KeyInterop.KeyFromVirtualKey((int) e.GetNewValue<KeyBind>().Key)));
-        }
-
-        private static void OnActiveComboChanged(StringEventArgs e)
-        {
-            ActiveComboChanged?.Invoke(null, e);
         }
     }
 }

@@ -50,6 +50,7 @@ namespace InvokerReborn.Combos
                 _emp1,
                 _meteor1,
                 _deafeningBlast1,
+                new OptionalItemAborter(me, "item_refresher"),
                 _refresher,
                 _meteor2,
                 _deafeningBlast2,
