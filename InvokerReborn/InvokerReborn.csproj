@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CF86C167-3D4B-4FE1-A033-64A8915C05A2}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>InvokerReborn</RootNamespace>
+    <AssemblyName>InvokerReborn</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Ensage">
+      <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
+    </Reference>
+    <Reference Include="Ensage.Common">
+      <HintPath>C:\EnsageSharp\References\Ensage.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\EnsageSharp\Core\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="PlaySharp.Toolkit">
+      <HintPath>C:\EnsageSharp\Core\PlaySharp.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX">
+      <HintPath>C:\EnsageSharp\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9">
+      <HintPath>C:\EnsageSharp\References\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Abilities\Alacrity.cs" />
+    <Compile Include="Abilities\ColdSnap.cs" />
+    <Compile Include="Abilities\EMP.cs" />
+    <Compile Include="Abilities\ForgeSpirit.cs" />
+    <Compile Include="Abilities\GhostWalk.cs" />
+    <Compile Include="Abilities\IceWall.cs" />
+    <Compile Include="Abilities\Meteor.cs" />
+    <Compile Include="Abilities\Tornado.cs" />
+    <Compile Include="Combos\AssassinationCombo.cs" />
+    <Compile Include="EventArgs\BoolEventArgs.cs" />
+    <Compile Include="ChangedKeyMessage.cs" />
+    <Compile Include="Combos\AlaForSnap.cs" />
+    <Compile Include="Combos\EulsSSMeteorBlast.cs" />
+    <Compile Include="Combos\SmartCombo.cs" />
+    <Compile Include="Core.cs" />
+    <Compile Include="Interfaces\SequenceEntry.cs" />
+    <Compile Include="Interfaces\ISequenceEntry.cs" />
+    <Compile Include="Interfaces\InvokerComboAbility.cs" />
+    <Compile Include="Interfaces\InvokerCombo.cs" />
+    <Compile Include="InvokerMenu.cs" />
+    <Compile Include="Items\Blink.cs" />
+    <Compile Include="Items\Euls.cs" />
+    <Compile Include="Items\Refresher.cs" />
+    <Compile Include="Items\Sheep.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Abilities\DeafeningBlast.cs" />
+    <Compile Include="Abilities\Sunstrike.cs" />
+    <Compile Include="EventArgs\StringEventArgs.cs" />
+    <Compile Include="SequenceHelpers\AwaitModifier.cs" />
+    <Compile Include="SequenceHelpers\AwaitMoveToTarget.cs" />
+    <Compile Include="SequenceHelpers\BlinkOrMoveEntry.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
