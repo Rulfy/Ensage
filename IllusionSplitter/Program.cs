@@ -36,13 +36,13 @@ namespace IllusionSplitter
         private static async void GameDispatcher_OnIngameUpdate(EventArgs args)
 #pragma warning restore 1998
         {
-            Await.Block("spell", SplitterLogic);
+            Await.Block("splitterLogic", SplitterLogic);
         }
 
         private static void AssemblyMenu_SplitterHotkeyPressed(object sender, EventArgs e)
         {
             var hero = ObjectManager.LocalHero;
-            if (hero == null || _added)
+            if (hero == null || _added || Game.IsPaused)
                 return;
             _added = true;
             GameDispatcher.OnIngameUpdate += GameDispatcher_OnIngameUpdate;
@@ -57,9 +57,9 @@ namespace IllusionSplitter
                 mirrorImage.UseAbility();
                 int delay = (int) ((mirrorImage.GetCastPoint(0) +
                                    mirrorImage.AbilitySpecialData.First(x => x.Name == "invuln_duration").Value)*1000.0f) +
-                            250;
+                            250 + (int)Game.Ping;
                 Log.Debug($"using mirror image with delay {delay}");
-                await Task.Delay(delay);
+                await Await.Delay(delay);
                 return;
             }
 
@@ -67,9 +67,9 @@ namespace IllusionSplitter
             if (conjureImage != null && conjureImage.CanBeCasted())
             {
                 conjureImage.UseAbility();
-                int delay = (int)(conjureImage.GetCastPoint(0) * 1000.0f + 250.0f);
+                int delay = (int)(conjureImage.GetCastPoint(0) * 1000.0f + 250.0f) + (int)Game.Ping;
                 Log.Debug($"using conjure image with delay {delay}");
-                await Task.Delay(delay);
+                await Await.Delay(delay);
                 return;
             }
 
@@ -86,9 +86,9 @@ namespace IllusionSplitter
                 doppelWalk.UseAbility(hero.Position + pos);
                 int delay = (int)(doppelWalk.GetCastPoint(0) +
                                    doppelWalk.AbilitySpecialData.First(x => x.Name == "delay").Value) * 1000 +
-                            250;
+                            250 +(int)Game.Ping;
                 Log.Debug($"using doppel walk with delay {delay}");
-                await Task.Delay(delay);
+                await Await.Delay(delay);
                 // ReSharper disable once RedundantJumpStatement
                 return;
             }
@@ -108,7 +108,7 @@ namespace IllusionSplitter
                     manta.UseAbility();
                     casted = true;
 
-                    await Task.Delay(250);
+                    await Await.Delay(250+(int)Game.Ping);
                 }
                 if (!casted)
                 {
@@ -119,7 +119,7 @@ namespace IllusionSplitter
                         bottle.UseAbility();
                         casted = true;
 
-                        await Task.Delay(125);
+                        await Await.Delay(125 + (int)Game.Ping);
                     }
                 }
             }
