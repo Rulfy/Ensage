@@ -1,66 +1,50 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Ensage;
-using Ensage.Common;
-using SpacebarToFarm.Interfaces;
-using SpacebarToFarm.Interfaces.Units;
-
-namespace SpacebarToFarm
+﻿namespace SpacebarToFarm
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+
+    using Ensage;
+    using Ensage.Common;
+
+    using SpacebarToFarm.Interfaces;
+    using SpacebarToFarm.Interfaces.Units;
+
     class Program
     {
-        #region Properties
-        private static readonly Dictionary<Unit, FarmUnit> FarmUnits = new Dictionary<Unit, FarmUnit>();
+        #region Static Fields
+
         private static readonly List<FarmUnit> AutoFarmUnits = new List<FarmUnit>();
-        private static List<Unit> _oldSelection = new List<Unit>();
+
+        private static readonly Dictionary<Unit, FarmUnit> FarmUnits = new Dictionary<Unit, FarmUnit>();
 
         private static bool _farmPressed;
+
+        private static List<Unit> _oldSelection = new List<Unit>();
+
         #endregion
 
-        static void Main()
+        #region Methods
+
+        private static FarmUnit CreateFarmer(Unit unit)
         {
-            FarmMenu.Initialize();
+            switch (unit.ClassID)
+            {
+                case ClassID.CDOTA_BaseNPC_Invoker_Forged_Spirit:
+                    return new FarmForgeSpirit(unit);
 
-            Events.OnClose += Events_OnClose;
+                // TODO: special hero/unit implementations
 
-            FarmMenu.FarmPressed += FarmMenu_FarmPressed;
-            FarmMenu.AutoFarmChanged += FarmMenu_AutoFarmChanged;
-            FarmMenu.ActiveEffectChanged += FarmMenu_ActiveEffectChanged;
-            FarmMenu.RangeEffectChanged += FarmMenu_RangeEffectChanged;
-            FarmMenu.RangeChanged += FarmMenu_RangeChanged; ;
-            Game.OnIngameUpdate += Game_OnIngameUpdate;
+                default:
+                    if (unit.IsMelee) return new FarmUnitMelee(unit);
+                    else return new FarmUnitRanged(unit);
+            }
         }
 
-        private static void FarmMenu_RangeChanged(object sender, EventArgs e)
+        private static void Events_OnClose(object sender, EventArgs e)
         {
-            FarmMenu_RangeEffectChanged(sender, new BoolEventArgs(false));
-            FarmMenu_RangeEffectChanged(sender, new BoolEventArgs(FarmMenu.ShouldDrawLasthitRange));
-            FarmMenu_ActiveEffectChanged(sender, new BoolEventArgs(false));
-            FarmMenu_ActiveEffectChanged(sender, new BoolEventArgs(FarmMenu.ShouldUseActiveEffect));
-        }
-
-        private static void FarmMenu_RangeEffectChanged(object sender, BoolEventArgs e)
-        {
-            if (e.Value)
-            {
-                var list = FarmUnits.Where(x => _oldSelection.Contains(x.Key)).Select(x => x.Value).ToList();
-                foreach (var farmUnit in list)
-                {
-                    farmUnit.AddRangeEffect();
-                }
-                foreach (var autoFarmUnit in AutoFarmUnits)
-                {
-                    autoFarmUnit.AddRangeEffect();
-                }
-            }
-            else
-            {
-                foreach (var source in FarmUnits.Values.Where(x => x.IsRangeEffectActive))
-                {
-                    source.RemoveRangeEffect();
-                }
-            }
+            AutoFarmUnits.Clear();
+            FarmUnits.Clear();
         }
 
         private static void FarmMenu_ActiveEffectChanged(object sender, BoolEventArgs e)
@@ -86,34 +70,23 @@ namespace SpacebarToFarm
             }
         }
 
-        #region Events
-        private static void Events_OnClose(object sender, EventArgs e)
-        {
-            AutoFarmUnits.Clear();
-            FarmUnits.Clear();
-        }
         private static void FarmMenu_AutoFarmChanged(object sender, BoolEventArgs e)
         {
-            if (!e.Value)
-                return;
+            if (!e.Value) return;
 
-            if (!Game.IsInGame || Game.IsPaused)
-                return;
+            if (!Game.IsInGame || Game.IsPaused) return;
 
             var player = ObjectManager.LocalPlayer;
-            if (player == null)
-                return;
+            if (player == null) return;
 
             var selection = player.Selection.Where(x => x is Unit).Cast<Unit>().ToList();
-            if (!selection.Any())
-                return;
+            if (!selection.Any()) return;
 
-            bool newOne = false;
+            var newOne = false;
             var tmpList = new List<FarmUnit>();
             foreach (var unit in selection)
             {
-                if (!unit.IsAlive || !unit.IsControllable)
-                    continue;
+                if (!unit.IsAlive || !unit.IsControllable) continue;
 
                 FarmUnit farmer;
                 if (!FarmUnits.TryGetValue(unit, out farmer))
@@ -152,6 +125,7 @@ namespace SpacebarToFarm
                 }
             }
         }
+
         private static void FarmMenu_FarmPressed(object sender, BoolEventArgs e)
         {
             if (!e.Value)
@@ -169,13 +143,43 @@ namespace SpacebarToFarm
             _farmPressed = e.Value;
         }
 
+        private static void FarmMenu_RangeChanged(object sender, EventArgs e)
+        {
+            FarmMenu_RangeEffectChanged(sender, new BoolEventArgs(false));
+            FarmMenu_RangeEffectChanged(sender, new BoolEventArgs(FarmMenu.ShouldDrawLasthitRange));
+            FarmMenu_ActiveEffectChanged(sender, new BoolEventArgs(false));
+            FarmMenu_ActiveEffectChanged(sender, new BoolEventArgs(FarmMenu.ShouldUseActiveEffect));
+        }
+
+        private static void FarmMenu_RangeEffectChanged(object sender, BoolEventArgs e)
+        {
+            if (e.Value)
+            {
+                var list = FarmUnits.Where(x => _oldSelection.Contains(x.Key)).Select(x => x.Value).ToList();
+                foreach (var farmUnit in list)
+                {
+                    farmUnit.AddRangeEffect();
+                }
+                foreach (var autoFarmUnit in AutoFarmUnits)
+                {
+                    autoFarmUnit.AddRangeEffect();
+                }
+            }
+            else
+            {
+                foreach (var source in FarmUnits.Values.Where(x => x.IsRangeEffectActive))
+                {
+                    source.RemoveRangeEffect();
+                }
+            }
+        }
+
         private static void Game_OnIngameUpdate(EventArgs args)
         {
-            if (!Game.IsInGame || Game.IsPaused)
-                return;
+            if (!Game.IsInGame || Game.IsPaused) return;
 
             // auto farm units
-            for( int i = AutoFarmUnits.Count - 1; i >= 0; --i )
+            for (var i = AutoFarmUnits.Count - 1; i >= 0; --i)
             {
                 var entry = AutoFarmUnits[i];
                 if (!entry.IsValid)
@@ -188,17 +192,13 @@ namespace SpacebarToFarm
             }
 
             // currently pressed
-            if (!_farmPressed)
-                return;
-                
+            if (!_farmPressed) return;
 
             var player = ObjectManager.LocalPlayer;
-            if (player == null)
-                return;
+            if (player == null) return;
 
-            List<Unit> selection = player.Selection.Where(x => x is Unit).Cast<Unit>().ToList();
-            if (!selection.Any())
-                return;
+            var selection = player.Selection.Where(x => x is Unit).Cast<Unit>().ToList();
+            if (!selection.Any()) return;
 
             if (!_oldSelection.SequenceEqual(selection))
             {
@@ -223,9 +223,8 @@ namespace SpacebarToFarm
 
             foreach (var unit in selection)
             {
-                if( !unit.IsAlive || !unit.IsControllable )
-                    continue;
-               
+                if (!unit.IsAlive || !unit.IsControllable) continue;
+
                 FarmUnit farmer;
                 if (!FarmUnits.TryGetValue(unit, out farmer))
                 {
@@ -239,23 +238,21 @@ namespace SpacebarToFarm
             }
         }
 
-        #endregion
-
-        private static FarmUnit CreateFarmer(Unit unit)
+        static void Main()
         {
-            switch (unit.ClassID)
-            {
-                case ClassID.CDOTA_BaseNPC_Invoker_Forged_Spirit:
-                    return new FarmForgeSpirit(unit);
+            FarmMenu.Initialize();
 
-                // TODO: special hero implementations
+            Events.OnClose += Events_OnClose;
 
-                default:
-                    if(unit.IsMelee)
-                        return new FarmUnitMelee(unit);
-                    else
-                        return new FarmUnitRanged(unit);
-            }
+            FarmMenu.FarmPressed += FarmMenu_FarmPressed;
+            FarmMenu.AutoFarmChanged += FarmMenu_AutoFarmChanged;
+            FarmMenu.ActiveEffectChanged += FarmMenu_ActiveEffectChanged;
+            FarmMenu.RangeEffectChanged += FarmMenu_RangeEffectChanged;
+            FarmMenu.RangeChanged += FarmMenu_RangeChanged;
+            ;
+            Game.OnIngameUpdate += Game_OnIngameUpdate;
         }
+
+        #endregion
     }
 }

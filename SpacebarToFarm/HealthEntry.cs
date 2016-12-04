@@ -1,9 +1,11 @@
-﻿using Ensage;
-
-namespace SpacebarToFarm
+﻿namespace SpacebarToFarm
 {
+    using Ensage;
+
     public class HealthEntry
     {
+        #region Constructors and Destructors
+
         public HealthEntry(int health)
         {
             Health = health;
@@ -16,7 +18,14 @@ namespace SpacebarToFarm
             Time = Game.RawGameTime + time;
         }
 
+        #endregion
+
+        #region Public Properties
+
         public int Health { get; }
+
         public float Time { get; }
+
+        #endregion
     }
 }
