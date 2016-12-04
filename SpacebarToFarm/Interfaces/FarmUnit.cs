@@ -98,7 +98,8 @@
                     }
                     else
                     {
-                        break;
+                        if(nextAttack + projectileTime > timeLeft)
+                            break;
                     }
                     ++i;
                 }
