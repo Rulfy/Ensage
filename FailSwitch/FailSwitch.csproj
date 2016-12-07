@@ -39,20 +39,30 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharp\System\Ensage.dll</HintPath>
+      <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharp\System\Ensage.Common.dll</HintPath>
+    <Reference Include="Ensage.Common, Version=1.2.4.2, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\EnsageSharp\References\Ensage.Common.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX">
-      <HintPath>C:\EnsageSharp\System\SharpDX.dll</HintPath>
+    <Reference Include="log4net">
+      <HintPath>C:\EnsageSharp\Core\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Direct3D9">
-      <HintPath>C:\EnsageSharp\System\SharpDX.Direct3D9.dll</HintPath>
+    <Reference Include="PlaySharp.Toolkit">
+      <HintPath>C:\EnsageSharp\Core\PlaySharp.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\EnsageSharp\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\EnsageSharp\References\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
