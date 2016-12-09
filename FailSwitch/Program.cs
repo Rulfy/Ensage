@@ -11,20 +11,42 @@ using Ensage.Common.Threading;
 using Ensage.Items;
 using log4net;
 using PlaySharp.Toolkit.Logging;
+using SharpDX;
 using Attribute = Ensage.Attribute;
 
 namespace FailSwitch
 {
-    internal class AreaSpell
+    internal enum MagicPierce
     {
-        public AreaSpell(string name, string radius)
+        No,
+        Yes,
+        Agha
+    }
+
+    internal class SpecialSpellInfo
+    {
+        public SpecialSpellInfo(string name, string radius, MagicPierce piercesMagic = MagicPierce.No)
         {
+            PiercesMagic = piercesMagic;
             Name = name;
             Radius = radius;
         }
 
         public string Name { get; }
         public string Radius { get; }
+        public MagicPierce PiercesMagic { get; }
+    }
+
+    internal class PositionInfo
+    {
+        public PositionInfo(Vector3 position, float time)
+        {
+            Position = position;
+            Time = time;
+        }
+
+        public Vector3 Position { get; }
+        public float Time { get; }
     }
 
     internal class Program
@@ -42,12 +64,22 @@ namespace FailSwitch
         private static Func<Task> _powerTreadsFunc;
         private static bool _loaded;
 
-        private static readonly List<AreaSpell> AreaSpells = new List<AreaSpell>
+        private static readonly List<SpecialSpellInfo> AreaSpells = new List<SpecialSpellInfo>
         {
-            new AreaSpell("enigma_black_hole", "pull_radius"),
-            new AreaSpell("puck_dream_coil", "coil_radius"),
-            new AreaSpell("obsidian_destroyer_sanity_eclipse", "radius"),
-            new AreaSpell("faceless_void_chronosphere", "radius")
+            new SpecialSpellInfo("enigma_black_hole", "pull_radius", MagicPierce.Yes),
+            new SpecialSpellInfo("puck_dream_coil", "coil_radius", MagicPierce.Agha),
+            new SpecialSpellInfo("obsidian_destroyer_sanity_eclipse", "radius"),
+            new SpecialSpellInfo("faceless_void_chronosphere", "radius", MagicPierce.Yes)
+        };
+
+        private static readonly List<SpecialSpellInfo> NoTargetSpells = new List<SpecialSpellInfo>
+        {
+            new SpecialSpellInfo("magnataur_reverse_polarity", "pull_radius", MagicPierce.Yes),
+            new SpecialSpellInfo("tidehunter_ravage", "radius"),
+            new SpecialSpellInfo("axe_berserkers_call", "radius", MagicPierce.Yes),
+            new SpecialSpellInfo("centaur_hoof_stomp", "radius"),
+            new SpecialSpellInfo("slardar_slithereen_crush", "crush_radius"),
+            new SpecialSpellInfo("earthshaker_echo_slam", "echo_slam_echo_range")
         };
 
         private static readonly string[] LinkensSpells =
@@ -58,6 +90,7 @@ namespace FailSwitch
             "lich_chain_frost"
         };
 
+        private static readonly Dictionary<Hero, PositionInfo> _positionInfo = new Dictionary<Hero, PositionInfo>();
         private static Ability _testAbility;
         private static float _testTime;
         private static Func<Hero, bool> _testExpr;
@@ -65,6 +98,12 @@ namespace FailSwitch
         private static void Main()
         {
             Events.OnLoad += Events_OnLoad;
+            Events.OnClose += Events_OnClose;
+        }
+
+        private static void Events_OnClose(object sender, EventArgs e)
+        {
+            _positionInfo.Clear();
         }
 
         private static void Events_OnLoad(object sender, EventArgs e)
@@ -95,12 +134,32 @@ namespace FailSwitch
             Player.OnExecuteOrder += Player_OnExecuteAction;
             Game.OnFireEvent += Game_OnGameEvent;
             Game.OnIngameUpdate += Game_OnIngameUpdate;
+            //Game.OnIngameUpdate += PositionTrackerUpdate;
             GameDispatcher.OnIngameUpdate += GameDispatcher_PowerTreads;
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        private static async void GameDispatcher_PowerTreads(EventArgs args)
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+        private static void PositionTrackerUpdate(EventArgs args)
+        {
+            if (!Utils.SleepCheck("failswitchPositionUpdate"))
+                return;
+            Utils.Sleep(125, "failswitchPositionUpdate");
+
+            var hero = ObjectManager.LocalHero;
+            if (hero == null)
+                return;
+            var enemies = ObjectManager.GetEntities<Hero>().Where(
+                x => x.IsAlive && (x.Team != hero.Team) &&
+                     (
+                         x.Inventory.Items.Any(y => (y.Name == "item_invis_sword") || (y.Name == "item_silver_edge")) ||
+                         x.Spellbook.Spells.Any(
+                             y =>
+                                 (y.Name == "bounty_hunter_wind_walk") || (y.Name == "clinkz_wind_walk") ||
+                                 (y.Name == "riki_permanent_invisibility") || (y.Name == "item_glimmer_cape") || (y.Name == "broodmother_spin_web"))
+                     )
+            );
+        }
+
+        private static void GameDispatcher_PowerTreads(EventArgs args)
         {
             if (Game.IsPaused || (_powerTreadsFunc == null))
                 return;
@@ -187,30 +246,14 @@ namespace FailSwitch
         private static void AbilityCheck(Player sender, ExecuteOrderEventArgs args)
         {
             // Check if we waste a no target spell
-            if (args.Ability.Name == "magnataur_reverse_polarity")
+            var spell = NoTargetSpells.FirstOrDefault(x => x.Name == args.Ability.Name);
+            if (spell != null)
             {
-                _testExpr = x =>
-                    x.IsAlive && x.IsVisible && !x.IsIllusion && (x.Team != sender.Team) &&
-                    (x.Distance2D(args.Entities.First()) - x.HullRadius < args.Ability.CastRange);
+               
+                _testExpr = GetExprFunc(sender, args, spell);
 
-                var enemies =
-                    ObjectManager.GetEntities<Hero>().Where(_testExpr);
-                if (!enemies.Any())
-                {
-                    args.Process = false;
-                    NotifyPlayer("Stop failing", Game.Localize(args.Ability.Name));
-                    return;
-                }
-                _testTime = Game.RawGameTime;
-                _testAbility = args.Ability;
-            }
-            else if (args.Ability.Name == "tidehunter_ravage")
-            {
-                _testExpr = x =>
-                    x.IsAlive && x.IsVisible && !x.IsIllusion && (x.Team != sender.Team) &&
-                    !x.IsMagicImmune() &&
-                    (x.Distance2D(args.Entities.First()) - x.HullRadius <
-                     args.Ability.AbilitySpecialData.First(s => s.Name == "radius").Value);
+                Log.Debug($"Testing {spell.Name}");
+
                 var enemies =
                     ObjectManager.GetEntities<Hero>().Where(_testExpr);
                 if (!enemies.Any())
@@ -256,15 +299,14 @@ namespace FailSwitch
             }
         }
 
+  
         private static void AreaSpellCheck(Player sender, ExecuteOrderEventArgs args)
         {
             var spell = AreaSpells.FirstOrDefault(x => x.Name == args.Ability.Name);
             if (spell != null)
             {
-                _testExpr = x =>
-                    x.IsAlive && x.IsVisible && !x.IsIllusion && (x.Team != sender.Team)
-                    && (x.Distance2D(args.TargetPosition) - x.HullRadius
-                        < args.Ability.AbilitySpecialData.First(s => s.Name == spell.Radius).Value);
+                _testExpr = GetExprFunc(sender, args, spell);
+
                 var enemies =
                     ObjectManager.GetEntities<Hero>().Where(_testExpr);
                 if (!enemies.Any())
@@ -326,7 +368,7 @@ namespace FailSwitch
                 await Await.Delay(delay);
 
                 var owner = powerTreads.Owner as Unit;
-                if (owner != null && owner.IsChanneling())
+                if ((owner != null) && owner.IsChanneling())
                 {
                     Log.Debug("NOT toggling back due to channeling");
                     _powerTreadsFunc = null;
@@ -348,7 +390,35 @@ namespace FailSwitch
         private static void NotifyPlayer(string message, string ability)
         {
             if (_notifyItem.GetValue<bool>())
-                Game.PrintMessage($"<font color='#FF6666'>{message}</font> <font color='#66B2FF'>{ability}</font>", MessageType.LogMessage);
+                Game.PrintMessage($"<font color='#FF6666'>{message}</font> <font color='#66B2FF'>{ability}</font>",
+                    MessageType.LogMessage);
+        }
+
+        private static Func<Hero, bool> GetExprFunc(Player sender, ExecuteOrderEventArgs args, SpecialSpellInfo info)
+        {
+            var pos = args.Order == Order.AbilityTarget ? args.Target.Position : args.Ability.Owner.Position;
+            switch (info.PiercesMagic)
+            {
+                case MagicPierce.No:
+                    return
+                        x => x.IsAlive && x.IsVisible && !x.IsIllusion && (x.Team != sender.Team) && !x.IsMagicImmune()
+                             && (x.Distance2D(pos) - x.HullRadius
+                                 < args.Ability.AbilitySpecialData.First(s => s.Name == info.Radius).Value);
+                case MagicPierce.Yes:
+                    return x => x.IsAlive && x.IsVisible && !x.IsIllusion && (x.Team != sender.Team)
+                                && (x.Distance2D(pos) - x.HullRadius
+                                    < args.Ability.AbilitySpecialData.First(s => s.Name == info.Radius).Value);
+                case MagicPierce.Agha:
+                    return
+                        x =>
+                            x.IsAlive && x.IsVisible && !x.IsIllusion && (x.Team != sender.Team) &&
+                            (!x.IsMagicImmune() ||
+                             ((Unit)args.Ability.Owner).HasItem(ClassID.CDOTA_Item_UltimateScepter))
+                            && (x.Distance2D(pos) - x.HullRadius
+                                < args.Ability.AbilitySpecialData.First(s => s.Name == info.Radius).Value);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(info.PiercesMagic), info.PiercesMagic, null);
+            }
         }
     }
 }
