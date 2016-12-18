@@ -1,4 +1,6 @@
-﻿namespace SpacebarToFarm
+﻿using SharpDX;
+
+namespace SpacebarToFarm
 {
     using System;
     using System.Collections.Generic;
@@ -31,6 +33,39 @@
             //Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
             //ObjectManager.OnAddTrackingProjectile += ObjectManager_OnAddTrackingProjectile;
             Entity.OnAnimationChanged += Entity_OnAnimationChanged;
+
+           // Drawing.OnDraw += Drawing_OnDraw;
+        }
+
+        private static void Drawing_OnDraw(EventArgs args)
+        {
+            var ControlledUnit = ObjectManager.LocalHero;
+            var AttackRange = 550;
+            foreach (var attacker in AnimationInformation)
+            {
+                Vector2 screenPos;
+                if (Drawing.WorldToScreen(attacker.Key.NetworkPosition, out screenPos))
+                {
+                    var distance = attacker.Key.Distance2D(ControlledUnit) - attacker.Key.HullRadius - ControlledUnit.HullRadius;
+
+                    var projectileTime = Math.Min(AttackRange, distance) / (float)ControlledUnit.ProjectileSpeed();
+                    var timeLeft= (Math.Max(0, distance - AttackRange) / ControlledUnit.MovementSpeed)
+                           + (float)ControlledUnit.AttackPoint() + (float)ControlledUnit.GetTurnTime(attacker.Key) + projectileTime
+                           - Game.Ping / 1000.0f;
+
+                    var nextAttack =
+                       (float)
+                       (attacker.Key.SecondsPerAttack * 1 - (Game.RawGameTime - attacker.Value)
+                        - attacker.Key.AttackPoint());
+                    var nextAttack1 =
+                      (float)
+                      (attacker.Key.SecondsPerAttack * 2 - (Game.RawGameTime - attacker.Value)
+                       - attacker.Key.AttackPoint());
+                    Drawing.DrawText($"{timeLeft} | {nextAttack} | {nextAttack1}",screenPos,Color.White,FontFlags.AntiAlias);
+                    Drawing.DrawText($"{Math.Min(AttackRange, distance)} | {distance}", screenPos + new Vector2(0,60), Color.White, FontFlags.AntiAlias);
+                }
+
+            }
         }
 
         #endregion

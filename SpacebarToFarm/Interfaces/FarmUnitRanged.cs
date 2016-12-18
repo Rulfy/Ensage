@@ -72,20 +72,21 @@
                         .OrderBy(x => x.Distance2D(ControlledUnit))
                         .FirstOrDefault();
 
-                if (couldKill == null) return;
-
-                LastTarget = couldKill;
-
-                if (ControlledUnit.IsAttacking() && GetPseudoHealth(couldKill) > GetAttackDamage(couldKill))
+                if (couldKill != null)
                 {
-                    ControlledUnit.Stop();
-                    Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
+                    LastTarget = couldKill;
+
+                    if (ControlledUnit.IsAttacking() && GetPseudoHealth(couldKill) > GetAttackDamage(couldKill))
+                    {
+                        ControlledUnit.Stop();
+                        Utils.Sleep((ControlledUnit.AttackPoint()* 250), $"lasthit_{ControlledUnit.Handle}");
+                        return;
+                    }
+
+                    ControlledUnit.Attack(couldKill);
+                    Utils.Sleep((ControlledUnit.AttackPoint()*250), $"lasthit_{ControlledUnit.Handle}");
                     return;
                 }
-
-                ControlledUnit.Attack(couldKill);
-                Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
-                return;
             }
 
             if (!FarmMenu.IsDenyModeActive) return;
@@ -99,15 +100,17 @@
                     .FirstOrDefault();
             if (couldDeny != null)
             {
+                LastTarget = couldDeny;
+
                 if (ControlledUnit.IsAttacking() && GetPseudoHealth(couldDeny) > GetAttackDamage(couldDeny))
                 {
                     ControlledUnit.Stop();
-                    Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
+                    Utils.Sleep((ControlledUnit.AttackPoint() * 250), $"lasthit_{ControlledUnit.Handle}");
                     return;
                 }
 
                 ControlledUnit.Attack(couldDeny);
-                Utils.Sleep((ControlledUnit.AttackPoint() * 500), $"lasthit_{ControlledUnit.Handle}");
+                Utils.Sleep((ControlledUnit.AttackPoint() * 250), $"lasthit_{ControlledUnit.Handle}");
                 return;
             }
         }
@@ -182,7 +185,7 @@
         {
             var distance = target.Distance2D(ControlledUnit) - target.HullRadius - ControlledUnit.HullRadius;
 
-            var projectileTime = Math.Min(AttackRange, AttackRange - distance) / (float)ControlledUnit.ProjectileSpeed();
+            var projectileTime = Math.Min(AttackRange, distance) / (float)ControlledUnit.ProjectileSpeed();
             return (Math.Max(0, distance - AttackRange) / ControlledUnit.MovementSpeed)
                    + (float)ControlledUnit.AttackPoint() + (float)ControlledUnit.GetTurnTime(target) + projectileTime
                    - Game.Ping / 1000.0f;
