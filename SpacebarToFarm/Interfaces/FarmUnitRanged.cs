@@ -44,17 +44,17 @@
             RangeEffect.SetControlPoint(2, new Vector3(AttackRange + FarmMenu.RangedBonusRange, 255, 0));
         }
 
-        public override void Harras()
+        public override bool Harras()
         {
             throw new NotImplementedException();
         }
 
-        public override void LaneClear()
+        public override bool LaneClear()
         {
             throw new NotImplementedException();
         }
 
-        public override void LastHit()
+        public override bool LastHit()
         {
             if (LastTarget != null && !IsLastTargetValid)
             {
@@ -62,7 +62,7 @@
                 LastTarget = null;
             }
 
-            if (!Utils.SleepCheck($"lasthit_{ControlledUnit.Handle}")) return;
+            if (!Utils.SleepCheck($"lasthit_{ControlledUnit.Handle}")) return LastTarget != null;
 
             if (FarmMenu.IsLasthittingActive)
             {
@@ -80,16 +80,16 @@
                     {
                         ControlledUnit.Stop();
                         Utils.Sleep((ControlledUnit.AttackPoint()* 250), $"lasthit_{ControlledUnit.Handle}");
-                        return;
+                        return false;
                     }
 
                     ControlledUnit.Attack(couldKill);
                     Utils.Sleep((ControlledUnit.AttackPoint()*250), $"lasthit_{ControlledUnit.Handle}");
-                    return;
+                    return true;
                 }
             }
 
-            if (!FarmMenu.IsDenyModeActive) return;
+            if (!FarmMenu.IsDenyModeActive) return false;
 
             var couldDeny =
                 InfoCentral.AlliedCreeps.Where(
@@ -106,13 +106,14 @@
                 {
                     ControlledUnit.Stop();
                     Utils.Sleep((ControlledUnit.AttackPoint() * 250), $"lasthit_{ControlledUnit.Handle}");
-                    return;
+                    return false;
                 }
 
                 ControlledUnit.Attack(couldDeny);
                 Utils.Sleep((ControlledUnit.AttackPoint() * 250), $"lasthit_{ControlledUnit.Handle}");
-                return;
+                return true;
             }
+            return false;
         }
 
         #endregion
@@ -134,7 +135,7 @@
                     // 140
                     var abilitySpecialData =
                         quellingBlade.AbilitySpecialData.FirstOrDefault(x => x.Name == "damage_bonus_ranged");
-                    if (abilitySpecialData != null) baseDamage *= (abilitySpecialData.Value / 100.0f);
+                    if (abilitySpecialData != null) baseDamage += abilitySpecialData.Value;
                 }
 
                 var battleFury =

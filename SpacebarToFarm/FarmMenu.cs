@@ -42,6 +42,8 @@
 
         private static int _rangedBonusRange;
 
+        private static bool _isMovingActive;
+
         #endregion
 
         #region Constructors and Destructors
@@ -65,6 +67,11 @@
             autoStop.Tooltip = "Will automatically issue a stop order after the last target has been killed.";
             autoStop.ValueChanged += AutoStop_ValueChanged;
             generalMenu.AddItem(autoStop);
+
+            var autoMove = new MenuItem("autoMove", "Move to Cursor").SetValue(true);
+            autoMove.Tooltip = "Will move to your cursor position whenever the script is idling.";
+            autoMove.ValueChanged += AutoMove_ValueChanged; ;
+            generalMenu.AddItem(autoMove);
 
             var meleeRangeItem = new MenuItem("meleeRange", "Melee lasthit range").SetValue(new Slider(600, 400, 1000));
             meleeRangeItem.Tooltip = "Lasthit range for melee units.";
@@ -129,7 +136,10 @@
             _rangedBonusRange = rangedBonusItem.GetValue<Slider>().Value;
             _isLasthitModeActive = lasthitModeItem.GetValue<bool>();
             _isDenyModeActive = denyModeItem.GetValue<bool>();
+            _isMovingActive = autoMove.GetValue<bool>();
         }
+
+       
 
         #endregion
 
@@ -155,6 +165,7 @@
         public static int GreenColor => GreenColorItem.GetValue<Slider>().Value;
 
         public static bool IsAutoStopEnabled => _isAutostopActive;
+        public static bool IsMovingActive => _isMovingActive;
 
         public static bool IsDenyModeActive => _isDenyModeActive;
 
@@ -190,6 +201,10 @@
         #endregion
 
         #region Methods
+        private static void AutoMove_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            _isMovingActive = e.GetNewValue<bool>();
+        }
 
         private static void ActiveEffect_ValueChanged(object sender, OnValueChangeEventArgs e)
         {

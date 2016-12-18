@@ -188,7 +188,10 @@
                     AutoFarmUnits.RemoveAt(i);
                     continue;
                 }
-                entry.LastHit();
+                if (!entry.LastHit() && FarmMenu.IsMovingActive)
+                {
+                    MoveToMouse(entry);
+                }
             }
 
             // currently pressed
@@ -234,8 +237,19 @@
                     farmer.AddEffects();
                 }
                 AutoFarmUnits.Remove(farmer);
-                farmer.LastHit();
+                if (!farmer.LastHit() && FarmMenu.IsMovingActive)
+                {
+                    MoveToMouse(farmer);
+                }
             }
+        }
+
+        static void MoveToMouse(FarmUnit unit)
+        {
+            if (!Utils.SleepCheck($"moveLhCheck{unit.ControlledUnit.Handle}"))
+                return;
+            Utils.Sleep(250,$"moveLhCheck{unit.ControlledUnit.Handle}");
+            unit.ControlledUnit.Move(Game.MousePosition);
         }
 
         static void Main()

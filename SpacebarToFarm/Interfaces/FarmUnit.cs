@@ -162,11 +162,11 @@
             return health;
         }
 
-        public abstract void Harras();
+        public abstract bool Harras();
 
-        public abstract void LaneClear();
+        public abstract bool LaneClear();
 
-        public abstract void LastHit();
+        public abstract bool LastHit();
 
         public void RemoveEffects()
         {
