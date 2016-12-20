@@ -368,9 +368,9 @@ namespace FailSwitch
                 await Await.Delay(delay);
 
                 var owner = powerTreads.Owner as Unit;
-                if ((owner != null) && owner.IsChanneling())
+                if ((owner != null && (owner.IsChanneling() || owner.IsInvisible())) || args.Ability.AbilityData2.ID == 5195) // templar_assassin_meld
                 {
-                    Log.Debug("NOT toggling back due to channeling");
+                    Log.Debug("NOT toggling back due to channeling or invis");
                     _powerTreadsFunc = null;
                     return;
                 }
