@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
@@ -8,12 +9,16 @@ using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Common.Threading;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace Zaio.Interfaces
 {
     internal abstract class ComboHero : ComboBase, IComboExecutor
     {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private readonly bool _repeatCombo;
         private ParticleEffect _attackRangeEffect;
         private bool _executed;
@@ -64,10 +69,15 @@ namespace Zaio.Interfaces
 
         protected override async Task Execute(CancellationToken token)
         {
-            Target = TargetSelector.ClosestToMouse(MyHero);
-            if (Target == null)
+            if (!ZaioMenu.ShouldLockTarget || (Target == null || !Target.IsAlive))
             {
-                return;
+                Log.Debug($"Find new target");
+                // todo: more select0rs
+                Target = TargetSelector.ClosestToMouse(MyHero);
+                if (Target == null)
+                {
+                    return;
+                }
             }
             await ExecuteComboAsync(Target, token);
             await Await.Delay(250, token);
@@ -83,6 +93,7 @@ namespace Zaio.Interfaces
 
             if (!base.CanExecute())
             {
+                Target = null;
                 _executed = false;
                 return false;
             }

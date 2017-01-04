@@ -19,10 +19,12 @@ namespace Zaio
         private static MenuItem _orbwalker;
         private static MenuItem _targetSelector;
         private static MenuItem _displayAttackRange;
+        private static MenuItem _lockTarget;
 
         public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int)_comboKey.GetValue<KeyBind>().Key);
         public static bool ShouldUseOrbwalker => _orbwalker.GetValue<bool>();
         public static bool ShouldDisplayAttackRange => _displayAttackRange.GetValue<bool>();
+        public static bool ShouldLockTarget => _lockTarget.GetValue<bool>();
 
         public static void OnLoad()
         {
@@ -39,6 +41,9 @@ namespace Zaio
 
             _displayAttackRange = new MenuItem("zaioAttackRange", "Display AttackRange").SetValue(true);
             general.AddItem(_displayAttackRange);
+
+            _lockTarget = new MenuItem("zaioLockTarget", "Lock Combo-Target").SetValue(true);
+            general.AddItem(_lockTarget);
 
             _targetSelector =
                 new MenuItem("zaioTargetSelector", "Target Selector").SetValue(new[] { "Closest to mouse", "Auto" });
