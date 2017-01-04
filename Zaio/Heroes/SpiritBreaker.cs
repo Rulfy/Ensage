@@ -24,18 +24,16 @@ namespace Zaio.Heroes
             "spirit_breaker_nether_strike",
             "item_invis_sword",
             "item_silver_edge",
-            "item_blade_mail",
-            "item_sheepstick",
-            "item_abyssal_blade",
             "item_urn_of_shadows",
-            "item_armlet"
+            "item_armlet",
+            "item_mask_of_madness"
         };
 
         public override void OnLoad()
         {
             base.OnLoad();
 
-            var heroMenu = new Menu("Tiny", "zaioSpiritBreaker", false, "npc_dota_hero_spirit_breaker", true);
+            var heroMenu = new Menu("SpiritBreaker", "zaioSpiritBreaker", false, "npc_dota_hero_spirit_breaker", true);
 
             heroMenu.AddItem(new MenuItem("zaioSpiritBreakerAbilitiesText", "Supported Abilities"));
             var supportedStuff = new MenuItem("zaioSpiritBreakerAbilities", string.Empty);
@@ -47,14 +45,19 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            if (MyHero.HasModifier("modifier_spirit_breaker_charge_of_darkness") && !MyHero.IsInvisible())
+            if (MyHero.HasModifier("modifier_spirit_breaker_charge_of_darkness"))
             {
-                var shadowBlade = MyHero.FindItem("item_invis_sword") ?? MyHero.FindItem("item_silver_edge");
-                var distance = MyHero.Distance2D(Target);
-                if (shadowBlade != null && shadowBlade.CanBeCasted() && !MyHero.IsVisibleToEnemies && distance > 1200 && distance < 6000)
+                if (!MyHero.IsInvisible())
                 {
-                    shadowBlade.UseAbility();
-                    await Await.Delay(500, tk);
+                    var shadowBlade = MyHero.FindItem("item_invis_sword") ?? MyHero.FindItem("item_silver_edge");
+                    var distance = MyHero.Distance2D(Target);
+                    if (shadowBlade != null && shadowBlade.CanBeCasted() && !MyHero.IsVisibleToEnemies &&
+                        distance > 1200 && distance < 6000)
+                    {
+                        Log.Debug($"using invis");
+                        shadowBlade.UseAbility();
+                        await Await.Delay(500, tk);
+                    }
                 }
                 return;
             }
@@ -72,10 +75,20 @@ namespace Zaio.Heroes
 
                 return;
             }
+            var ult = MyHero.Spellbook.SpellR;
             // make him disabled
-            if (await DisableEnemy(tk))
+            if (await DisableEnemy(tk, ult.CanBeCasted(Target) ? (float)ult.FindCastPoint() : 0))
             {
+                Log.Debug($"disabled enemy");
                 return;
+            }
+
+            var armlet = MyHero.FindItem("item_armlet");
+            if (armlet != null && !armlet.IsToggled)
+            {
+                Log.Debug($"toggling armlet");
+                armlet.ToggleAbility();
+                await Await.Delay(1, tk);
             }
 
             var bladeMail = MyHero.FindItem("item_blade_mail");
@@ -90,11 +103,10 @@ namespace Zaio.Heroes
                 if (enemies.Any())
                 {
                     bladeMail.UseAbility();
-                    await Await.Delay(125, tk);
+                    await Await.Delay(1, tk);
                 }
             }
 
-            var ult = MyHero.Spellbook.SpellR;
             if (ult.CanBeCasted())
             {
                 Log.Debug($"using ult on target");
@@ -107,7 +119,15 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using URN on target");
                 urn.UseAbility(Target);
-                await Await.Delay(125, tk);
+                await Await.Delay(1, tk);
+            }
+
+            var mask = MyHero.FindItem("item_mask_of_madness");
+            if (mask != null && mask.CanBeCasted() )
+            {
+                Log.Debug($"using mask");
+                mask.UseAbility();
+                await Await.Delay(1, tk);
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)

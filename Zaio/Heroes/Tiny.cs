@@ -14,11 +14,17 @@ using Zaio.Interfaces;
 namespace Zaio.Heroes
 {
     [Hero(ClassID.CDOTA_Unit_Hero_Tiny)]
-    class Tiny : ComboHero
+    internal class Tiny : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        private static readonly string[] SupportedAbilities = { "tiny_avalanche", "tiny_toss", "item_blink", "item_phase_boots", "item_blade_mail", "item_sheepstick", "item_abyssal_blade", "item_manta" };
+        private static readonly string[] SupportedAbilities =
+        {
+            "tiny_avalanche",
+            "tiny_toss",
+            "item_blade_mail",
+            "item_manta"
+        };
 
         public override void OnLoad()
         {
@@ -26,7 +32,7 @@ namespace Zaio.Heroes
 
             var heroMenu = new Menu("Tiny", "zaioTiny", false, "npc_dota_hero_tiny", true);
 
-            heroMenu.AddItem(new MenuItem("zaioTinyAbilitiesText","Supported Abilities"));
+            heroMenu.AddItem(new MenuItem("zaioTinyAbilitiesText", "Supported Abilities"));
             var supportedStuff = new MenuItem("zaioTinyAbilities", string.Empty);
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
@@ -60,10 +66,10 @@ namespace Zaio.Heroes
             {
                 var enemies =
                     ObjectManager.GetEntitiesFast<Hero>()
-                                    .Where(
-                                        x =>
-                                            x.IsAlive && x.Team != MyHero.Team && x != Target &&
-                                            x.Distance2D(MyHero) < 600);
+                                 .Where(
+                                     x =>
+                                         x.IsAlive && x.Team != MyHero.Team && x != Target &&
+                                         x.Distance2D(MyHero) < 600);
                 if (enemies.Any())
                 {
                     bladeMail.UseAbility();
@@ -110,6 +116,5 @@ namespace Zaio.Heroes
             }
             await Await.Delay(125, tk);
         }
-
     }
 }

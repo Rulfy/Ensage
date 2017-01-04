@@ -166,10 +166,11 @@ namespace Zaio.Interfaces
             return false;
         }
 
-        protected async Task<bool> DisableEnemy(CancellationToken tk = default(CancellationToken))
+        protected async Task<bool> DisableEnemy(CancellationToken tk = default(CancellationToken), float minimumTime = 0)
         {
             // make him disabled
-            if (Target.IsHexed() || Target.IsStunned() || Target.IsSilenced() || Target.IsDisarmed())
+            float duration = 0;
+            if ((Target.IsHexed(out duration) || Target.IsStunned(out duration) || Target.IsSilenced() || Target.IsDisarmed()) && duration >= minimumTime)
             {
                 return true;
             }
@@ -179,6 +180,7 @@ namespace Zaio.Interfaces
                 var item = MyHero.FindItem(itemName);
                 if (item != null && item.CanBeCasted(Target))
                 {
+                    Log.Debug($"using disable item {item.Name}");
                     item.UseAbility(Target);
                     await Await.Delay(1, tk);
                     return true;

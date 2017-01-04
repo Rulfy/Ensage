@@ -23,14 +23,7 @@ namespace Zaio.Heroes
             "legion_commander_overwhelming_odds",
             "legion_commander_press_the_attack",
             "legion_commander_duel",
-            "item_phase_boots",
             "item_blade_mail",
-            "item_sheepstick",
-            "item_abyssal_blade",
-            "item_blink",
-            "item_heavens_halberd",
-            "item_orchid",
-            "item_bloodthorn",
             "item_armlet"
         };
 

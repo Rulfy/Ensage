@@ -18,11 +18,7 @@ namespace Zaio.Heroes
             "ursa_earthshock",
             "ursa_overpower",
             "ursa_enrage",
-            "item_blink",
-            "item_phase_boots",
             "item_blade_mail",
-            "item_sheepstick",
-            "item_abyssal_blade"
         };
 
         public override void OnLoad()

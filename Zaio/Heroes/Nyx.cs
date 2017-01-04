@@ -22,14 +22,13 @@ namespace Zaio.Heroes
 
         private static readonly string[] SupportedAbilities =
         {
-            "ursa_earthshock",
-            "ursa_overpower",
-            "ursa_enrage",
-            "item_blink",
-            "item_phase_boots",
+            "nyx_assassin_impale",
+            "nyx_assassin_mana_burn",
+            "nyx_assassin_spiked_carapace",
+            "nyx_assassin_vendetta",
             "item_blade_mail",
-            "item_sheepstick",
-            "item_abyssal_blade"
+            "item_ethereal_blade",
+            "item_dagon"
         };
 
         public override void OnLoad()
