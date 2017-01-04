@@ -12,21 +12,21 @@ using SharpDX;
 
 namespace Zaio.Interfaces
 {
-    internal abstract class IHero : ComboBase, IComboExecutor
+    internal abstract class ComboHero : ComboBase, IComboExecutor
     {
-        private bool _repeatCombo;
+        private readonly bool _repeatCombo;
+        private ParticleEffect _attackRangeEffect;
         private bool _executed;
         protected Hero MyHero;
-        protected Unit Target;
         protected Orbwalker Orbwalker;
-        private ParticleEffect _attackRangeEffect;
+        protected Unit Target;
 
-        protected IHero() : base(ZaioMenu.ComboKey)
+        protected ComboHero() : base(ZaioMenu.ComboKey)
         {
             _repeatCombo = true;
         }
 
-        protected IHero(bool repeatCombo) : base(ZaioMenu.ComboKey)
+        protected ComboHero(bool repeatCombo) : base(ZaioMenu.ComboKey)
         {
             _repeatCombo = repeatCombo;
         }
@@ -44,7 +44,7 @@ namespace Zaio.Interfaces
             {
                 _attackRangeEffect = MyHero.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf");
                 _attackRangeEffect.SetControlPoint(1, new Vector3(255, 0, 222));
-                _attackRangeEffect.SetControlPoint(2, new Vector3(MyHero.GetAttackRange()+MyHero.HullRadius, 255, 0));
+                _attackRangeEffect.SetControlPoint(2, new Vector3(MyHero.GetAttackRange() + MyHero.HullRadius, 255, 0));
                 _attackRangeEffect.SetControlPoint(3, new Vector3(5, 0, 0));
             }
         }
@@ -57,7 +57,8 @@ namespace Zaio.Interfaces
         {
             if (_executed && Target != null && Target.IsAlive)
             {
-                Drawing.DrawText($"Killing {Game.Localize(Target.Name)}", Game.MouseScreenPosition + new Vector2(28,5), new Vector2(24,200), Color.Red, FontFlags.AntiAlias|FontFlags.DropShadow);
+                Drawing.DrawText($"Killing {Game.Localize(Target.Name)}", Game.MouseScreenPosition + new Vector2(28, 5),
+                    new Vector2(24, 200), Color.Red, FontFlags.AntiAlias | FontFlags.DropShadow);
             }
         }
 
@@ -87,7 +88,9 @@ namespace Zaio.Interfaces
             }
 
             if (_repeatCombo)
+            {
                 return true;
+            }
 
             return !_executed;
         }
@@ -96,7 +99,9 @@ namespace Zaio.Interfaces
         {
             var distance = MyHero.Distance2D(Target) - Target.HullRadius - MyHero.HullRadius;
             if (distance <= testDistance)
+            {
                 return true;
+            }
 
             var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
             if (blink != null && blink.CanBeCasted())
@@ -110,7 +115,8 @@ namespace Zaio.Interfaces
             return false;
         }
 
-        protected async Task<bool> MoveOrBlinkToEnemy(CancellationToken tk = default(CancellationToken), float minimumRange = 0.0f)
+        protected async Task<bool> MoveOrBlinkToEnemy(CancellationToken tk = default(CancellationToken),
+            float minimumRange = 0.0f)
         {
             var distance = MyHero.Distance2D(Target) - Target.HullRadius - MyHero.HullRadius;
             if (distance <= MyHero.GetAttackRange() * 1.1)
@@ -135,7 +141,7 @@ namespace Zaio.Interfaces
             if (phaseBoots != null && phaseBoots.CanBeCasted())
             {
                 phaseBoots.UseAbility();
-                await Await.Delay(125, tk);
+                await Await.Delay(1, tk);
             }
             if (ZaioMenu.ShouldUseOrbwalker)
             {
@@ -146,6 +152,27 @@ namespace Zaio.Interfaces
                 MyHero.Attack(Target);
             }
             await Await.Delay(125, tk);
+            return false;
+        }
+
+        protected async Task<bool> DisableEnemy(CancellationToken tk = default(CancellationToken))
+        {
+            // make him disabled
+            if (Target.IsHexed() || Target.IsStunned() || Target.IsSilenced() || Target.IsDisarmed())
+            {
+                return true;
+            }
+            var itemList = new[] {"item_sheepstick", "item_abyssal_blade", "item_bloodthorn", "item_orchid", "item_heavens_halberd" };
+            foreach (var itemName in itemList)
+            {
+                var item = MyHero.FindItem(itemName);
+                if (item != null && item.CanBeCasted(Target))
+                {
+                    item.UseAbility(Target);
+                    await Await.Delay(1, tk);
+                    return true;
+                }
+            }
             return false;
         }
     }

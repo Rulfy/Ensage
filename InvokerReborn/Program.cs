@@ -1,30 +1,28 @@
-﻿using System;
-using Ensage;
-using Ensage.Common;
-
-namespace InvokerReborn
+﻿namespace InvokerReborn
 {
+    using System;
+
+    using Ensage;
+    using Ensage.Common;
+
     internal class Program
     {
-        private static Core _core;
-
-        private static void Main(string[] args)
-        {
-            Events.OnLoad += Events_OnLoad;
-        }
-
-        private static void Game_OnIngameUpdate(EventArgs args)
-        {
-            Console.WriteLine(Game.Ping);
-        }
+        private static Core core;
 
         private static void Events_OnLoad(object sender, EventArgs e)
         {
             var hero = ObjectManager.LocalHero;
             if ((hero == null) || (hero.ClassID != ClassID.CDOTA_Unit_Hero_Invoker))
+            {
                 return;
+            }
 
-            _core = new Core();
+            core = new Core();
+        }
+
+        private static void Main()
+        {
+            Events.OnLoad += Events_OnLoad;
         }
     }
 }

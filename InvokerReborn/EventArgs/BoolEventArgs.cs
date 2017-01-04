@@ -1,12 +1,12 @@
-﻿using System;
-
-namespace InvokerReborn
+﻿namespace InvokerReborn
 {
+    using System;
+
     public class BoolEventArgs : EventArgs
     {
         public BoolEventArgs(bool value)
         {
-            Value = value;
+            this.Value = value;
         }
 
         public bool Value { get; }

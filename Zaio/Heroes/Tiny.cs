@@ -8,17 +8,17 @@ using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
+using Zaio.Helpers;
 using Zaio.Interfaces;
 
 namespace Zaio.Heroes
 {
-    class Tiny : IHero
+    [Hero(ClassID.CDOTA_Unit_Hero_Tiny)]
+    class Tiny : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly string[] SupportedAbilities = { "tiny_avalanche", "tiny_toss", "item_blink", "item_phase_boots", "item_blade_mail", "item_sheepstick", "item_abyssal_blade", "item_manta" };
-
-        public new static ClassID HeroClassId { get; } = ClassID.CDOTA_Unit_Hero_Tiny;
 
         public override void OnLoad()
         {
@@ -42,23 +42,9 @@ namespace Zaio.Heroes
                 return;
             }
             // make him disabled
-            if (!(Target.IsHexed() || Target.IsStunned() || Target.IsSilenced()))
+            if (await DisableEnemy(tk))
             {
-                var sheep = MyHero.FindItem("item_sheepstick");
-                if (sheep != null && sheep.CanBeCasted(Target))
-                {
-                    sheep.UseAbility(Target);
-                    await Await.Delay(125, tk);
-                }
-                else
-                {
-                    var abyssal = MyHero.FindItem("item_abyssal_blade");
-                    if (abyssal != null && abyssal.CanBeCasted())
-                    {
-                        abyssal.UseAbility(Target);
-                        await Await.Delay(125, tk);
-                    }
-                }
+                return;
             }
 
             var manta = MyHero.FindItem("item_manta");

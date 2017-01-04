@@ -8,11 +8,13 @@ using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
+using Zaio.Helpers;
 using Zaio.Interfaces;
 
 namespace Zaio.Heroes
 {
-    internal class LegionCommander : IHero
+    [Hero(ClassID.CDOTA_Unit_Hero_Legion_Commander)]
+    internal class LegionCommander : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -31,8 +33,6 @@ namespace Zaio.Heroes
             "item_bloodthorn",
             "item_armlet"
         };
-
-        public new static ClassID HeroClassId { get; } = ClassID.CDOTA_Unit_Hero_Legion_Commander;
 
         public override void OnLoad()
         {
@@ -98,7 +98,7 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"toggling armlet");
                     armlet.ToggleAbility();
-                    await Await.Delay(125, tk);
+                    await Await.Delay(1, tk);
                 }
             }
             // check if we are near the enemy
@@ -107,40 +107,15 @@ namespace Zaio.Heroes
                 return;
             }
             // make him disabled
-            if (!(Target.IsHexed() || Target.IsStunned() || Target.IsSilenced()))
-            {
-                Log.Debug($"trying to disable enemy");
-                var sheep = MyHero.FindItem("item_sheepstick");
-                if (sheep != null && sheep.CanBeCasted(Target))
-                {
-                    sheep.UseAbility(Target);
-                    await Await.Delay(125, tk);
-                }
-                else
-                {
-                    var abyssal = MyHero.FindItem("item_abyssal_blade");
-                    if (abyssal != null && abyssal.CanBeCasted())
-                    {
-                        abyssal.UseAbility(Target);
-                        await Await.Delay(125, tk);
-                    }
-                    else
-                    {
-                        var bloodthorn = MyHero.FindItem("item_bloodthorn");
-                        if (bloodthorn != null && bloodthorn.CanBeCasted())
-                        {
-                            bloodthorn.UseAbility(Target);
-                            await Await.Delay(125, tk);
-                        }
-                    }
-                }
-            }
+            if (await DisableEnemy(tk))
+                return;
+
             var bladeMail = MyHero.FindItem("item_blade_mail");
             if (bladeMail != null && bladeMail.CanBeCasted())
             {
                 Log.Debug($"using blademail");
                 bladeMail.UseAbility();
-                await Await.Delay(125, tk);
+                await Await.Delay(1, tk);
             }
             // test if ulti is good
             var hasLinkens = Target.IsLinkensProtected();
@@ -150,7 +125,7 @@ namespace Zaio.Heroes
                 if (heavens != null && heavens.CanBeCasted())
                 {
                     heavens.UseAbility(Target);
-                    await Await.Delay(125, tk);
+                    await Await.Delay(1, tk);
                     hasLinkens = false;
                 }
                 else
@@ -159,7 +134,7 @@ namespace Zaio.Heroes
                     if (orchid != null && orchid.CanBeCasted())
                     {
                         orchid.UseAbility(Target);
-                        await Await.Delay(125, tk);
+                        await Await.Delay(1, tk);
                         hasLinkens = false;
                     }
                     else
@@ -168,7 +143,7 @@ namespace Zaio.Heroes
                         if (bloodthorn != null && bloodthorn.CanBeCasted())
                         {
                             bloodthorn.UseAbility(Target);
-                            await Await.Delay(125, tk);
+                            await Await.Delay(1, tk);
                             hasLinkens = false;
                         }
                     }

@@ -1,9 +1,11 @@
-﻿using System.Windows.Input;
-using Ensage;
-using PlaySharp.Toolkit.EventAggregator;
-
-namespace InvokerReborn.Combos
+﻿namespace InvokerReborn.Combos
 {
+    using System.Windows.Input;
+
+    using Ensage;
+
+    using PlaySharp.Toolkit.EventAggregator;
+
     internal class SmartCombo : IHandle<ChangedKeyMessage>
     {
         public SmartCombo(Hero me, Key key)

@@ -1,0 +1,142 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using Ensage;
+using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
+using Ensage.Common.Threading;
+using log4net;
+using PlaySharp.Toolkit.Logging;
+using Zaio.Helpers;
+using Zaio.Interfaces;
+
+namespace Zaio.Heroes
+{
+    [Hero(ClassID.CDOTA_Unit_Hero_Nyx_Assassin)]
+    internal class Nyx : ComboHero
+    {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        private static readonly string[] SupportedAbilities =
+        {
+            "ursa_earthshock",
+            "ursa_overpower",
+            "ursa_enrage",
+            "item_blink",
+            "item_phase_boots",
+            "item_blade_mail",
+            "item_sheepstick",
+            "item_abyssal_blade"
+        };
+
+        public override void OnLoad()
+        {
+            base.OnLoad();
+
+            var heroMenu = new Menu("Nyx", "zaioNyx", false, "npc_dota_hero_nyx_assassin", true);
+
+            heroMenu.AddItem(new MenuItem("zaioNyxAbilitiesText", "Supported Abilities"));
+            var supportedStuff = new MenuItem("zaioNyxAbilities", string.Empty);
+            supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
+            heroMenu.AddItem(supportedStuff);
+
+            ZaioMenu.LoadHeroSettings(heroMenu);
+        }
+
+        public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
+        {
+            // check if we are near the enemy
+            var ult = MyHero.Spellbook.SpellR;
+            if (!await MoveOrBlinkToEnemy(tk))
+            {
+                if (ult.CanBeCasted() && !MyHero.HasModifier("modifier_nyx_assassin_vendetta"))
+                {
+                    Log.Debug($"going invis boys since too far");
+                    ult.UseAbility();
+                    await Await.Delay(125, tk);
+                }
+
+                return;
+            }
+            if (!MyHero.HasModifier("modifier_nyx_assassin_vendetta"))
+            {
+                // make him disabled
+                if (await DisableEnemy(tk))
+                {
+                    return;
+                }
+                var enemies =
+                        ObjectManager.GetEntitiesFast<Hero>()
+                                     .Where(
+                                         x =>
+                                             x.IsAlive && x.Team != MyHero.Team && x != Target &&
+                                             x.Distance2D(MyHero) < 600);
+
+                var bladeMail = MyHero.FindItem("item_blade_mail");
+                if (bladeMail != null && bladeMail.CanBeCasted())
+                {
+                    if (enemies.Any())
+                    {
+                        bladeMail.UseAbility();
+                        await Await.Delay(1, tk);
+                    }
+                }
+                var spellE = MyHero.Spellbook.SpellE;
+                if (spellE.CanBeCasted() && (enemies.Any() || (!Target.IsHexed() && !Target.IsStunned())))
+                {
+                    spellE.UseAbility();
+                    await Await.Delay(1, tk);
+                }
+
+                var ethereal = MyHero.FindItem("item_ethereal_blade");
+                if (ethereal != null && ethereal.CanBeCasted(Target))
+                {
+                    ethereal.UseAbility(Target);
+                    var speed = ethereal.AbilitySpecialData.First(x => x.Name == "projectile_speed").Value;
+                    var time = Target.Distance2D(MyHero) / speed;
+                    Log.Debug($"waiting for eth {time}");
+                    await Await.Delay((int)(time * 1000.0f + Game.Ping), tk);
+                }
+                var dagon = MyHero.Inventory.Items.FirstOrDefault(x => x.Name.StartsWith("item_dagon"));
+                if (dagon != null && dagon.CanBeCasted(Target))
+                {
+                    Log.Debug($"Use dagon");
+                    dagon.UseAbility(Target);
+                    await Await.Delay(1, tk);
+                }
+                var stun = MyHero.Spellbook.SpellQ;
+                if (stun.CanBeCasted())
+                {
+                    stun.UseAbility(Target.NetworkPosition);
+                    var speed = stun.AbilitySpecialData.First(x => x.Name == "speed").Value;
+                    var time = Target.Distance2D(MyHero) / speed;
+
+                    Log.Debug($"Use stun");
+                    await Await.Delay((int)((stun.FindCastPoint() + time) * 1000.0 + Game.Ping), tk);
+                }
+
+                var manaBurn = MyHero.Spellbook.SpellW;
+                if (manaBurn.CanBeCasted(Target) && Target.Mana > 100)
+                {
+                    manaBurn.UseAbility(Target);
+                    Log.Debug($"Use manaburn");
+                    await Await.Delay((int)(manaBurn.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
+
+            }
+
+            if (ZaioMenu.ShouldUseOrbwalker)
+            {
+                Orbwalker.Attack(Target, false);
+            }
+            else
+            {
+                MyHero.Attack(Target);
+            }
+            await Await.Delay(125, tk);
+        }
+    }
+}

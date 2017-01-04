@@ -1,191 +1,209 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Input;
-using Ensage.Common.Menu;
-using Ensage.Common.Menu.MenuItems;
-using PlaySharp.Toolkit.EventAggregator;
-
-namespace InvokerReborn
+﻿namespace InvokerReborn
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Windows.Input;
+
+    using Ensage.Common.Menu;
+    using Ensage.Common.Menu.MenuItems;
+
+    using PlaySharp.Toolkit.EventAggregator;
+
     public class InvokerMenu
     {
-        public const string SmartComboName = "smartCombo";
         public const string ComboName = "combo";
 
+        public const string SmartComboName = "smartCombo";
+
         private static readonly List<string> ComboNames = new List<string>
-        {
-            "AlaForSnap",
-            "EulsSSMeteorBlast",
-            "Assassination",
-            "ToEMPMetBlastRefMetBlastEMP"
-        };
+                                                              {
+                                                                  "AlaForSnap",
+                                                                  "EulsSSMeteorBlast",
+                                                                  "Assassination",
+                                                                  "ToEMPMetBlastRefMetBlastEMP"
+                                                              };
 
         private static readonly List<List<string>> ComboPictures = new List<List<string>>
-        {
-            new List<string> {"invoker_alacrity", "invoker_forge_spirit", "cold_snap"},
-            new List<string>
-            {
-                "item_cyclone",
-                "invoker_sun_strike",
-                "invoker_chaos_meteor",
-                "invoker_deafening_blast",
-                "invoker_cold_snap",
-                "invoker_forge_spirit"
-            },
-            new List<string>
-            {
-                "invoker_tornado",
-                "invoker_sun_strike",
-                "invoker_chaos_meteor",
-                "invoker_deafening_blast",
-                "item_refresher",
-                "invoker_chaos_meteor1",
-                "invoker_sun_strike1"
-            },
-             new List<string>
-            {
-                "invoker_tornado",
-                "invoker_emp",
-                "invoker_chaos_meteor",
-                "invoker_deafening_blast",
-                "item_refresher",
-                "invoker_chaos_meteor1",
-                "invoker_deafening_blast1",
-                "invoker_emp1",
-            }
-        };
+                                                                       {
+                                                                           new List<string>
+                                                                               {
+                                                                                   "invoker_alacrity",
+                                                                                   "invoker_forge_spirit",
+                                                                                   "cold_snap"
+                                                                               },
+                                                                           new List<string>
+                                                                               {
+                                                                                   "item_cyclone",
+                                                                                   "invoker_sun_strike",
+                                                                                   "invoker_chaos_meteor",
+                                                                                   "invoker_deafening_blast",
+                                                                                   "invoker_cold_snap",
+                                                                                   "invoker_forge_spirit"
+                                                                               },
+                                                                           new List<string>
+                                                                               {
+                                                                                   "invoker_tornado",
+                                                                                   "invoker_sun_strike",
+                                                                                   "invoker_chaos_meteor",
+                                                                                   "invoker_deafening_blast",
+                                                                                   "item_refresher",
+                                                                                   "invoker_chaos_meteor1",
+                                                                                   "invoker_sun_strike1"
+                                                                               },
+                                                                           new List<string>
+                                                                               {
+                                                                                   "invoker_tornado",
+                                                                                   "invoker_emp",
+                                                                                   "invoker_chaos_meteor",
+                                                                                   "invoker_deafening_blast",
+                                                                                   "item_refresher",
+                                                                                   "invoker_chaos_meteor1",
+                                                                                   "invoker_deafening_blast1",
+                                                                                   "invoker_emp1"
+                                                                               }
+                                                                       };
 
-        // main
-        private static Menu _menu;
-
-        // general
-        private static MenuItem _safeDistanceItem;
-        private static MenuItem _maxWalkDistance;
-        private static MenuItem _moveTimeoutItem;
-
-        private static MenuItem _sunstrikeKillStealItem;
-        private static MenuItem _sunstrikeAutoKillItem;
-        private static MenuItem _sunstrikeSafeCastItem;
+        private static MenuItem combo;
 
         // combo
-        private static StringSwitcher _comboListItem;
-        private static MenuItem _comboPicturesItem;
+        private static StringSwitcher comboListItem;
+
+        private static MenuItem comboPicturesItem;
+
+        private static MenuItem ghostWalkItem;
+
+        private static MenuItem maxWalkDistance;
+
+        // main
+        private static Menu menu;
+
+        private static MenuItem moveTimeoutItem;
 
         // hotkeys
-        private static MenuItem _prepareCombo;
+        private static MenuItem prepareCombo;
 
-        private static MenuItem _combo;
-        private static MenuItem _smartCombo;
+        // general
+        private static MenuItem safeDistanceItem;
 
-        private static MenuItem _ghostWalkItem;
+        private static MenuItem smartCombo;
+
+        private static MenuItem sunstrikeAutoKillItem;
+
+        private static MenuItem sunstrikeKillStealItem;
+
+        private static MenuItem sunstrikeSafeCastItem;
+
+        // events
+        public static event EventHandler<StringEventArgs> ActiveComboChanged;
+
+        public static event EventHandler<BoolEventArgs> GhostWalkKeyPressed;
+
+        public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int)combo.GetValue<KeyBind>().Key);
+
+        public static string CurrentlyActiveCombo => comboListItem.GetValue<StringList>().SelectedValue;
 
         // events
         public static IEventAggregator EventAggregator { get; private set; }
 
-        public static bool IsPrepareKeyPressed => _prepareCombo.GetValue<KeyBind>().Active;
-        public static int SafeDistance => _safeDistanceItem.GetValue<Slider>().Value;
-        public static int MaxWalkDistance => _maxWalkDistance.GetValue<Slider>().Value;
-        public static int MoveTimeout => _moveTimeoutItem.GetValue<Slider>().Value;
+        public static Key GhostWalkKey => KeyInterop.KeyFromVirtualKey((int)ghostWalkItem.GetValue<KeyBind>().Key);
 
-        public static bool SunStrikeKillSteal => _sunstrikeKillStealItem.GetValue<bool>();
-        public static bool SunStrikeAutoKill => _sunstrikeAutoKillItem.GetValue<bool>();
-        public static bool SunStrikeSafeCast => _sunstrikeSafeCastItem.GetValue<bool>();
+        public static bool IsPrepareKeyPressed => prepareCombo.GetValue<KeyBind>().Active;
 
-        public static Key SmartComboKey => KeyInterop.KeyFromVirtualKey((int) _smartCombo.GetValue<KeyBind>().Key);
-        public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int) _combo.GetValue<KeyBind>().Key);
-        public static Key GhostWalkKey => KeyInterop.KeyFromVirtualKey((int)_ghostWalkItem.GetValue<KeyBind>().Key);
+        public static int MaxWalkDistance => maxWalkDistance.GetValue<Slider>().Value;
 
-        public static string CurrentlyActiveCombo => _comboListItem.GetValue<StringList>().SelectedValue;
+        public static int MoveTimeout => moveTimeoutItem.GetValue<Slider>().Value;
 
-        // events
-        public static event EventHandler<StringEventArgs> ActiveComboChanged;
-        public static event EventHandler<BoolEventArgs> GhostWalkKeyPressed;
+        public static int SafeDistance => safeDistanceItem.GetValue<Slider>().Value;
+
+        public static Key SmartComboKey => KeyInterop.KeyFromVirtualKey((int)smartCombo.GetValue<KeyBind>().Key);
+
+        public static bool SunStrikeAutoKill => sunstrikeAutoKillItem.GetValue<bool>();
+
+        public static bool SunStrikeKillSteal => sunstrikeKillStealItem.GetValue<bool>();
+
+        public static bool SunStrikeSafeCast => sunstrikeSafeCastItem.GetValue<bool>();
 
         public static void BuildMenu()
         {
-            if (_menu != null)
+            if (menu != null)
+            {
                 return;
+            }
 
             foreach (var comboPicture in ComboPictures)
+            {
                 comboPicture.Reverse();
+            }
 
             EventAggregator = new EventAggregator();
-            _menu = new Menu("Invoker Reborn", "invreb", true, "npc_dota_hero_invoker", true);
+            menu = new Menu("Invoker Reborn", "invreb", true, "npc_dota_hero_invoker", true);
 
             // general
             var generalMenu = new Menu("General", "generalMenu");
 
-            _moveTimeoutItem = new MenuItem("moveTimeout", "Reach Timeout [ms]").SetValue(new Slider(2000, 500, 10000));
-            _moveTimeoutItem.Tooltip = "Aborts the combo if the target couldn't be reached in that time.";
-            generalMenu.AddItem(_moveTimeoutItem);
+            moveTimeoutItem = new MenuItem("moveTimeout", "Reach Timeout [ms]").SetValue(new Slider(2000, 500, 10000));
+            moveTimeoutItem.Tooltip = "Aborts the combo if the target couldn't be reached in that time.";
+            generalMenu.AddItem(moveTimeoutItem);
 
-            _safeDistanceItem = new MenuItem("safeDistance", "Safe Distance").SetValue(new Slider(400, 0, 600));
-            _safeDistanceItem.Tooltip =
+            safeDistanceItem = new MenuItem("safeDistance", "Safe Distance").SetValue(new Slider(400, 0, 600));
+            safeDistanceItem.Tooltip =
                 "Distance to keep after blinking/moving. Mustn't be higher than the combo range.";
-            generalMenu.AddItem(_safeDistanceItem);
+            generalMenu.AddItem(safeDistanceItem);
 
-            _maxWalkDistance = new MenuItem("maxWalkDistance", "Max Walk Distance [%]").SetValue(new Slider(25, 0, 100));
-            _maxWalkDistance.Tooltip =
-                "If target is further away than this distance, then blink will be used.";
-            generalMenu.AddItem(_maxWalkDistance);
+            maxWalkDistance = new MenuItem("maxWalkDistance", "Max Walk Distance [%]").SetValue(new Slider(25));
+            maxWalkDistance.Tooltip = "If target is further away than this distance, then blink will be used.";
+            generalMenu.AddItem(maxWalkDistance);
 
-
-            _sunstrikeSafeCastItem = new MenuItem("ssSafeCast", "SunStrike Safe Cast").SetValue(true);
-            _sunstrikeSafeCastItem.Tooltip =
+            sunstrikeSafeCastItem = new MenuItem("ssSafeCast", "SunStrike Safe Cast").SetValue(true);
+            sunstrikeSafeCastItem.Tooltip =
                 "Cast SunStrike as soon as an enemy is disabled for a long enough duration.";
-            generalMenu.AddItem(_sunstrikeSafeCastItem);
+            generalMenu.AddItem(sunstrikeSafeCastItem);
 
-            _sunstrikeAutoKillItem = new MenuItem("ssAutoKill", "SunStrike Auto Kill").SetValue(true);
-            _sunstrikeAutoKillItem.Tooltip =
-                "Cast SunStrike if an enemy is killable and no allies are too close.";
-            generalMenu.AddItem(_sunstrikeAutoKillItem);
+            sunstrikeAutoKillItem = new MenuItem("ssAutoKill", "SunStrike Auto Kill").SetValue(true);
+            sunstrikeAutoKillItem.Tooltip = "Cast SunStrike if an enemy is killable and no allies are too close.";
+            generalMenu.AddItem(sunstrikeAutoKillItem);
 
-            _sunstrikeKillStealItem = new MenuItem("ssKillSteal", "SunStrike Kill Steal").SetValue(false);
-            _sunstrikeKillStealItem.Tooltip =
-                "Cast SunStrike as soon as an enemy is killable.";
-            generalMenu.AddItem(_sunstrikeKillStealItem);
+            sunstrikeKillStealItem = new MenuItem("ssKillSteal", "SunStrike Kill Steal").SetValue(false);
+            sunstrikeKillStealItem.Tooltip = "Cast SunStrike as soon as an enemy is killable.";
+            generalMenu.AddItem(sunstrikeKillStealItem);
 
-
-            _menu.AddSubMenu(generalMenu);
+            menu.AddSubMenu(generalMenu);
 
             // combo
             var comboMenu = new Menu("Combo", "comboMenu");
 
-            _comboListItem = new StringSwitcher("activeCombo", "Active Combo", ComboNames.ToArray())
-            {
-                Tooltip = "Currently active combo."
-            };
-            _comboListItem.ValueChanged += ComboListItem_ValueChanged;
-            comboMenu.AddItem(_comboListItem);
+            comboListItem = new StringSwitcher("activeCombo", "Active Combo", ComboNames.ToArray())
+                                 {
+                                     Tooltip = "Currently active combo."
+                                 };
+            comboListItem.ValueChanged += ComboListItem_ValueChanged;
+            comboMenu.AddItem(comboListItem);
 
-            var selectedIndex = _comboListItem.GetValue<StringList>().SelectedIndex;
-            _comboPicturesItem =
-                new MenuItem("activeComboPictures", "").SetValue(
+            var selectedIndex = comboListItem.GetValue<StringList>().SelectedIndex;
+            comboPicturesItem =
+                new MenuItem("activeComboPictures", string.Empty).SetValue(
                     new AbilityToggler(ComboPictures[selectedIndex].ToDictionary(x => x, x => true)));
-            comboMenu.AddItem(_comboPicturesItem);
+            comboMenu.AddItem(comboPicturesItem);
 
-            _menu.AddSubMenu(comboMenu);
+            menu.AddSubMenu(comboMenu);
 
             // hotkey
             var hotkeyMenu = new Menu("Hotkeys", "hotkeyMenu");
 
-            _prepareCombo =
-                new MenuItem("prepareCombo", "Prepare Combo").SetValue(new KeyBind(0, KeyBindType.Press));
-            _prepareCombo.Tooltip = "Press this key combined with any combo key to prepare the combo.";
-            hotkeyMenu.AddItem(_prepareCombo);
+            prepareCombo = new MenuItem("prepareCombo", "Prepare Combo").SetValue(new KeyBind(0, KeyBindType.Press));
+            prepareCombo.Tooltip = "Press this key combined with any combo key to prepare the combo.";
+            hotkeyMenu.AddItem(prepareCombo);
 
-            _combo = new MenuItem(ComboName, "Combo").SetValue(new KeyBind(0, KeyBindType.Press));
-            _combo.ValueChanged += _combo_ValueChanged;
-            _combo.Tooltip = "Uses the currently selected combo.";
-            hotkeyMenu.AddItem(_combo);
+            combo = new MenuItem(ComboName, "Combo").SetValue(new KeyBind(0, KeyBindType.Press));
+            combo.ValueChanged += _combo_ValueChanged;
+            combo.Tooltip = "Uses the currently selected combo.";
+            hotkeyMenu.AddItem(combo);
 
-
-            _smartCombo = new MenuItem(SmartComboName, "Smart Combo").SetValue(new KeyBind(0, KeyBindType.Press));
-            _smartCombo.ValueChanged += SmartCombo_ValueChanged;
-            _smartCombo.Tooltip = "Tries to use a combo with the currently invoked spells.";
-            hotkeyMenu.AddItem(_smartCombo);
-
+            smartCombo = new MenuItem(SmartComboName, "Smart Combo").SetValue(new KeyBind(0, KeyBindType.Press));
+            smartCombo.ValueChanged += SmartCombo_ValueChanged;
+            smartCombo.Tooltip = "Tries to use a combo with the currently invoked spells.";
+            hotkeyMenu.AddItem(smartCombo);
 
             var nextCombo = new MenuItem("nextCombo", "Next Combo").SetValue(new KeyBind(0x6B, KeyBindType.Press));
             nextCombo.ValueChanged += NextCombo_ValueChanged;
@@ -197,14 +215,23 @@ namespace InvokerReborn
             prevCombo.Tooltip = "Selects the previous combo.";
             hotkeyMenu.AddItem(prevCombo);
 
-            _ghostWalkItem = new MenuItem("ghostWalk", "GhostWalk").SetValue(new KeyBind(0, KeyBindType.Press));
-            _ghostWalkItem.ValueChanged += _ghostWalkItem_ValueChanged;
-            _ghostWalkItem.Tooltip = "Invokes and uses ghostwalk if ready.";
-            hotkeyMenu.AddItem(_ghostWalkItem);
+            ghostWalkItem = new MenuItem("ghostWalk", "GhostWalk").SetValue(new KeyBind(0, KeyBindType.Press));
+            ghostWalkItem.ValueChanged += _ghostWalkItem_ValueChanged;
+            ghostWalkItem.Tooltip = "Invokes and uses ghostwalk if ready.";
+            hotkeyMenu.AddItem(ghostWalkItem);
 
-            _menu.AddSubMenu(hotkeyMenu);
+            menu.AddSubMenu(hotkeyMenu);
 
-            _menu.AddToMainMenu();
+            menu.AddToMainMenu();
+        }
+
+        private static void _combo_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            if (e.GetNewValue<KeyBind>().Key != e.GetOldValue<KeyBind>().Key)
+            {
+                EventAggregator.PublishOnCurrentThread(
+                    new ChangedKeyMessage(ComboName, KeyInterop.KeyFromVirtualKey((int)e.GetNewValue<KeyBind>().Key)));
+            }
         }
 
         private static void _ghostWalkItem_ValueChanged(object sender, OnValueChangeEventArgs e)
@@ -220,49 +247,52 @@ namespace InvokerReborn
             SetActiveCombo(e.GetNewValue<StringList>().SelectedIndex);
         }
 
-        private static void SetActiveCombo(int index)
+        private static void NextCombo_ValueChanged(object sender, OnValueChangeEventArgs e)
         {
-            _comboPicturesItem.SetValue(new AbilityToggler(ComboPictures[index].ToDictionary(x => x, x => true)));
+            if ((e.GetNewValue<KeyBind>().Key == e.GetOldValue<KeyBind>().Key) && e.GetNewValue<KeyBind>().Active)
+            {
+                var tmpList = comboListItem.GetValue<StringList>();
+                tmpList.SelectedIndex++;
+                if (tmpList.SelectedIndex >= tmpList.SList.Length)
+                {
+                    tmpList.SelectedIndex = 0;
+                }
 
-            ActiveComboChanged?.Invoke(null, new StringEventArgs(ComboNames[index]));
+                comboListItem.SetValue(tmpList);
+            }
         }
 
         private static void PrevCombo_ValueChanged(object sender, OnValueChangeEventArgs e)
         {
             if ((e.GetNewValue<KeyBind>().Key == e.GetOldValue<KeyBind>().Key) && e.GetNewValue<KeyBind>().Active)
             {
-                var tmpList = _comboListItem.GetValue<StringList>();
+                var tmpList = comboListItem.GetValue<StringList>();
                 tmpList.SelectedIndex--;
                 if (tmpList.SelectedIndex < 0)
+                {
                     tmpList.SelectedIndex = tmpList.SList.Length - 1;
-                _comboListItem.SetValue(tmpList);
+                }
+
+                comboListItem.SetValue(tmpList);
             }
         }
 
-        private static void NextCombo_ValueChanged(object sender, OnValueChangeEventArgs e)
+        private static void SetActiveCombo(int index)
         {
-            if ((e.GetNewValue<KeyBind>().Key == e.GetOldValue<KeyBind>().Key) && e.GetNewValue<KeyBind>().Active)
-            {
-                var tmpList = _comboListItem.GetValue<StringList>();
-                tmpList.SelectedIndex++;
-                if (tmpList.SelectedIndex >= tmpList.SList.Length)
-                    tmpList.SelectedIndex = 0;
-                _comboListItem.SetValue(tmpList);
-            }
-        }
+            comboPicturesItem.SetValue(new AbilityToggler(ComboPictures[index].ToDictionary(x => x, x => true)));
 
-        private static void _combo_ValueChanged(object sender, OnValueChangeEventArgs e)
-        {
-            if (e.GetNewValue<KeyBind>().Key != e.GetOldValue<KeyBind>().Key)
-                EventAggregator.PublishOnCurrentThread(new ChangedKeyMessage(ComboName,
-                    KeyInterop.KeyFromVirtualKey((int) e.GetNewValue<KeyBind>().Key)));
+            ActiveComboChanged?.Invoke(null, new StringEventArgs(ComboNames[index]));
         }
 
         private static void SmartCombo_ValueChanged(object sender, OnValueChangeEventArgs e)
         {
             if (e.GetNewValue<KeyBind>().Key != e.GetOldValue<KeyBind>().Key)
-                EventAggregator.PublishOnCurrentThread(new ChangedKeyMessage(SmartComboName,
-                    KeyInterop.KeyFromVirtualKey((int) e.GetNewValue<KeyBind>().Key)));
+            {
+                EventAggregator.PublishOnCurrentThread(
+                    new ChangedKeyMessage(
+                        SmartComboName,
+                        KeyInterop.KeyFromVirtualKey((int)e.GetNewValue<KeyBind>().Key)));
+            }
         }
     }
 }

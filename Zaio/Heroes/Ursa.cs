@@ -1,22 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
+using Zaio.Helpers;
 using Zaio.Interfaces;
 
 namespace Zaio.Heroes
 {
-    class Ursa : IHero
+    [Hero(ClassID.CDOTA_Unit_Hero_Ursa)]
+    internal class Ursa : ComboHero
     {
-        public new static ClassID HeroClassId { get; } = ClassID.CDOTA_Unit_Hero_Ursa;
-
-        private static readonly string[] SupportedAbilities = { "ursa_earthshock", "ursa_overpower", "ursa_enrage", "item_blink", "item_phase_boots", "item_blade_mail", "item_sheepstick", "item_abyssal_blade"};
+        private static readonly string[] SupportedAbilities =
+        {
+            "ursa_earthshock",
+            "ursa_overpower",
+            "ursa_enrage",
+            "item_blink",
+            "item_phase_boots",
+            "item_blade_mail",
+            "item_sheepstick",
+            "item_abyssal_blade"
+        };
 
         public override void OnLoad()
         {
@@ -41,7 +48,7 @@ namespace Zaio.Heroes
                 if (overpower.CanBeCasted())
                 {
                     overpower.UseAbility();
-                    await Await.Delay((int)(overpower.FindCastPoint()*1000.0 + Game.Ping), tk);
+                    await Await.Delay((int) (overpower.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
             }
             // check if we are near the enemy
@@ -50,34 +57,20 @@ namespace Zaio.Heroes
                 return;
             }
             // make him disabled
-            if (!(Target.IsHexed() || Target.IsStunned() || Target.IsSilenced()))
+            if (await DisableEnemy(tk))
             {
-                var sheep = MyHero.FindItem("item_sheepstick");
-                if (sheep != null && sheep.CanBeCasted(Target))
+                return;
+            }
+            if (!(Target.IsHexed() || Target.IsStunned()) && !Target.IsMagicImmune())
+            {
+                var healthPercentage = (float) Target.Health / Target.MaximumHealth;
+                if (healthPercentage > 0.5)
                 {
-                    sheep.UseAbility(Target);
-                    await Await.Delay(125, tk);
-                }
-                else
-                {
-                    var abyssal = MyHero.FindItem("item_abyssal_blade");
-                    if (abyssal != null && abyssal.CanBeCasted())
+                    var earthshock = MyHero.Spellbook.SpellQ;
+                    if (earthshock.CanBeCasted())
                     {
-                        abyssal.UseAbility(Target);
-                        await Await.Delay(125, tk);
-                    }
-                    else
-                    {
-                        var healthPercentage = (float) Target.Health / Target.MaximumHealth;
-                        if (healthPercentage > 0.5)
-                        {
-                            var earthshock = MyHero.Spellbook.SpellQ;
-                            if (earthshock.CanBeCasted())
-                            {
-                                earthshock.UseAbility();
-                                await Await.Delay((int) (earthshock.FindCastPoint() * 1000.0 + Game.Ping), tk);
-                            }
-                        }
+                        earthshock.UseAbility();
+                        await Await.Delay((int) (earthshock.FindCastPoint() * 1000.0 + Game.Ping), tk);
                     }
                 }
             }
@@ -93,7 +86,7 @@ namespace Zaio.Heroes
                                          x.IsAlive && x.Team != MyHero.Team && x != Target &&
                                          x.Distance2D(MyHero) < 600);
                 hasEnemies = enemies.Any();
-                if ((MyHero.IsStunned() || hasEnemies == true || (float)MyHero.Health / MyHero.MaximumHealth <= 0.25f))
+                if (MyHero.IsStunned() || hasEnemies == true || (float) MyHero.Health / MyHero.MaximumHealth <= 0.25f)
                 {
                     enrage.UseAbility();
                     await Await.Delay(125, tk);
@@ -129,6 +122,5 @@ namespace Zaio.Heroes
             }
             await Await.Delay(125, tk);
         }
-
     }
 }

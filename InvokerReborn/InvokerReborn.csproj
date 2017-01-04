@@ -40,12 +40,9 @@
     <Reference Include="Ensage.Common">
       <HintPath>C:\EnsageSharp\References\Ensage.Common.dll</HintPath>
     </Reference>
-    <Reference Include="log4net, Version=1.2.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+    <Reference Include="PlaySharp.Toolkit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharp\Core\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="PlaySharp.Toolkit">
-      <HintPath>C:\EnsageSharp\Core\PlaySharp.Toolkit.dll</HintPath>
+      <HintPath>C:\EnsageSharp\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
       <HintPath>C:\EnsageSharp\References\SharpDX.dll</HintPath>
@@ -98,7 +95,6 @@
     <Compile Include="SequenceHelpers\AwaitModifier.cs" />
     <Compile Include="SequenceHelpers\AwaitMoveToTarget.cs" />
     <Compile Include="SequenceHelpers\AwaitBlinkOrMove.cs" />
-    <Compile Include="SequenceHelpers\OptionalItemAborter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
