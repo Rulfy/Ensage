@@ -36,8 +36,6 @@ namespace Zaio.Interfaces
             _repeatCombo = repeatCombo;
         }
 
-        public static ClassID HeroClassId { get; }
-
         public abstract Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken());
 
         public virtual void OnLoad()

@@ -62,6 +62,7 @@
     <Compile Include="Helpers\HeroAttribute.cs" />
     <Compile Include="Heroes\LegionCommander.cs" />
     <Compile Include="Heroes\Nyx.cs" />
+    <Compile Include="Heroes\SkywrathMage.cs" />
     <Compile Include="Heroes\SpiritBreaker.cs" />
     <Compile Include="Heroes\Tiny.cs" />
     <Compile Include="Heroes\Ursa.cs" />

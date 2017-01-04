@@ -48,7 +48,7 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             // check if we are near the enemy
-            var ult = MyHero.Spellbook.SpellR;
+            var ult = MyHero.Spellbook.Spells.First(x => x.AbilityData2.ID == 5465);
             if (!await MoveOrBlinkToEnemy(tk))
             {
                 if (ult.CanBeCasted() && !MyHero.HasModifier("modifier_nyx_assassin_vendetta"))
