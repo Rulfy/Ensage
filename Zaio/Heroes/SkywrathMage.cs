@@ -57,7 +57,7 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"use atos");
                 atos.UseAbility(Target);
-                await Await.Delay(1, tk);
+                
             }
 
             var w = MyHero.Spellbook.SpellW;
@@ -65,17 +65,23 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"use W");
                 w.UseAbility();
-                await Await.Delay(1, tk);
             }
+
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            {
+                Log.Debug($"disabled!");
+                // return;
+            }
+
             var q = MyHero.Spellbook.SpellQ;
-            if (q.CanBeCasted())
+            if (q.CanBeCasted(Target))
             {
                 Log.Debug($"use Q");
                 q.UseAbility(Target);
                 await Await.Delay((int) (q.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
             var e = MyHero.Spellbook.SpellE;
-            if (e.CanBeCasted())
+            if (e.CanBeCasted(Target))
             {
                 Log.Debug($"use e");
                 e.UseAbility(Target);
@@ -83,11 +89,11 @@ namespace Zaio.Heroes
             }
 
             var veil = MyHero.FindItem("item_veil_of_discord");
-            if (veil != null && veil.CanBeCasted())
+            if (veil != null && veil.CanBeCasted(Target))
             {
                 Log.Debug($"use veil");
                 veil.UseAbility(Target.NetworkPosition);
-                await Await.Delay(1, tk);
+                
             }
 
             var eth = MyHero.FindItem("item_ethereal_blade");
@@ -101,7 +107,7 @@ namespace Zaio.Heroes
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted() && (Target.IsRooted() || Target.MovementSpeed < 200 || !Target.IsMoving))
+            if (ult.CanBeCasted(Target) && (Target.IsRooted() || Target.MovementSpeed < 200 || !Target.IsMoving))
             {
                 Log.Debug($"use ult {Target.IsRooted()} | {Target.IsMoving} | {Target.MovementSpeed}");
                 var castPoint = (float) ult.FindCastPoint();
@@ -114,7 +120,7 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"Use dagon");
                 dagon.UseAbility(Target);
-                await Await.Delay(1, tk);
+                
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)

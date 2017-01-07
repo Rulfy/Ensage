@@ -1,10 +1,13 @@
 ﻿using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
 
@@ -13,6 +16,8 @@ namespace Zaio.Heroes
     [Hero(ClassID.CDOTA_Unit_Hero_Ursa)]
     internal class Ursa : ComboHero
     {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private static readonly string[] SupportedAbilities =
         {
             "ursa_earthshock",
@@ -47,15 +52,11 @@ namespace Zaio.Heroes
                     await Await.Delay((int) (overpower.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
             }
-            // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
-            {
-                return;
-            }
             // make him disabled
-            if (await DisableEnemy(tk))
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
-                return;
+                Log.Debug($"disabled!");
+                // return;
             }
             if (!(Target.IsHexed() || Target.IsStunned()) && !Target.IsMagicImmune())
             {
@@ -63,16 +64,20 @@ namespace Zaio.Heroes
                 if (healthPercentage > 0.5)
                 {
                     var earthshock = MyHero.Spellbook.SpellQ;
-                    if (earthshock.CanBeCasted())
+                    if (earthshock.CanBeCasted(Target) && earthshock.CanHit(Target))
                     {
                         earthshock.UseAbility();
                         await Await.Delay((int) (earthshock.FindCastPoint() * 1000.0 + Game.Ping), tk);
                     }
                 }
             }
+            // check if we are near the enemy
+            if (!await MoveOrBlinkToEnemy(tk))
+            {
+                return;
+            }
             // test if ulti is good
             var enrage = MyHero.Spellbook.SpellR;
-            bool? hasEnemies = null;
             if (enrage.CanBeCasted())
             {
                 var enemies =
@@ -81,33 +86,14 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && x != Target &&
                                          x.Distance2D(MyHero) < 600);
-                hasEnemies = enemies.Any();
+                bool? hasEnemies = enemies.Any();
                 if (MyHero.IsStunned() || hasEnemies == true || (float) MyHero.Health / MyHero.MaximumHealth <= 0.25f)
                 {
                     enrage.UseAbility();
                     await Await.Delay(125, tk);
                 }
             }
-            var bladeMail = MyHero.FindItem("item_blade_mail");
-            if (bladeMail != null && bladeMail.CanBeCasted())
-            {
-                if (hasEnemies == null)
-                {
-                    var enemies =
-                        ObjectManager.GetEntitiesFast<Hero>()
-                                     .Where(
-                                         x =>
-                                             x.IsAlive && x.Team != MyHero.Team && x != Target &&
-                                             x.Distance2D(MyHero) < 600);
-                    hasEnemies = enemies.Any();
-                }
-                if (hasEnemies == true)
-                {
-                    bladeMail.UseAbility();
-                    await Await.Delay(125, tk);
-                }
-            }
-
+            
             if (ZaioMenu.ShouldUseOrbwalker)
             {
                 Orbwalker.Attack(Target, false);

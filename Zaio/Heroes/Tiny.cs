@@ -42,66 +42,60 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
-            {
-                return;
-            }
             // make him disabled
-            if (await DisableEnemy(tk))
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
-                return;
+                Log.Debug($"disabled!");
+                // return;
             }
 
             var manta = MyHero.FindItem("item_manta");
             if (manta != null && manta.CanBeCasted() && MyHero.IsSilenced())
             {
+                Log.Debug($"use manta 1 because silenced");
                 manta.UseAbility();
-                await Await.Delay(250, tk);
+                await Await.Delay(125, tk);
                 manta = null;
-            }
-
-            var bladeMail = MyHero.FindItem("item_blade_mail");
-            if (bladeMail != null && bladeMail.CanBeCasted())
-            {
-                var enemies =
-                    ObjectManager.GetEntitiesFast<Hero>()
-                                 .Where(
-                                     x =>
-                                         x.IsAlive && x.Team != MyHero.Team && x != Target &&
-                                         x.Distance2D(MyHero) < 600);
-                if (enemies.Any())
-                {
-                    bladeMail.UseAbility();
-                    await Await.Delay(125, tk);
-                }
             }
 
             // test if toss/av combo is working
             var avalanche = MyHero.Spellbook.SpellQ;
             var toss = MyHero.Spellbook.SpellW;
-            if (toss.CanBeCasted())
+            if (toss.CanBeCasted(Target) && toss.CanHit(Target))
             {
+                Log.Debug($"use toss");
+                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+
                 var closestUnit =
                     ObjectManager.GetEntitiesFast<Unit>()
                                  .Where(x => x != MyHero && x.IsAlive && x.Distance2D(MyHero) <= toss.CastRange)
                                  .OrderBy(x => x.Distance2D(MyHero))
                                  .FirstOrDefault();
                 Log.Debug($"Closest unit for toss: {closestUnit?.Name}");
-                if (closestUnit == target)
+                if (closestUnit == Target || blink.Cooldown > 0)
                 {
                     toss.UseAbility(Target);
+                    Log.Debug($"use toss!!");
                     await Await.Delay(125, tk);
                 }
             }
-            if (avalanche.CanBeCasted())
+            if (avalanche.CanBeCasted(Target) && avalanche.CanHit(Target))
             {
+                Log.Debug($"use avalanche");
                 avalanche.UseAbility(Target.NetworkPosition);
                 await Await.Delay(125, tk);
             }
 
+            // check if we are near the enemy
+            if (!await MoveOrBlinkToEnemy(tk))
+            {
+                Log.Debug($"return because of blink");
+                return;
+            }
+
             if (manta != null && manta.CanBeCasted())
             {
+                Log.Debug($"Use manta");
                 manta.UseAbility();
                 await Await.Delay(250, tk);
             }

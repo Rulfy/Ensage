@@ -49,28 +49,25 @@ namespace Zaio.Heroes
             }
             // maybe got some pre damage
             var odds = MyHero.Spellbook.SpellQ;
-            if (odds.CanBeCasted() && MyHero.Mana > 300)
+            if (odds.CanBeCasted(Target) && MyHero.Mana > 300 && odds.CanHit(Target))
             {
-                if (MyHero.Distance2D(Target) < odds.CastRange)
+                var radius = odds.AbilitySpecialData.First(x => x.Name == "radius").Value;
+                var targets =
+                    ObjectManager.GetEntitiesParallel<Unit>()
+                                    .Where(
+                                        x =>
+                                            x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() &&
+                                            x.Distance2D(Target) <= radius);
+                var heroes = targets.Where(x => x is Hero);
+                if (heroes.Any() || targets.Count() >= 5)
                 {
-                    var radius = odds.AbilitySpecialData.First(x => x.Name == "radius").Value;
-                    var targets =
-                        ObjectManager.GetEntitiesParallel<Unit>()
-                                     .Where(
-                                         x =>
-                                             x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() &&
-                                             x.Distance2D(Target) <= radius);
-                    var heroes = targets.Where(x => x is Hero);
-                    if (heroes.Any() || targets.Count() >= 5)
-                    {
-                        Log.Debug($"Using Q with {heroes.Count()} heroes and {targets.Count()} targets");
-                        odds.UseAbility(Target.NetworkPosition);
-                        await Await.Delay((int) (odds.FindCastPoint() * 1000.0 + Game.Ping), tk);
-                    }
-                    else
-                    {
-                        Log.Debug($"NOT using Q sionce only {heroes.Count()} heroes and {targets.Count()} targets");
-                    }
+                    Log.Debug($"Using Q with {heroes.Count()} heroes and {targets.Count()} targets");
+                    odds.UseAbility(Target.NetworkPosition);
+                    await Await.Delay((int) (odds.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
+                else
+                {
+                    Log.Debug($"NOT using Q sionce only {heroes.Count()} heroes and {targets.Count()} targets");
                 }
             }
 
@@ -93,7 +90,7 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"toggling armlet");
                     armlet.ToggleAbility();
-                    await Await.Delay(1, tk);
+                    
                 }
             }
             // check if we are near the enemy
@@ -102,9 +99,10 @@ namespace Zaio.Heroes
                 return;
             }
             // make him disabled
-            if (await DisableEnemy(tk))
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
-                return;
+                Log.Debug($"disabled!");
+                // return;
             }
 
             var bladeMail = MyHero.FindItem("item_blade_mail");
@@ -112,35 +110,35 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using blademail");
                 bladeMail.UseAbility();
-                await Await.Delay(1, tk);
+                
             }
             // test if ulti is good
             var hasLinkens = Target.IsLinkensProtected();
             if (hasLinkens)
             {
                 var heavens = MyHero.FindItem("item_heavens_halberd");
-                if (heavens != null && heavens.CanBeCasted())
+                if (heavens != null && heavens.CanBeCasted(Target))
                 {
                     heavens.UseAbility(Target);
-                    await Await.Delay(1, tk);
+                    
                     hasLinkens = false;
                 }
                 else
                 {
                     var orchid = MyHero.FindItem("item_orchid");
-                    if (orchid != null && orchid.CanBeCasted())
+                    if (orchid != null && orchid.CanBeCasted(Target))
                     {
                         orchid.UseAbility(Target);
-                        await Await.Delay(1, tk);
+                        
                         hasLinkens = false;
                     }
                     else
                     {
                         var bloodthorn = MyHero.FindItem("item_bloodthorn");
-                        if (bloodthorn != null && bloodthorn.CanBeCasted())
+                        if (bloodthorn != null && bloodthorn.CanBeCasted(Target))
                         {
                             bloodthorn.UseAbility(Target);
-                            await Await.Delay(1, tk);
+                            
                             hasLinkens = false;
                         }
                     }

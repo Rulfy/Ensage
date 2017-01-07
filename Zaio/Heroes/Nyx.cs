@@ -45,6 +45,59 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
+            if (!MyHero.HasModifier("modifier_nyx_assassin_vendetta"))
+            {
+                var stun = MyHero.Spellbook.SpellQ;
+
+                var manaNeeded = stun.CanBeCasted(Target) ? stun.ManaCost + 100 : 0;
+                if (manaNeeded <= MyHero.Mana)
+                {
+                    // make him disabled
+                    if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+                    {
+                        Log.Debug($"disabled!");
+                       // return;
+                    }
+                    
+                    var ethereal = MyHero.FindItem("item_ethereal_blade");
+                    if (ethereal != null && ethereal.CanBeCasted(Target) && ethereal.CanHit(Target))
+                    {
+                        ethereal.UseAbility(Target);
+                        var speed = ethereal.AbilitySpecialData.First(x => x.Name == "projectile_speed").Value;
+                        var time = Target.Distance2D(MyHero) / speed;
+                        Log.Debug($"waiting for eth {time}");
+                        await Await.Delay((int) (time * 1000.0f + Game.Ping), tk);
+                    }
+                    var dagon = MyHero.Inventory.Items.FirstOrDefault(x => x.Name.StartsWith("item_dagon"));
+                    if (dagon != null && dagon.CanBeCasted(Target) && dagon.CanHit(Target))
+                    {
+                        Log.Debug($"Use dagon");
+                        dagon.UseAbility(Target);
+                        
+                    }
+                }
+                if (stun.CanBeCasted(Target) && stun.CanHit(Target))
+                {
+                    var speed = stun.AbilitySpecialData.First(x => x.Name == "speed").Value;
+                    var time = (Target.Distance2D(MyHero) / speed) * 1000.0f;
+
+                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
+                    stun.UseAbility(predictedPos);
+
+                    Log.Debug($"Use stun");
+                    await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
+
+                var manaBurn = MyHero.Spellbook.SpellW;
+                Log.Debug($"Use manaburn {manaBurn.CanBeCasted(Target)} | {manaBurn.CanHit(Target)}");
+                if (manaBurn.CanBeCasted(Target) && Target.Mana > 100 && manaBurn.CanHit(Target))
+                {
+                    manaBurn.UseAbility(Target);
+                    Log.Debug($"Use manaburn");
+                    await Await.Delay((int) (manaBurn.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
+            }
+
             // check if we are near the enemy
             var ult = MyHero.Spellbook.Spells.First(x => x.AbilityData2.ID == 5465);
             if (!await MoveOrBlinkToEnemy(tk))
@@ -55,85 +108,15 @@ namespace Zaio.Heroes
                     ult.UseAbility();
                     await Await.Delay(125, tk);
                 }
-
+                Log.Debug($"move or blink");
                 return;
-            }
-            if (!MyHero.HasModifier("modifier_nyx_assassin_vendetta"))
-            {
-                var stun = MyHero.Spellbook.SpellQ;
-
-                var manaNeeded = stun.CanBeCasted(Target) ? stun.ManaCost + 100 : 0;
-                if (manaNeeded <= MyHero.Mana)
-                {
-                    // make him disabled
-                    if (await DisableEnemy(tk))
-                    {
-                        return;
-                    }
-                    var enemies =
-                        ObjectManager.GetEntitiesFast<Hero>()
-                                     .Where(
-                                         x =>
-                                             x.IsAlive && x.Team != MyHero.Team && x != Target &&
-                                             x.Distance2D(MyHero) < 600);
-
-                    var bladeMail = MyHero.FindItem("item_blade_mail");
-                    if (bladeMail != null && bladeMail.CanBeCasted())
-                    {
-                        if (enemies.Any())
-                        {
-                            bladeMail.UseAbility();
-                            await Await.Delay(1, tk);
-                        }
-                    }
-                    var spellE = MyHero.Spellbook.SpellE;
-                    if (spellE.CanBeCasted() && (enemies.Any() || !Target.IsHexed() && !Target.IsStunned()))
-                    {
-                        spellE.UseAbility();
-                        await Await.Delay(1, tk);
-                    }
-
-                    var ethereal = MyHero.FindItem("item_ethereal_blade");
-                    if (ethereal != null && ethereal.CanBeCasted(Target))
-                    {
-                        ethereal.UseAbility(Target);
-                        var speed = ethereal.AbilitySpecialData.First(x => x.Name == "projectile_speed").Value;
-                        var time = Target.Distance2D(MyHero) / speed;
-                        Log.Debug($"waiting for eth {time}");
-                        await Await.Delay((int) (time * 1000.0f + Game.Ping), tk);
-                    }
-                    var dagon = MyHero.Inventory.Items.FirstOrDefault(x => x.Name.StartsWith("item_dagon"));
-                    if (dagon != null && dagon.CanBeCasted(Target))
-                    {
-                        Log.Debug($"Use dagon");
-                        dagon.UseAbility(Target);
-                        await Await.Delay(1, tk);
-                    }
-                }
-                if (stun.CanBeCasted())
-                {
-                    var speed = stun.AbilitySpecialData.First(x => x.Name == "speed").Value;
-                    var time = Target.Distance2D(MyHero) / speed * 1000.0f;
-
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
-                    stun.UseAbility(predictedPos);
-
-                    Log.Debug($"Use stun");
-                    await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
-                }
-
-                var manaBurn = MyHero.Spellbook.SpellW;
-                if (manaBurn.CanBeCasted(Target) && Target.Mana > 100)
-                {
-                    manaBurn.UseAbility(Target);
-                    Log.Debug($"Use manaburn");
-                    await Await.Delay((int) (manaBurn.FindCastPoint() * 1000.0 + Game.Ping), tk);
-                }
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
+                Log.Debug($"ATTACK");
                 Orbwalker.Attack(Target, false);
+
             }
             else
             {

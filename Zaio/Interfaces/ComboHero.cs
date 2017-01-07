@@ -17,6 +17,13 @@ using Attribute = Ensage.Attribute;
 
 namespace Zaio.Interfaces
 {
+    internal enum DisabledState
+    {
+        NotDisabled,
+        AlreadyDisabled,
+        UsedAbilityToDisable
+    }
+
     internal abstract class ComboHero : ComboBase, IComboExecutor
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -182,14 +189,13 @@ namespace Zaio.Interfaces
                     pos *= minimumRange;
                     blink.UseAbility(Target.NetworkPosition - pos);
                     await Await.Delay(125, tk);
-                    return true;
+                    return false;
                 }
             }
             var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
             if (phaseBoots != null && phaseBoots.CanBeCasted())
             {
                 phaseBoots.UseAbility();
-                await Await.Delay(1, tk);
             }
             if (ZaioMenu.ShouldUseOrbwalker)
             {
@@ -203,14 +209,14 @@ namespace Zaio.Interfaces
             return false;
         }
 
-        protected async Task<bool> DisableEnemy(CancellationToken tk = default(CancellationToken), float minimumTime = 0)
+        protected async Task<DisabledState> DisableEnemy(CancellationToken tk = default(CancellationToken), float minimumTime = 0)
         {
             // make him disabled
             float duration = 0;
             if ((Target.IsHexed(out duration) || Target.IsStunned(out duration) || Target.IsSilenced() ||
                  Target.IsDisarmed()) && duration >= minimumTime)
             {
-                return true;
+                return DisabledState.AlreadyDisabled;
             }
             var itemList = new[]
             {
@@ -223,15 +229,14 @@ namespace Zaio.Interfaces
             foreach (var itemName in itemList)
             {
                 var item = MyHero.FindItem(itemName);
-                if (item != null && item.CanBeCasted(Target))
+                if (item != null && item.CanBeCasted(Target) && item.CanHit(Target))
                 {
                     Log.Debug($"using disable item {item.Name}");
                     item.UseAbility(Target);
-                    await Await.Delay(1, tk);
-                    return true;
+                    return DisabledState.UsedAbilityToDisable;
                 }
             }
-            return false;
+            return DisabledState.NotDisabled;
         }
 
         protected virtual async Task Killsteal()
@@ -270,7 +275,7 @@ namespace Zaio.Interfaces
                     damage += MyHero.TotalStrength * 2;
                 }
 
-                damage *= spellAmp + 0.4f;
+                damage *= spellAmp + (eth.AbilitySpecialData.First(x => x.Name == "ethereal_damage_bonus").Value / -100.0f);
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(

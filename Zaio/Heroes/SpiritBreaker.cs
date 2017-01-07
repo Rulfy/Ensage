@@ -77,10 +77,10 @@ namespace Zaio.Heroes
             }
             var ult = MyHero.Spellbook.SpellR;
             // make him disabled
-            if (await DisableEnemy(tk, ult.CanBeCasted(Target) ? (float) ult.FindCastPoint() : 0))
+            if (await DisableEnemy(tk, ult.CanBeCasted(Target) ? (float) ult.FindCastPoint() : 0) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled enemy");
-                return;
+                //return;
             }
 
             var armlet = MyHero.FindItem("item_armlet");
@@ -88,26 +88,10 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"toggling armlet");
                 armlet.ToggleAbility();
-                await Await.Delay(1, tk);
+                
             }
 
-            var bladeMail = MyHero.FindItem("item_blade_mail");
-            if (bladeMail != null && bladeMail.CanBeCasted())
-            {
-                var enemies =
-                    ObjectManager.GetEntitiesFast<Hero>()
-                                 .Where(
-                                     x =>
-                                         x.IsAlive && x.Team != MyHero.Team && x != Target &&
-                                         x.Distance2D(MyHero) < 600);
-                if (enemies.Any())
-                {
-                    bladeMail.UseAbility();
-                    await Await.Delay(1, tk);
-                }
-            }
-
-            if (ult.CanBeCasted())
+            if (ult.CanBeCasted() && ult.CanHit(Target))
             {
                 Log.Debug($"using ult on target");
                 ult.UseAbility(Target);
@@ -120,7 +104,7 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using URN on target");
                 urn.UseAbility(Target);
-                await Await.Delay(1, tk);
+                
             }
 
             var mask = MyHero.FindItem("item_mask_of_madness");
@@ -128,7 +112,7 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using mask");
                 mask.UseAbility();
-                await Await.Delay(1, tk);
+                
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)
