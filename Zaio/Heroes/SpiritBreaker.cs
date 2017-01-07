@@ -70,14 +70,14 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"charging enemy since too far");
                     charge.UseAbility(Target);
-                    await Await.Delay((int)(charge.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    await Await.Delay((int) (charge.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
 
                 return;
             }
             var ult = MyHero.Spellbook.SpellR;
             // make him disabled
-            if (await DisableEnemy(tk, ult.CanBeCasted(Target) ? (float)ult.FindCastPoint() : 0))
+            if (await DisableEnemy(tk, ult.CanBeCasted(Target) ? (float) ult.FindCastPoint() : 0))
             {
                 Log.Debug($"disabled enemy");
                 return;
@@ -111,11 +111,12 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using ult on target");
                 ult.UseAbility(Target);
-                await Await.Delay((int)(ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
             var urn = MyHero.FindItem("item_urn_of_shadows");
-            if (urn != null && urn.CanBeCasted(Target) && urn.CurrentCharges > 0 && !Target.HasModifier("modifier_item_urn_damage"))
+            if (urn != null && urn.CanBeCasted(Target) && urn.CurrentCharges > 0 &&
+                !Target.HasModifier("modifier_item_urn_damage"))
             {
                 Log.Debug($"using URN on target");
                 urn.UseAbility(Target);
@@ -123,7 +124,7 @@ namespace Zaio.Heroes
             }
 
             var mask = MyHero.FindItem("item_mask_of_madness");
-            if (mask != null && mask.CanBeCasted() )
+            if (mask != null && mask.CanBeCasted())
             {
                 Log.Debug($"using mask");
                 mask.UseAbility();

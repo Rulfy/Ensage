@@ -4,12 +4,12 @@ using Attribute = System.Attribute;
 
 namespace Zaio.Helpers
 {
-    [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class HeroAttribute : Attribute
     {
         public HeroAttribute(ClassID id)
         {
-            this.Id = id;
+            Id = id;
         }
 
         public ClassID Id { get; }

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
-using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
@@ -48,9 +46,8 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            var charge = MyHero.Spellbook.SpellQ;
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(tk, 200, 700))
             {
                 return;
             }
@@ -75,14 +72,14 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"use Q");
                 q.UseAbility(Target);
-                await Await.Delay((int)(q.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                await Await.Delay((int) (q.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
             var e = MyHero.Spellbook.SpellE;
             if (e.CanBeCasted())
             {
                 Log.Debug($"use e");
                 e.UseAbility(Target);
-                await Await.Delay((int)(e.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                await Await.Delay((int) (e.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
             var veil = MyHero.FindItem("item_veil_of_discord");
@@ -100,16 +97,16 @@ namespace Zaio.Heroes
                 var time = Target.Distance2D(MyHero) / speed;
                 Log.Debug($"waiting for eth {time}");
                 eth.UseAbility(Target);
-                await Await.Delay((int)(time * 1000.0f + Game.Ping), tk);
+                await Await.Delay((int) (time * 1000.0f + Game.Ping), tk);
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if(ult.CanBeCasted() && (Target.IsRooted() || Target.MovementSpeed < 200 || !Target.IsMoving))
+            if (ult.CanBeCasted() && (Target.IsRooted() || Target.MovementSpeed < 200 || !Target.IsMoving))
             {
                 Log.Debug($"use ult {Target.IsRooted()} | {Target.IsMoving} | {Target.MovementSpeed}");
-                var castPoint = (float)ult.FindCastPoint();
-                ult.UseAbility(Prediction.InFront(Target, castPoint * Target.MovementSpeed));
-                await Await.Delay((int)(castPoint * 1000.0 + Game.Ping), tk);
+                var castPoint = (float) ult.FindCastPoint();
+                ult.UseAbility(Ensage.Common.Prediction.InFront(Target, castPoint * Target.MovementSpeed));
+                await Await.Delay((int) (castPoint * 1000.0 + Game.Ping), tk);
             }
 
             var dagon = MyHero.Inventory.Items.FirstOrDefault(x => x.Name.StartsWith("item_dagon"));

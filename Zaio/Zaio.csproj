@@ -68,6 +68,7 @@
     <Compile Include="Heroes\Ursa.cs" />
     <Compile Include="Interfaces\ComboExecutor.cs" />
     <Compile Include="Interfaces\ComboHero.cs" />
+    <Compile Include="Prediction\Prediction.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ZaioMenu.cs" />

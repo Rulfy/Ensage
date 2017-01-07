@@ -6,7 +6,7 @@ namespace Zaio
     public enum TargetSelectorMode
     {
         NearestToMouse,
-        Auto,    
+        Auto
     }
 
     public class ZaioMenu
@@ -20,21 +20,25 @@ namespace Zaio
         private static MenuItem _targetSelector;
         private static MenuItem _displayAttackRange;
         private static MenuItem _lockTarget;
+        private static MenuItem _killSteal;
 
-        public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int)_comboKey.GetValue<KeyBind>().Key);
+        public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int) _comboKey.GetValue<KeyBind>().Key);
         public static bool ShouldUseOrbwalker => _orbwalker.GetValue<bool>();
         public static bool ShouldDisplayAttackRange => _displayAttackRange.GetValue<bool>();
         public static bool ShouldLockTarget => _lockTarget.GetValue<bool>();
+        public static bool ShouldKillSteal => _killSteal.GetValue<bool>();
 
         public static void OnLoad()
         {
             if (_menu != null)
+            {
                 return;
+            }
 
             _menu = new Menu("Zaio", "zaioMenu", true);
 
             //  ###########
-            Menu general = new Menu("General", "zaioGeneral");
+            var general = new Menu("General", "zaioGeneral");
 
             _orbwalker = new MenuItem("zaioOrbwalk", "Orbwalk").SetValue(true);
             general.AddItem(_orbwalker);
@@ -45,14 +49,17 @@ namespace Zaio
             _lockTarget = new MenuItem("zaioLockTarget", "Lock Combo-Target").SetValue(true);
             general.AddItem(_lockTarget);
 
+            _killSteal = new MenuItem("zaioKillSteal", "Auto KillSteal").SetValue(true);
+            general.AddItem(_killSteal);
+
             _targetSelector =
-                new MenuItem("zaioTargetSelector", "Target Selector").SetValue(new[] { "Closest to mouse", "Auto" });
+                new MenuItem("zaioTargetSelector", "Target Selector").SetValue(new[] {"Closest to mouse", "Auto"});
             general.AddItem(_targetSelector);
 
             _menu.AddSubMenu(general);
 
             // ###########
-            Menu hotkeys = new Menu("Hotkeys", "zaioHotkeys");
+            var hotkeys = new Menu("Hotkeys", "zaioHotkeys");
 
             _comboKey = new MenuItem("zaioCombo", "Combo").SetValue(new KeyBind(0, KeyBindType.Press));
             hotkeys.AddItem(_comboKey);
@@ -67,7 +74,7 @@ namespace Zaio
         {
             ResetHeroSettings();
 
-             _heroSettings = newHeroSettings;
+            _heroSettings = newHeroSettings;
             _menu.AddSubMenu(_heroSettings);
         }
 

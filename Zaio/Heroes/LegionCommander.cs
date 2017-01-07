@@ -49,7 +49,7 @@ namespace Zaio.Heroes
             }
             // maybe got some pre damage
             var odds = MyHero.Spellbook.SpellQ;
-            if (odds.CanBeCasted()&& MyHero.Mana > 300 )
+            if (odds.CanBeCasted() && MyHero.Mana > 300)
             {
                 if (MyHero.Distance2D(Target) < odds.CastRange)
                 {
@@ -57,13 +57,15 @@ namespace Zaio.Heroes
                     var targets =
                         ObjectManager.GetEntitiesParallel<Unit>()
                                      .Where(
-                                         x => x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() && x.Distance2D(Target) <= radius);
+                                         x =>
+                                             x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() &&
+                                             x.Distance2D(Target) <= radius);
                     var heroes = targets.Where(x => x is Hero);
                     if (heroes.Any() || targets.Count() >= 5)
                     {
                         Log.Debug($"Using Q with {heroes.Count()} heroes and {targets.Count()} targets");
                         odds.UseAbility(Target.NetworkPosition);
-                        await Await.Delay((int)(odds.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        await Await.Delay((int) (odds.FindCastPoint() * 1000.0 + Game.Ping), tk);
                     }
                     else
                     {
@@ -71,12 +73,12 @@ namespace Zaio.Heroes
                     }
                 }
             }
-            
+
             // press the attack for teh damage
             var duel = MyHero.Spellbook.SpellR;
-            if (IsInRange(duel.CastRange) )
+            if (IsInRange(duel.CastRange))
             {
-                var enemyHealth = (float)Target.Health / Target.MaximumHealth;
+                var enemyHealth = (float) Target.Health / Target.MaximumHealth;
                 if (!MyHero.HasModifier("modifier_press_the_attack") && enemyHealth > 0.33f)
                 {
                     var pressTheAttack = MyHero.Spellbook.SpellW;
@@ -101,7 +103,9 @@ namespace Zaio.Heroes
             }
             // make him disabled
             if (await DisableEnemy(tk))
+            {
                 return;
+            }
 
             var bladeMail = MyHero.FindItem("item_blade_mail");
             if (bladeMail != null && bladeMail.CanBeCasted())

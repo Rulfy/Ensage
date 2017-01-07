@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
@@ -11,13 +10,13 @@ using Zaio.Interfaces;
 
 namespace Zaio
 {
-    class Program
+    internal class Program
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static ComboHero _currentHero;
 
-        static void Main()
+        private static void Main()
         {
             Events.OnLoad += Events_OnLoad;
             Events.OnClose += Events_OnClose;
@@ -29,7 +28,9 @@ namespace Zaio
         {
             var hero = ObjectManager.LocalHero;
             if (hero == null)
+            {
                 return;
+            }
 
             foreach (var heroModifier in hero.Modifiers)
             {
@@ -62,7 +63,7 @@ namespace Zaio
             var hero = ObjectManager.LocalHero;
             if (hero != null)
             {
-                var types = Assembly.GetExecutingAssembly().GetTypes().Where( x => x.Namespace == "Zaio.Heroes");
+                var types = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.Namespace == "Zaio.Heroes");
                 foreach (var type in types)
                 {
                     var property = type.GetCustomAttribute<HeroAttribute>();
@@ -79,7 +80,8 @@ namespace Zaio
                         }
                     }
                 }
-                Game.PrintMessage($"Zaio: <font color='#FF1133'>{Game.Localize(hero.Name)} is not supported! ({hero.ClassID})</font>");
+                Game.PrintMessage(
+                    $"Zaio: <font color='#FF1133'>{Game.Localize(hero.Name)} is not supported! ({hero.ClassID})</font>");
             }
         }
     }

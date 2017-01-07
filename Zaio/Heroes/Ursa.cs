@@ -18,7 +18,7 @@ namespace Zaio.Heroes
             "ursa_earthshock",
             "ursa_overpower",
             "ursa_enrage",
-            "item_blade_mail",
+            "item_blade_mail"
         };
 
         public override void OnLoad()
