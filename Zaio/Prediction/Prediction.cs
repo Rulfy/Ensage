@@ -108,8 +108,8 @@ namespace Zaio.Prediction
                     _lastPositions[unit] = unit.NetworkPosition;
                     _lastRotations[unit] = unit.NetworkRotationRad;
                 }
-                _lastPositions = _lastPositions.Where(x => x.Key.IsAlive).ToDictionary(x => x.Key, y => y.Value);
-                _lastRotations = _lastRotations.Where(x => x.Key.IsAlive).ToDictionary(x => x.Key, y => y.Value);
+                _lastPositions = _lastPositions.Where(x => x.Key.IsValid && x.Key.IsAlive).ToDictionary(x => x.Key, y => y.Value);
+                _lastRotations = _lastRotations.Where(x => x.Key.IsValid && x.Key.IsAlive).ToDictionary(x => x.Key, y => y.Value);
             }
         }
     }
