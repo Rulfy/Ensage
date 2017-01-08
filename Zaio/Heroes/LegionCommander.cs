@@ -54,10 +54,10 @@ namespace Zaio.Heroes
                 var radius = odds.AbilitySpecialData.First(x => x.Name == "radius").Value;
                 var targets =
                     ObjectManager.GetEntitiesParallel<Unit>()
-                                    .Where(
-                                        x =>
-                                            x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() &&
-                                            x.Distance2D(Target) <= radius);
+                                 .Where(
+                                     x =>
+                                         x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() &&
+                                         x.Distance2D(Target) <= radius);
                 var heroes = targets.Where(x => x is Hero);
                 if (heroes.Any() || targets.Count() >= 5)
                 {
@@ -90,7 +90,6 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"toggling armlet");
                     armlet.ToggleAbility();
-                    
                 }
             }
             // check if we are near the enemy
@@ -99,7 +98,7 @@ namespace Zaio.Heroes
                 return;
             }
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
@@ -110,7 +109,6 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using blademail");
                 bladeMail.UseAbility();
-                
             }
             // test if ulti is good
             var hasLinkens = Target.IsLinkensProtected();
@@ -120,7 +118,7 @@ namespace Zaio.Heroes
                 if (heavens != null && heavens.CanBeCasted(Target))
                 {
                     heavens.UseAbility(Target);
-                    
+
                     hasLinkens = false;
                 }
                 else
@@ -129,7 +127,7 @@ namespace Zaio.Heroes
                     if (orchid != null && orchid.CanBeCasted(Target))
                     {
                         orchid.UseAbility(Target);
-                        
+
                         hasLinkens = false;
                     }
                     else
@@ -138,7 +136,7 @@ namespace Zaio.Heroes
                         if (bloodthorn != null && bloodthorn.CanBeCasted(Target))
                         {
                             bloodthorn.UseAbility(Target);
-                            
+
                             hasLinkens = false;
                         }
                     }
@@ -153,13 +151,13 @@ namespace Zaio.Heroes
             }
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalker.Attack(Target, false);
+                Orbwalk();
             }
             else
             {
                 MyHero.Attack(Target);
+                await Await.Delay(125, tk);
             }
-            await Await.Delay(125, tk);
         }
     }
 }

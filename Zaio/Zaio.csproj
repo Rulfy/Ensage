@@ -59,8 +59,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\BoolEventArgs - Copy.cs" />
+    <Compile Include="Helpers\BoolEventArgs.cs" />
     <Compile Include="Helpers\HeroAttribute.cs" />
     <Compile Include="Heroes\LegionCommander.cs" />
+    <Compile Include="Heroes\Lion.cs" />
     <Compile Include="Heroes\Nyx.cs" />
     <Compile Include="Heroes\SkywrathMage.cs" />
     <Compile Include="Heroes\SpiritBreaker.cs" />

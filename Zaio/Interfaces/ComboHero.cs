@@ -13,6 +13,7 @@ using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
+using SpacebarToFarm;
 using Attribute = Ensage.Attribute;
 
 namespace Zaio.Interfaces
@@ -54,13 +55,57 @@ namespace Zaio.Interfaces
 
             if (ZaioMenu.ShouldDisplayAttackRange)
             {
-                _attackRangeEffect = MyHero.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf");
-                _attackRangeEffect.SetControlPoint(1, new Vector3(255, 0, 222));
-                _attackRangeEffect.SetControlPoint(2, new Vector3(MyHero.GetAttackRange() + MyHero.HullRadius, 255, 0));
-                _attackRangeEffect.SetControlPoint(3, new Vector3(5, 0, 0));
+                CreateAttackEffect();
             }
 
             GameDispatcher.OnIngameUpdate += GameDispatcher_OnIngameUpdate;
+            ZaioMenu.DisplayAttackRangeChanged += ZaioMenu_DisplayAttackRangeChanged;
+            ZaioMenu.ComboKeyChanged += ZaioMenu_ComboKeyChanged;
+        }
+
+        private void ZaioMenu_ComboKeyChanged(object sender, KeyEventArgs e)
+        {
+            Log.Debug($"Combokey changed from {Key} to {e.Value}");
+            Key = e.Value;
+        }
+
+        private void CreateAttackEffect()
+        {
+            _attackRangeEffect = MyHero.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf");
+            _attackRangeEffect.SetControlPoint(1, new Vector3(255, 0, 222));
+            _attackRangeEffect.SetControlPoint(2, new Vector3(MyHero.GetAttackRange() + MyHero.HullRadius, 255, 0));
+            _attackRangeEffect.SetControlPoint(3, new Vector3(5, 0, 0));
+        }
+
+        private void DestroyAttackEffect()
+        {
+            if (_attackRangeEffect != null)
+            {
+                try
+                {
+                    _attackRangeEffect.Dispose();
+                }
+                catch (ParticleEffectNotFoundException)
+                {
+                }
+                finally
+                {
+                    _attackRangeEffect = null;
+                }
+            }
+        }
+
+        private void ZaioMenu_DisplayAttackRangeChanged(object sender, BoolEventArgs e)
+        {
+            Log.Debug($"display attack range chagned to {e.Value}");
+            if (e.Value)
+            {
+                CreateAttackEffect();
+            }
+            else
+            {
+                DestroyAttackEffect();
+            }
         }
 
         private void GameDispatcher_OnIngameUpdate(EventArgs args)
@@ -83,21 +128,9 @@ namespace Zaio.Interfaces
         public virtual void OnClose()
         {
             GameDispatcher.OnIngameUpdate -= GameDispatcher_OnIngameUpdate;
-
-            if (_attackRangeEffect != null)
-            {
-                try
-                {
-                    _attackRangeEffect.Dispose();
-                }
-                catch (ParticleEffectNotFoundException)
-                {
-                }
-                finally
-                {
-                    _attackRangeEffect = null;
-                }
-            }
+            ZaioMenu.DisplayAttackRangeChanged -= ZaioMenu_DisplayAttackRangeChanged;
+            ZaioMenu.ComboKeyChanged -= ZaioMenu_ComboKeyChanged;
+            DestroyAttackEffect();
         }
 
         public virtual void OnDraw()
@@ -118,6 +151,19 @@ namespace Zaio.Interfaces
                 Target = TargetSelector.ClosestToMouse(MyHero);
                 if (Target == null)
                 {
+                    switch (ZaioMenu.NoTargetMode)
+                    {
+                        case NoTargetMode.Move:
+                            MyHero.Move(Game.MousePosition);
+                            break;
+                        case NoTargetMode.AttackMove:
+                            if (!MyHero.IsAttacking())
+                            {
+                                MyHero.Attack(Game.MousePosition);
+                            }
+                            break;
+                    }
+                    await Await.Delay(125, token);
                     return;
                 }
             }
@@ -199,17 +245,37 @@ namespace Zaio.Interfaces
             }
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalker.Attack(Target, false);
+                Orbwalk();
             }
             else
             {
                 MyHero.Attack(Target);
+                await Await.Delay(125, tk);
             }
-            await Await.Delay(125, tk);
             return false;
         }
 
-        protected async Task<DisabledState> DisableEnemy(CancellationToken tk = default(CancellationToken), float minimumTime = 0)
+        protected void Orbwalk(float distance = 0.0f)
+        {
+            switch (ZaioMenu.OrbwalkerMode)
+            {
+                case OrbwalkerMode.Mouse:
+                    Orbwalker.OrbwalkOn(Target);
+                    break;
+                case OrbwalkerMode.Target:
+                    var pos = (Target.NetworkPosition - MyHero.NetworkPosition).Normalized();
+                    pos *= distance;
+                    Orbwalker.OrbwalkOn(Target, Target.NetworkPosition - pos);
+                    break;
+                case OrbwalkerMode.Attack:
+                    Orbwalker.Attack(Target, true);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        protected DisabledState DisableEnemy(CancellationToken tk = default(CancellationToken), float minimumTime = 0)
         {
             // make him disabled
             float duration = 0;
@@ -275,7 +341,8 @@ namespace Zaio.Interfaces
                     damage += MyHero.TotalStrength * 2;
                 }
 
-                damage *= spellAmp + (eth.AbilitySpecialData.First(x => x.Name == "ethereal_damage_bonus").Value / -100.0f);
+                damage *= spellAmp +
+                          eth.AbilitySpecialData.First(x => x.Name == "ethereal_damage_bonus").Value / -100.0f;
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(

@@ -53,7 +53,7 @@ namespace Zaio.Heroes
                 }
             }
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
@@ -93,16 +93,16 @@ namespace Zaio.Heroes
                     await Await.Delay(125, tk);
                 }
             }
-            
+
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalker.Attack(Target, false);
+                Orbwalk();
             }
             else
             {
                 MyHero.Attack(Target);
+                await Await.Delay(125, tk);
             }
-            await Await.Delay(125, tk);
         }
     }
 }

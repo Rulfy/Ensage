@@ -77,7 +77,8 @@ namespace Zaio.Heroes
             }
             var ult = MyHero.Spellbook.SpellR;
             // make him disabled
-            if (await DisableEnemy(tk, ult.CanBeCasted(Target) ? (float) ult.FindCastPoint() : 0) == DisabledState.UsedAbilityToDisable)
+            if (DisableEnemy(tk, ult.CanBeCasted(Target) ? (float) ult.FindCastPoint() : 0) ==
+                DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled enemy");
                 //return;
@@ -88,7 +89,6 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"toggling armlet");
                 armlet.ToggleAbility();
-                
             }
 
             if (ult.CanBeCasted() && ult.CanHit(Target))
@@ -104,7 +104,6 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using URN on target");
                 urn.UseAbility(Target);
-                
             }
 
             var mask = MyHero.FindItem("item_mask_of_madness");
@@ -112,18 +111,17 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using mask");
                 mask.UseAbility();
-                
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalker.Attack(Target, false);
+                Orbwalk();
             }
             else
             {
                 MyHero.Attack(Target);
+                await Await.Delay(125, tk);
             }
-            await Await.Delay(125, tk);
         }
     }
 }

@@ -1,0 +1,146 @@
+﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using Ensage;
+using Ensage.Common.Extensions;
+using Ensage.Common.Menu;
+using Ensage.Common.Threading;
+using log4net;
+using PlaySharp.Toolkit.Logging;
+using Zaio.Helpers;
+using Zaio.Interfaces;
+
+namespace Zaio.Heroes
+{
+    [Hero(ClassID.CDOTA_Unit_Hero_Lion)]
+    internal class Lion : ComboHero
+    {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        private static readonly string[] SupportedAbilities =
+        {
+            "lion_impale",
+            "lion_voodoo",
+            "lion_mana_drain",
+            "lion_finger_of_death"
+        };
+
+        public override void OnLoad()
+        {
+            base.OnLoad();
+
+            var heroMenu = new Menu("Lion", "zaioLion", false, "npc_dota_hero_lion", true);
+
+            heroMenu.AddItem(new MenuItem("zaioLionAbilitiesText", "Supported Abilities"));
+            var supportedStuff = new MenuItem("zaioLionAbilities", string.Empty);
+            supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
+            heroMenu.AddItem(supportedStuff);
+
+            ZaioMenu.LoadHeroSettings(heroMenu);
+        }
+
+        public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
+        {
+            var ult = MyHero.Spellbook.SpellR;
+
+            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && !Target.IsLinkensProtected())
+            {
+                var damage = 0.0f;
+                if (MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter))
+                {
+                    damage = ult.AbilitySpecialData.First(x => x.Name == "damage_scepter").GetValue(ult.Level - 1);
+                }
+                else
+                {
+                    damage = ult.AbilitySpecialData.First(x => x.Name == "damage").GetValue(ult.Level - 1);
+                }
+                if (Target.Health <= damage * (1.0f - Target.MagicDamageResist))
+                {
+                    Log.Debug(
+                        $"use ult because enough damage {Target.Health} <= {damage * (1.0f - Target.MagicDamageResist)} ");
+                    ult.UseAbility(Target);
+                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
+            }
+
+            // make him disabled
+            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            {
+                Log.Debug($"disabled!");
+                // return;
+            }
+            float maxRange = 500;
+            var duration = 0.0f;
+            if (!(Target.IsHexed(out duration) || Target.IsStunned(out duration)) || duration < 1.2)
+            {
+                var hex = MyHero.Spellbook.SpellW;
+                maxRange = Math.Max(maxRange, hex.CastRange);
+                if (hex.CanBeCasted(Target) && hex.CanHit(Target))
+                {
+                    Log.Debug($"use hex {duration}");
+                    hex.UseAbility(Target);
+                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    return;
+                }
+
+                var stun = MyHero.Spellbook.SpellQ;
+                maxRange = Math.Max(maxRange, stun.CastRange);
+                if (stun.CanBeCasted(Target) && hex.CanHit(Target))
+                {
+                    var speed = stun.AbilitySpecialData.First(x => x.Name == "speed").Value;
+                    var time = Target.Distance2D(MyHero) / speed * 1000.0f;
+
+                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
+
+                    Log.Debug($"use stun {duration} | {time}");
+                    stun.UseAbility(predictedPos);
+                    await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    return;
+                }
+            }
+
+            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && !Target.IsLinkensProtected())
+            {
+                Log.Debug($"use ult");
+                ult.UseAbility(Target);
+                await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+            }
+
+            var mana = MyHero.Spellbook.SpellE;
+            if (mana.CanBeCasted())
+            {
+                var illusion =
+                    ObjectManager.GetEntitiesFast<Unit>()
+                                 .FirstOrDefault(
+                                     x =>
+                                         x.IsAlive && x.IsIllusion && x.Team != MyHero.Team &&
+                                         x.Distance2D(MyHero) <= mana.CastRange);
+                if (illusion != null)
+                {
+                    Log.Debug($"use mana leech on illusion");
+                    mana.UseAbility(illusion);
+                    await Await.Delay((int) (mana.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
+            }
+
+            // check if we are near the enemy
+            if (!await MoveOrBlinkToEnemy(tk, 200, maxRange))
+            {
+                Log.Debug($"return because of blink");
+                return;
+            }
+
+            if (ZaioMenu.ShouldUseOrbwalker)
+            {
+                Orbwalk(300);
+            }
+            else
+            {
+                MyHero.Attack(Target);
+                await Await.Delay(125, tk);
+            }
+        }
+    }
+}

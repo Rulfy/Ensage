@@ -43,7 +43,7 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
@@ -102,13 +102,13 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalker.Attack(Target, false);
+                Orbwalk();
             }
             else
             {
                 MyHero.Attack(Target);
+                await Await.Delay(125, tk);
             }
-            await Await.Delay(125, tk);
         }
     }
 }

@@ -53,12 +53,12 @@ namespace Zaio.Heroes
                 if (manaNeeded <= MyHero.Mana)
                 {
                     // make him disabled
-                    if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+                    if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
                     {
                         Log.Debug($"disabled!");
-                       // return;
+                        // return;
                     }
-                    
+
                     var ethereal = MyHero.FindItem("item_ethereal_blade");
                     if (ethereal != null && ethereal.CanBeCasted(Target) && ethereal.CanHit(Target))
                     {
@@ -73,13 +73,12 @@ namespace Zaio.Heroes
                     {
                         Log.Debug($"Use dagon");
                         dagon.UseAbility(Target);
-                        
                     }
                 }
                 if (stun.CanBeCasted(Target) && stun.CanHit(Target))
                 {
                     var speed = stun.AbilitySpecialData.First(x => x.Name == "speed").Value;
-                    var time = (Target.Distance2D(MyHero) / speed) * 1000.0f;
+                    var time = Target.Distance2D(MyHero) / speed * 1000.0f;
 
                     var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
                     stun.UseAbility(predictedPos);
@@ -114,15 +113,13 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Log.Debug($"ATTACK");
-                Orbwalker.Attack(Target, false);
-
+                Orbwalk();
             }
             else
             {
                 MyHero.Attack(Target);
+                await Await.Delay(125, tk);
             }
-            await Await.Delay(125, tk);
         }
     }
 }

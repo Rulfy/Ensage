@@ -57,7 +57,6 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"use atos");
                 atos.UseAbility(Target);
-                
             }
 
             var w = MyHero.Spellbook.SpellW;
@@ -67,7 +66,7 @@ namespace Zaio.Heroes
                 w.UseAbility();
             }
 
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
@@ -93,7 +92,6 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"use veil");
                 veil.UseAbility(Target.NetworkPosition);
-                
             }
 
             var eth = MyHero.FindItem("item_ethereal_blade");
@@ -120,18 +118,17 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"Use dagon");
                 dagon.UseAbility(Target);
-                
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalker.Attack(Target, false);
+                Orbwalk(300);
             }
             else
             {
                 MyHero.Attack(Target);
+                await Await.Delay(125, tk);
             }
-            await Await.Delay(125, tk);
         }
     }
 }

@@ -102,14 +102,19 @@ namespace Zaio.Prediction
                 Utils.Sleep(250, "invReborn_Prediction_Position");
                 var units =
                     ObjectManager.GetEntitiesFast<Unit>()
-                                 .Where(x => x.IsValid && x.IsAlive && x.Team != ObjectManager.LocalPlayer.Team && x.IsVisible);
+                                 .Where(
+                                     x =>
+                                         x.IsValid && x.IsAlive && x.Team != ObjectManager.LocalPlayer.Team &&
+                                         x.IsVisible);
                 foreach (var unit in units)
                 {
                     _lastPositions[unit] = unit.NetworkPosition;
                     _lastRotations[unit] = unit.NetworkRotationRad;
                 }
-                _lastPositions = _lastPositions.Where(x => x.Key.IsValid && x.Key.IsAlive).ToDictionary(x => x.Key, y => y.Value);
-                _lastRotations = _lastRotations.Where(x => x.Key.IsValid && x.Key.IsAlive).ToDictionary(x => x.Key, y => y.Value);
+                _lastPositions = _lastPositions.Where(x => x.Key.IsValid && x.Key.IsAlive)
+                                               .ToDictionary(x => x.Key, y => y.Value);
+                _lastRotations = _lastRotations.Where(x => x.Key.IsValid && x.Key.IsAlive)
+                                               .ToDictionary(x => x.Key, y => y.Value);
             }
         }
     }
