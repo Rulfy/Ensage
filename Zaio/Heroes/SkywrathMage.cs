@@ -23,11 +23,7 @@ namespace Zaio.Heroes
             "skywrath_mage_arcane_bolt",
             "skywrath_mage_concussive_shot",
             "skywrath_mage_ancient_seal",
-            "skywrath_mage_mystic_flare",
-            "item_veil_of_discord",
-            "item_ethereal_blade",
-            "item_rod_of_atos",
-            "item_dagon"
+            "skywrath_mage_mystic_flare"
         };
 
         public override void OnLoad()
@@ -46,25 +42,20 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
+            var w = MyHero.Spellbook.SpellW;
+            if (w.CanBeCasted(Target) && w.CanHit(Target))
+            {
+                Log.Debug($"use W");
+                w.UseAbility();
+            }
+
             // check if we are near the enemy
             if (!await MoveOrBlinkToEnemy(tk, 200, 700))
             {
                 return;
             }
 
-            var atos = MyHero.FindItem("item_rod_of_atos");
-            if (atos != null && atos.CanBeCasted(Target))
-            {
-                Log.Debug($"use atos");
-                atos.UseAbility(Target);
-            }
-
-            var w = MyHero.Spellbook.SpellW;
-            if (w.CanBeCasted())
-            {
-                Log.Debug($"use W");
-                w.UseAbility();
-            }
+            await UseItems(tk);
 
             if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
@@ -87,23 +78,6 @@ namespace Zaio.Heroes
                 await Await.Delay((int) (e.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
-            var veil = MyHero.FindItem("item_veil_of_discord");
-            if (veil != null && veil.CanBeCasted(Target))
-            {
-                Log.Debug($"use veil");
-                veil.UseAbility(Target.NetworkPosition);
-            }
-
-            var eth = MyHero.FindItem("item_ethereal_blade");
-            if (eth != null && eth.CanBeCasted(Target))
-            {
-                var speed = eth.AbilitySpecialData.First(x => x.Name == "projectile_speed").Value;
-                var time = Target.Distance2D(MyHero) / speed;
-                Log.Debug($"waiting for eth {time}");
-                eth.UseAbility(Target);
-                await Await.Delay((int) (time * 1000.0f + Game.Ping), tk);
-            }
-
             var ult = MyHero.Spellbook.SpellR;
             if (ult.CanBeCasted(Target) && (Target.IsRooted() || Target.MovementSpeed < 200 || !Target.IsMoving))
             {
@@ -113,16 +87,9 @@ namespace Zaio.Heroes
                 await Await.Delay((int) (castPoint * 1000.0 + Game.Ping), tk);
             }
 
-            var dagon = MyHero.Inventory.Items.FirstOrDefault(x => x.Name.StartsWith("item_dagon"));
-            if (dagon != null && dagon.CanBeCasted(Target))
-            {
-                Log.Debug($"Use dagon");
-                dagon.UseAbility(Target);
-            }
-
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalk(300);
+                Orbwalk(450);
             }
             else
             {

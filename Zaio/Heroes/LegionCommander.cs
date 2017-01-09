@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
@@ -41,6 +42,69 @@ namespace Zaio.Heroes
             ZaioMenu.LoadHeroSettings(heroMenu);
         }
 
+        protected override async Task<bool> Killsteal()
+        {
+            if (await base.Killsteal())
+            {
+                return true;
+            }
+
+            if (MyHero.IsSilenced())
+            {
+                return false;
+            }
+
+            var odds = MyHero.Spellbook.SpellQ;
+            if (odds.CanBeCasted())
+            {
+                var damage = odds.GetAbilityData("damage");
+                var damagePerUnit = odds.GetAbilityData("damage_per_unit");
+                var damagePerHero = odds.GetAbilityData("damage_per_hero");
+                var radius = odds.GetAbilityData("radius");
+
+                var enemies =
+                    ObjectManager.GetEntitiesParallel<Hero>()
+                                 .Where(
+                                     x =>
+                                         x.IsAlive && x.Team != MyHero.Team && odds.CanBeCasted(x) && odds.CanHit(x));
+
+                var spellAmp = GetSpellAmp();
+                foreach (var enemy in enemies)
+                {
+                    var additionalTargetCount =
+                        ObjectManager.GetEntitiesParallel<Unit>()
+                                     .Where(
+                                         x =>
+                                             x.IsValid && x.IsAlive && x != enemy && x.Team != MyHero.Team &&
+                                             !x.IsMagicImmune() && x.IsSpawned && x.IsRealUnit2() &&
+                                             x.Distance2D(enemy) <= radius);
+
+                    var enemyDamage = damage;
+                    enemyDamage += additionalTargetCount.Count(x => !(x is Hero)) * damagePerUnit;
+                    enemyDamage += additionalTargetCount.Count(x => x is Hero) * damagePerHero;
+                    enemyDamage *= spellAmp;
+
+                    if (enemy.Health <= enemyDamage * (1 - enemy.MagicDamageResist))
+                    {
+                        var predictedPos = Prediction.Prediction.PredictPosition(enemy,
+                            (int) (odds.FindCastPoint() * 1000.0));
+                        Log.Debug(
+                            $"using odds to killsteal! {enemyDamage} units: {additionalTargetCount.Count(x => !(x is Hero))} heroes: {additionalTargetCount.Count(x => x is Hero)}");
+
+                        foreach (var unit in additionalTargetCount)
+                        {
+                            Log.Debug($"{unit.Name}");
+                        }
+                        odds.UseAbility(predictedPos);
+                        await Await.Delay((int) (odds.FindCastPoint() * 1000.0 + Game.Ping));
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             if (MyHero.HasModifier("modifier_legion_commander_duel"))
@@ -51,18 +115,22 @@ namespace Zaio.Heroes
             var odds = MyHero.Spellbook.SpellQ;
             if (odds.CanBeCasted(Target) && MyHero.Mana > 300 && odds.CanHit(Target))
             {
-                var radius = odds.AbilitySpecialData.First(x => x.Name == "radius").Value;
+                var radius = odds.GetAbilityData("radius");
                 var targets =
                     ObjectManager.GetEntitiesParallel<Unit>()
                                  .Where(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() &&
+                                         x.IsRealUnit2() &&
                                          x.Distance2D(Target) <= radius);
                 var heroes = targets.Where(x => x is Hero);
                 if (heroes.Any() || targets.Count() >= 5)
                 {
                     Log.Debug($"Using Q with {heroes.Count()} heroes and {targets.Count()} targets");
-                    odds.UseAbility(Target.NetworkPosition);
+
+                    var predictedPos = Prediction.Prediction.PredictPosition(Target,
+                        (int) (odds.FindCastPoint() * 1000.0));
+                    odds.UseAbility(predictedPos);
                     await Await.Delay((int) (odds.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
                 else
@@ -70,6 +138,8 @@ namespace Zaio.Heroes
                     Log.Debug($"NOT using Q sionce only {heroes.Count()} heroes and {targets.Count()} targets");
                 }
             }
+
+            await UseItems(tk);
 
             // press the attack for teh damage
             var duel = MyHero.Spellbook.SpellR;
@@ -85,7 +155,7 @@ namespace Zaio.Heroes
                         await Await.Delay((int) (pressTheAttack.FindCastPoint() * 1000.0 + Game.Ping), tk);
                     }
                 }
-                var armlet = MyHero.FindItem("item_armlet");
+                var armlet = MyHero.GetItemById(ItemId.item_armlet);
                 if (armlet != null && !armlet.IsToggled)
                 {
                     Log.Debug($"toggling armlet");
@@ -104,12 +174,6 @@ namespace Zaio.Heroes
                 // return;
             }
 
-            var bladeMail = MyHero.FindItem("item_blade_mail");
-            if (bladeMail != null && bladeMail.CanBeCasted())
-            {
-                Log.Debug($"using blademail");
-                bladeMail.UseAbility();
-            }
             // test if ulti is good
             var hasLinkens = Target.IsLinkensProtected();
             if (hasLinkens)
@@ -144,6 +208,13 @@ namespace Zaio.Heroes
             }
             if (duel.CanBeCasted(Target) && !hasLinkens)
             {
+                var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
+                if (bladeMail != null && bladeMail.CanBeCasted())
+                {
+                    Log.Debug($"using blademail");
+                    bladeMail.UseAbility();
+                }
+
                 Log.Debug($"using duel");
                 duel.UseAbility(Target);
                 await Await.Delay((int) (duel.FindCastPoint() * 1000.0 + Game.Ping), tk);

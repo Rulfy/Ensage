@@ -33,23 +33,27 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="clipper_library">
+      <HintPath>C:\PS\References\clipper_library.dll</HintPath>
+    </Reference>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
+      <HintPath>C:\PS\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharp\References\Ensage.Common.dll</HintPath>
+      <HintPath>C:\PS\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="PlaySharp.Toolkit">
-      <HintPath>C:\EnsageSharp\References\PlaySharp.Toolkit.dll</HintPath>
+      <HintPath>C:\PS\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>C:\EnsageSharp\References\SharpDX.dll</HintPath>
+      <HintPath>C:\PS\References\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9">
-      <HintPath>C:\EnsageSharp\References\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>C:\PS\References\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -59,9 +63,12 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helpers\BoolEventArgs - Copy.cs" />
+    <Compile Include="Helpers\KeyEventArgs.cs" />
     <Compile Include="Helpers\BoolEventArgs.cs" />
+    <Compile Include="Helpers\Geometry.cs" />
     <Compile Include="Helpers\HeroAttribute.cs" />
+    <Compile Include="Helpers\MyUnitExtension.cs" />
+    <Compile Include="Heroes\Clockwork.cs" />
     <Compile Include="Heroes\LegionCommander.cs" />
     <Compile Include="Heroes\Lion.cs" />
     <Compile Include="Heroes\Nyx.cs" />

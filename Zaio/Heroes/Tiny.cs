@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
@@ -21,9 +22,7 @@ namespace Zaio.Heroes
         private static readonly string[] SupportedAbilities =
         {
             "tiny_avalanche",
-            "tiny_toss",
-            "item_blade_mail",
-            "item_manta"
+            "tiny_toss"
         };
 
         public override void OnLoad()
@@ -42,6 +41,8 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
+            await UseItems(tk);
+
             // make him disabled
             if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
@@ -49,7 +50,7 @@ namespace Zaio.Heroes
                 // return;
             }
 
-            var manta = MyHero.FindItem("item_manta");
+            var manta = MyHero.GetItemById(ItemId.item_manta);
             if (manta != null && manta.CanBeCasted() && MyHero.IsSilenced())
             {
                 Log.Debug($"use manta 1 because silenced");

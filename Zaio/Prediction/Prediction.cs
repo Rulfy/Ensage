@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Extensions.SharpDX;
+using log4net;
+using PlaySharp.Toolkit.Logging;
 using SharpDX;
 
 namespace Zaio.Prediction
@@ -19,6 +22,8 @@ namespace Zaio.Prediction
 
     public static class Prediction
     {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private static readonly NavMeshPathfinding Pathfinding = new NavMeshPathfinding();
         private static Dictionary<Unit, Vector3> _lastPositions = new Dictionary<Unit, Vector3>();
         private static Dictionary<Unit, float> _lastRotations = new Dictionary<Unit, float>();
@@ -52,9 +57,11 @@ namespace Zaio.Prediction
 
         public static Vector3 PredictPosition(Unit target, int time, PredictionType type = PredictionType.GridNav)
         {
-            var maxDistance = time / 1000.0f * target.MovementSpeed;
+            var maxDistance = time / 1000.0f * target.MovementSpeed + target.HullRadius;
             var inFront = Ensage.Common.Prediction.InFront(target, maxDistance);
-            if (time <= 500)
+            inFront.Z = target.NetworkPosition.Z;
+
+            if (time <= 400)
             {
                 return inFront;
             }

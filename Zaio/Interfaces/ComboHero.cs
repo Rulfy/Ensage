@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common;
 using Ensage.Common.Combo;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Objects.UtilityObjects;
@@ -30,6 +31,29 @@ namespace Zaio.Interfaces
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly bool _repeatCombo;
+
+        protected readonly ItemId[] DisableItemList =
+        {
+            ItemId.item_sheepstick,
+            ItemId.item_abyssal_blade,
+            ItemId.item_bloodthorn,
+            ItemId.item_orchid,
+            ItemId.item_heavens_halberd
+        };
+
+        protected readonly ItemId[] ItemList =
+        {
+            ItemId.item_veil_of_discord,
+            ItemId.item_ethereal_blade,
+            ItemId.item_urn_of_shadows,
+            ItemId.item_rod_of_atos,
+            ItemId.item_dagon,
+            ItemId.item_dagon_2,
+            ItemId.item_dagon_3,
+            ItemId.item_dagon_4,
+            ItemId.item_dagon_5
+        };
+
         private ParticleEffect _attackRangeEffect;
         private bool _executed;
         protected Hero MyHero;
@@ -110,7 +134,7 @@ namespace Zaio.Interfaces
 
         private void GameDispatcher_OnIngameUpdate(EventArgs args)
         {
-            if (ZaioMenu.ShouldKillSteal)
+            if (ZaioMenu.ShouldKillSteal && !Game.IsPaused && MyHero.IsAlive)
             {
                 Await.Block("zaio_killstealer", Killsteal);
             }
@@ -284,17 +308,10 @@ namespace Zaio.Interfaces
             {
                 return DisabledState.AlreadyDisabled;
             }
-            var itemList = new[]
+
+            foreach (var itemName in DisableItemList)
             {
-                "item_sheepstick",
-                "item_abyssal_blade",
-                "item_bloodthorn",
-                "item_orchid",
-                "item_heavens_halberd"
-            };
-            foreach (var itemName in itemList)
-            {
-                var item = MyHero.FindItem(itemName);
+                var item = MyHero.GetItemById(itemName);
                 if (item != null && item.CanBeCasted(Target) && item.CanHit(Target))
                 {
                     Log.Debug($"using disable item {item.Name}");
@@ -305,29 +322,72 @@ namespace Zaio.Interfaces
             return DisabledState.NotDisabled;
         }
 
-        protected virtual async Task Killsteal()
+        protected float GetSpellAmp()
         {
             // spell amp
             var spellAmp = (100.0f + MyHero.TotalIntelligence / 16.0f) / 100.0f;
 
-            var aether = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_Aether_Lens);
+            var aether = MyHero.GetItemById(ItemId.item_aether_lens);
             if (aether != null)
             {
                 spellAmp += aether.AbilitySpecialData.First(x => x.Name == "spell_amp").Value / 100.0f;
             }
 
-            var talent = MyHero.Spellbook.Spells.FirstOrDefault(x => x.Name.StartsWith("special_bonus_spell_amplify_"));
-            if (talent != null && talent.Level > 0)
+            var talent =
+                MyHero.Spellbook.Spells.FirstOrDefault(
+                    x => x.Level > 0 && x.Name.StartsWith("special_bonus_spell_amplify_"));
+            if (talent != null)
             {
                 spellAmp += talent.AbilitySpecialData.First(x => x.Name == "value").Value / 100.0f;
             }
 
+            return spellAmp;
+        }
+
+        protected virtual async Task UseItems(CancellationToken tk = default(CancellationToken))
+        {
+            foreach (var itemId in ItemList)
+            {
+                var item = MyHero.GetItemById(itemId);
+                if (item != null && item.CanBeCasted(Target) && item.CanHit(Target))
+                {
+                    if (item.AbilityBehavior.HasFlag(AbilityBehavior.UnitTarget))
+                    {
+                        item.UseAbility(Target);
+
+                        // wait for eth hit to get bonus damage with following spells
+                        if (item.ID == (uint) ItemId.item_ethereal_blade)
+                        {
+                            var speed = item.GetAbilityData("projectile_speed");
+                            if (speed != 0.0f)
+                            {
+                                var time = Target.Distance2D(MyHero) / speed;
+                                await Await.Delay((int) (time * 1000.0f + Game.Ping), tk);
+                            }
+                        }
+                    }
+                    else if (item.AbilityBehavior.HasFlag(AbilityBehavior.Point))
+                    {
+                        item.UseAbility(Target.NetworkPosition);
+                    }
+                }
+            }
+        }
+
+        protected virtual async Task<bool> Killsteal()
+        {
+            if (MyHero.UnitState.HasFlag(UnitState.Muted) || MyHero.IsStunned() || MyHero.IsHexed())
+            {
+                return true;
+            }
+            // spell amp
+            var spellAmp = GetSpellAmp();
 
             // killsteal items
-            var eth = MyHero.FindItem("item_ethereal_blade");
+            var eth = MyHero.GetItemById(ItemId.item_ethereal_blade);
             if (eth != null && eth.CanBeCasted())
             {
-                var damage = eth.AbilitySpecialData.First(x => x.Name == "blast_damage_base").Value;
+                var damage = eth.GetAbilityData("blast_damage_base");
                 if (MyHero.PrimaryAttribute == Attribute.Agility)
                 {
                     damage += MyHero.TotalAgility * 2;
@@ -341,24 +401,22 @@ namespace Zaio.Interfaces
                     damage += MyHero.TotalStrength * 2;
                 }
 
-                damage *= spellAmp +
-                          eth.AbilitySpecialData.First(x => x.Name == "ethereal_damage_bonus").Value / -100.0f;
+                damage *= spellAmp + eth.GetAbilityData("ethereal_damage_bonus") / -100.0f;
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && !x.IsMagicImmune() &&
-                                         x.Distance2D(MyHero) < eth.CastRange &&
+                                         x.IsAlive && x.Team != MyHero.Team && eth.CanBeCasted(x) && eth.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicDamageResist));
                 if (enemy != null)
                 {
                     eth.UseAbility(enemy);
-                    var speed = eth.AbilitySpecialData.First(x => x.Name == "projectile_speed").Value;
+                    var speed = eth.GetAbilityData("projectile_speed");
                     var time = enemy.Distance2D(MyHero) / speed;
                     Log.Debug($"killsteal for eth {time} with damage {damage} ({damage * (1 - enemy.MagicDamageResist)}");
                     eth.UseAbility(enemy);
                     await Await.Delay((int) (time * 1000.0f + Game.Ping));
-                    return;
+                    return true;
                 }
             }
 
@@ -373,8 +431,7 @@ namespace Zaio.Interfaces
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && !x.IsMagicImmune() &&
-                                         x.Distance2D(MyHero) < dagon.CastRange &&
+                                         x.IsAlive && x.Team != MyHero.Team && dagon.CanBeCasted(x) && dagon.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicDamageResist));
                 if (enemy != null)
                 {
@@ -382,8 +439,10 @@ namespace Zaio.Interfaces
                         $"killsteal dagon {index} damage: {damage} ({damage * (1 - enemy.MagicDamageResist)}) - {dagon.CastRange}");
                     dagon.UseAbility(enemy);
                     await Await.Delay(125);
+                    return true;
                 }
             }
+            return false;
         }
     }
 }

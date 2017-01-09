@@ -22,8 +22,7 @@ namespace Zaio.Heroes
         {
             "ursa_earthshock",
             "ursa_overpower",
-            "ursa_enrage",
-            "item_blade_mail"
+            "ursa_enrage"
         };
 
         public override void OnLoad()
@@ -52,6 +51,8 @@ namespace Zaio.Heroes
                     await Await.Delay((int) (overpower.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
             }
+            await UseItems(tk);
+
             // make him disabled
             if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {

@@ -41,21 +41,79 @@ namespace Zaio.Heroes
             ZaioMenu.LoadHeroSettings(heroMenu);
         }
 
+        protected override async Task<bool> Killsteal()
+        {
+            if (await base.Killsteal())
+            {
+                return true;
+            }
+
+            if (MyHero.IsSilenced())
+            {
+                return false;
+            }
+
+            var ult = MyHero.Spellbook.SpellR;
+            if (ult.CanBeCasted())
+            {
+                var damage =
+                    ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) ? "damage_scepter" : "damage");
+                damage *= GetSpellAmp();
+                Log.Debug($"test ult damage {damage}");
+                var enemy =
+                    ObjectManager.GetEntitiesParallel<Hero>()
+                                 .FirstOrDefault(
+                                     x =>
+                                         x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) &&
+                                         x.Health < damage * (1 - x.MagicDamageResist));
+                if (enemy != null)
+                {
+                    Log.Debug(
+                        $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicDamageResist)} ");
+                    ult.UseAbility(enemy);
+                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping));
+                    return true;
+                }
+            }
+
+            var stun = MyHero.Spellbook.SpellQ;
+            if (stun.CanBeCasted())
+            {
+                var damage = (float) stun.GetDamage(stun.Level - 1);
+                damage *= GetSpellAmp();
+
+                var enemy =
+                    ObjectManager.GetEntitiesParallel<Hero>()
+                                 .FirstOrDefault(
+                                     x =>
+                                         x.IsAlive && x.Team != MyHero.Team && stun.CanBeCasted(x) && stun.CanHit(x) &&
+                                         x.Health < damage * (1 - x.MagicDamageResist));
+                if (enemy != null)
+                {
+                    var speed = stun.GetAbilityData("speed");
+                    var time = enemy.Distance2D(MyHero) / speed * 1000.0f;
+
+                    var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) time);
+                    Log.Debug(
+                        $"use killsteal stun because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicDamageResist)} ");
+                    stun.UseAbility(predictedPos);
+                    await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping));
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            var ult = MyHero.Spellbook.SpellR;
+            await UseItems(tk);
 
+            var ult = MyHero.Spellbook.SpellR;
             if (ult.CanBeCasted(Target) && ult.CanHit(Target) && !Target.IsLinkensProtected())
             {
-                var damage = 0.0f;
-                if (MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter))
-                {
-                    damage = ult.AbilitySpecialData.First(x => x.Name == "damage_scepter").GetValue(ult.Level - 1);
-                }
-                else
-                {
-                    damage = ult.AbilitySpecialData.First(x => x.Name == "damage").GetValue(ult.Level - 1);
-                }
+                var damage =
+                    ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) ? "damage_scepter" : "damage");
                 if (Target.Health <= damage * (1.0f - Target.MagicDamageResist))
                 {
                     Log.Debug(
@@ -89,7 +147,7 @@ namespace Zaio.Heroes
                 maxRange = Math.Max(maxRange, stun.CastRange);
                 if (stun.CanBeCasted(Target) && hex.CanHit(Target))
                 {
-                    var speed = stun.AbilitySpecialData.First(x => x.Name == "speed").Value;
+                    var speed = stun.GetAbilityData("speed");
                     var time = Target.Distance2D(MyHero) / speed * 1000.0f;
 
                     var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
@@ -134,7 +192,7 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalk(300);
+                Orbwalk(450);
             }
             else
             {
