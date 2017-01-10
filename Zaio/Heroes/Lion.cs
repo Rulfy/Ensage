@@ -130,7 +130,7 @@ namespace Zaio.Heroes
                 // return;
             }
             float maxRange = 500;
-            var duration = 0.0f;
+            float duration;
             if (!(Target.IsHexed(out duration) || Target.IsStunned(out duration)) || duration < 1.2)
             {
                 var hex = MyHero.Spellbook.SpellW;
@@ -161,9 +161,12 @@ namespace Zaio.Heroes
 
             if (ult.CanBeCasted(Target) && ult.CanHit(Target) && !Target.IsLinkensProtected())
             {
-                Log.Debug($"use ult");
-                ult.UseAbility(Target);
-                await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                if (Target.IsHexed() || Target.IsStunned() || (float)Target.Health / Target.MaximumHealth < 0.5f  )
+                {
+                    Log.Debug($"use ult");
+                    ult.UseAbility(Target);
+                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
             }
 
             var mana = MyHero.Spellbook.SpellE;

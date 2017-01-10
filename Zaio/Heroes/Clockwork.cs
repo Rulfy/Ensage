@@ -88,7 +88,7 @@ namespace Zaio.Heroes
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted())
+            if (MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) && ult.CanBeCasted())
             {
                 var damage = ult.GetAbilityData("damage");
                 damage *= GetSpellAmp();

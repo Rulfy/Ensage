@@ -51,7 +51,8 @@ namespace Zaio.Interfaces
             ItemId.item_dagon_2,
             ItemId.item_dagon_3,
             ItemId.item_dagon_4,
-            ItemId.item_dagon_5
+            ItemId.item_dagon_5,
+            ItemId.item_shivas_guard
         };
 
         private ParticleEffect _attackRangeEffect;
@@ -369,6 +370,10 @@ namespace Zaio.Interfaces
                     else if (item.AbilityBehavior.HasFlag(AbilityBehavior.Point))
                     {
                         item.UseAbility(Target.NetworkPosition);
+                    }
+                    else if (item.AbilityBehavior.HasFlag(AbilityBehavior.NoTarget))
+                    {
+                        item.UseAbility();
                     }
                 }
             }
