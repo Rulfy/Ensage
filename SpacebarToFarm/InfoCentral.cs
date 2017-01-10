@@ -133,16 +133,16 @@ namespace SpacebarToFarm
 
             EnemyCreeps =
                 ObjectManager.GetEntitiesParallel<Creep>()
-                    .Where(x => x.IsAlive && x.IsSpawned && x.Team != player.Team)
+                    .Where(x => x.IsValid && x.IsAlive && x.IsSpawned && x.Team != player.Team)
                     .ToList();
             AlliedCreeps =
                 ObjectManager.GetEntitiesParallel<Creep>()
-                    .Where(x => x.IsAlive && x.IsSpawned && x.Team == player.Team)
+                    .Where(x => x.IsValid && x.IsAlive && x.IsSpawned && x.Team == player.Team)
                     .ToList();
 
             AnimationInformation =
                 AnimationInformation.Where(
-                        x => x.Key.IsAlive && (Game.RawGameTime - x.Value) < x.Key.SecondsPerAttack * 4)
+                        x => x.Key.IsValid && x.Key.IsAlive && (Game.RawGameTime - x.Value) < x.Key.SecondsPerAttack * 4)
                     .ToDictionary(x => x.Key, x => x.Value);
 
             Utils.Sleep(250, "lastHitCreepRefresh");

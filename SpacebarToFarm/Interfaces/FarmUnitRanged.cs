@@ -122,7 +122,7 @@
 
         protected override float GetBaseDamage(Unit target)
         {
-            var baseDamage = ((float)ControlledUnit.MinimumDamage + ControlledUnit.MaximumDamage) / 2;
+            var baseDamage = (float)ControlledUnit.MinimumDamage;
             // base damage amplification
             if (target.Team != ControlledUnit.Team)
             {
