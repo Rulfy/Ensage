@@ -51,6 +51,7 @@ namespace Zaio.Heroes
                     await Await.Delay((int) (overpower.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
             }
+            HasNoLinkens(Target);
             await UseItems(tk);
 
             // make him disabled

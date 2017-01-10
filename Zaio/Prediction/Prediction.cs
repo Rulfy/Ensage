@@ -55,9 +55,16 @@ namespace Zaio.Prediction
             return false;
         }
 
-        public static Vector3 PredictPosition(Unit target, int time, PredictionType type = PredictionType.GridNav)
+        public static Vector3 PredictPosition(Unit target, int time, bool noTurning = false, PredictionType type = PredictionType.GridNav)
         {
             var maxDistance = time / 1000.0f * target.MovementSpeed + target.HullRadius;
+
+            if (noTurning && IsRotating(target)) // max distance checking? -> todo: testing
+                return Vector3.Zero;
+
+            if (!target.IsMoving)
+                return target.NetworkPosition;
+
             var inFront = Ensage.Common.Prediction.InFront(target, maxDistance);
             inFront.Z = target.NetworkPosition.Z;
 

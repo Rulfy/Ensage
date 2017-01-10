@@ -28,6 +28,11 @@ namespace Zaio.Heroes
             "item_armlet"
         };
 
+        private static readonly string[] KillstealAbilities =
+         {
+            "legion_commander_overwhelming_odds"
+        };
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -38,6 +43,11 @@ namespace Zaio.Heroes
             var supportedStuff = new MenuItem("zaioLegionAbilities", string.Empty);
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
+
+            heroMenu.AddItem(new MenuItem("zaioLegionKillstealAbilitiesText", "Supported Killsteal Abilities"));
+            var supportedKillsteal = new MenuItem("zaioLegionKillstealAbilities", string.Empty);
+            supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
+            heroMenu.AddItem(supportedKillsteal);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
         }
@@ -143,7 +153,7 @@ namespace Zaio.Heroes
 
             // press the attack for teh damage
             var duel = MyHero.Spellbook.SpellR;
-            if (IsInRange(duel.CastRange))
+            if (IsInRange(duel.GetCastRange()))
             {
                 var enemyHealth = (float) Target.Health / Target.MaximumHealth;
                 if (!MyHero.HasModifier("modifier_press_the_attack") && enemyHealth > 0.33f)
@@ -175,38 +185,7 @@ namespace Zaio.Heroes
             }
 
             // test if ulti is good
-            var hasLinkens = Target.IsLinkensProtected();
-            if (hasLinkens)
-            {
-                var heavens = MyHero.FindItem("item_heavens_halberd");
-                if (heavens != null && heavens.CanBeCasted(Target))
-                {
-                    heavens.UseAbility(Target);
-
-                    hasLinkens = false;
-                }
-                else
-                {
-                    var orchid = MyHero.FindItem("item_orchid");
-                    if (orchid != null && orchid.CanBeCasted(Target))
-                    {
-                        orchid.UseAbility(Target);
-
-                        hasLinkens = false;
-                    }
-                    else
-                    {
-                        var bloodthorn = MyHero.FindItem("item_bloodthorn");
-                        if (bloodthorn != null && bloodthorn.CanBeCasted(Target))
-                        {
-                            bloodthorn.UseAbility(Target);
-
-                            hasLinkens = false;
-                        }
-                    }
-                }
-            }
-            if (duel.CanBeCasted(Target) && !hasLinkens)
+            if (duel.CanBeCasted(Target) && HasNoLinkens(Target))
             {
                 var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
                 if (bladeMail != null && bladeMail.CanBeCasted())

@@ -74,7 +74,7 @@ namespace Zaio.Heroes
 
                 return;
             }
-
+            HasNoLinkens(Target);
             await UseItems(tk);
 
             var ult = MyHero.Spellbook.SpellR;

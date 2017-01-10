@@ -28,6 +28,12 @@ namespace Zaio.Heroes
             "nyx_assassin_vendetta"
         };
 
+        private static readonly string[] KillstealAbilities =
+        {
+            "nyx_assassin_impale",
+            "nyx_assassin_mana_burn"
+        };
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -38,6 +44,11 @@ namespace Zaio.Heroes
             var supportedStuff = new MenuItem("zaioNyxAbilities", string.Empty);
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
+
+            heroMenu.AddItem(new MenuItem("zaioNyxKillstealAbilitiesText", "Supported Killsteal Abilities"));
+            var supportedKillsteal = new MenuItem("zaioNyxKillstealAbilities", string.Empty);
+            supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
+            heroMenu.AddItem(supportedKillsteal);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
         }
@@ -116,6 +127,7 @@ namespace Zaio.Heroes
                 var manaNeeded = stun.CanBeCasted(Target) ? stun.ManaCost + 100 : 0;
                 if (manaNeeded <= MyHero.Mana)
                 {
+                    HasNoLinkens(Target);
                     await UseItems(tk);
 
                     // make him disabled
@@ -131,10 +143,13 @@ namespace Zaio.Heroes
                     var time = Target.Distance2D(MyHero) / speed * 1000.0f;
 
                     var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
-                    stun.UseAbility(predictedPos);
+                    if (MyHero.Distance2D(predictedPos) <= stun.GetCastRange())
+                    {
+                        stun.UseAbility(predictedPos);
 
-                    Log.Debug($"Use stun");
-                    await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        Log.Debug($"Use stun");
+                        await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    }
                 }
 
                 var manaBurn = MyHero.Spellbook.SpellW;

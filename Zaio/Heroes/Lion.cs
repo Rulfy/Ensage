@@ -27,6 +27,12 @@ namespace Zaio.Heroes
             "lion_finger_of_death"
         };
 
+        private static readonly string[] KillstealAbilities =
+        {
+            "lion_impale",
+            "lion_finger_of_death"
+        };
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -37,6 +43,11 @@ namespace Zaio.Heroes
             var supportedStuff = new MenuItem("zaioLionAbilities", string.Empty);
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
+
+            heroMenu.AddItem(new MenuItem("zaioLionKillstealAbilitiesText", "Supported Killsteal Abilities"));
+            var supportedKillsteal = new MenuItem("zaioLionKillstealAbilities", string.Empty);
+            supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
+            heroMenu.AddItem(supportedKillsteal);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
         }
@@ -59,14 +70,13 @@ namespace Zaio.Heroes
                 var damage =
                     ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) ? "damage_scepter" : "damage");
                 damage *= GetSpellAmp();
-                Log.Debug($"test ult damage {damage}");
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicDamageResist));
-                if (enemy != null)
+                if (enemy != null && HasNoLinkens(enemy))
                 {
                     Log.Debug(
                         $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicDamageResist)} ");
@@ -135,33 +145,54 @@ namespace Zaio.Heroes
             {
                 var hex = MyHero.Spellbook.SpellW;
                 maxRange = Math.Max(maxRange, hex.CastRange);
-                if (hex.CanBeCasted(Target) && hex.CanHit(Target))
+                if (hex.CanBeCasted(Target))
                 {
-                    Log.Debug($"use hex {duration}");
-                    hex.UseAbility(Target);
-                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
-                    return;
+                    if (hex.CanHit(Target))
+                    {
+                        Log.Debug($"use hex {duration}");
+                        hex.UseAbility(Target);
+                        await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        return;
+                    }
+                    if (!await MoveOrBlinkToEnemy(tk, 250, hex.GetCastRange()))
+                    {
+                        Log.Debug($"return because of blink and hex ready");
+                        return;
+                    }
                 }
 
                 var stun = MyHero.Spellbook.SpellQ;
                 maxRange = Math.Max(maxRange, stun.CastRange);
-                if (stun.CanBeCasted(Target) && hex.CanHit(Target))
+                if (stun.CanBeCasted(Target))
                 {
-                    var speed = stun.GetAbilityData("speed");
-                    var time = Target.Distance2D(MyHero) / speed * 1000.0f;
+                    if (hex.CanHit(Target))
+                    {
+                        var speed = stun.GetAbilityData("speed");
+                        var time = Target.Distance2D(MyHero) / speed * 1000.0f;
 
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
-
-                    Log.Debug($"use stun {duration} | {time}");
-                    stun.UseAbility(predictedPos);
-                    await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
-                    return;
+                        var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
+                        if (MyHero.Distance2D(predictedPos) <= stun.GetCastRange())
+                        {
+                            Log.Debug($"use stun {duration} | {time}");
+                            stun.UseAbility(predictedPos);
+                            await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        if (!await MoveOrBlinkToEnemy(tk, 250, stun.GetCastRange()))
+                        {
+                            Log.Debug($"return because of blink and stun ready");
+                            return;
+                        }
+                    }
                 }
             }
 
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && !Target.IsLinkensProtected())
+            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && HasNoLinkens(Target))
             {
-                if (Target.IsHexed() || Target.IsStunned() || (float)Target.Health / Target.MaximumHealth < 0.5f  )
+                if (Target.IsHexed() || Target.IsStunned() || ((float)Target.Health / Target.MaximumHealth) * (1.0f + Target.MagicDamageResist) < 0.5f  )
                 {
                     Log.Debug($"use ult");
                     ult.UseAbility(Target);

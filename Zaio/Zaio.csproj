@@ -69,11 +69,15 @@
     <Compile Include="Helpers\HeroAttribute.cs" />
     <Compile Include="Helpers\MyUnitExtension.cs" />
     <Compile Include="Heroes\Clockwork.cs" />
+    <Compile Include="Heroes\Generic.cs" />
     <Compile Include="Heroes\LegionCommander.cs" />
+    <Compile Include="Heroes\Jakiro.cs" />
+    <Compile Include="Heroes\LeShrak.cs" />
     <Compile Include="Heroes\Lion.cs" />
     <Compile Include="Heroes\Nyx.cs" />
     <Compile Include="Heroes\SkywrathMage.cs" />
     <Compile Include="Heroes\SpiritBreaker.cs" />
+    <Compile Include="Heroes\Axe.cs" />
     <Compile Include="Heroes\Tiny.cs" />
     <Compile Include="Heroes\Ursa.cs" />
     <Compile Include="Interfaces\ComboExecutor.cs" />

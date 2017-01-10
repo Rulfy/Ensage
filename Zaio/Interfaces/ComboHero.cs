@@ -41,6 +41,26 @@ namespace Zaio.Interfaces
             ItemId.item_heavens_halberd
         };
 
+        protected readonly ItemId[] LinkensItemList =
+        {
+            ItemId.item_force_staff,
+            ItemId.item_hurricane_pike,
+            ItemId.item_heavens_halberd,
+            ItemId.item_cyclone,
+            ItemId.item_rod_of_atos,
+            ItemId.item_orchid,
+            ItemId.item_bloodthorn,
+            ItemId.item_diffusal_blade,
+            ItemId.item_diffusal_blade_2,
+            ItemId.item_dagon,
+            ItemId.item_dagon_2,
+            ItemId.item_dagon_3,
+            ItemId.item_dagon_4,
+            ItemId.item_dagon_5,
+            ItemId.item_sheepstick,
+            ItemId.item_abyssal_blade, 
+        };
+
         protected readonly ItemId[] ItemList =
         {
             ItemId.item_veil_of_discord,
@@ -447,6 +467,24 @@ namespace Zaio.Interfaces
                     return true;
                 }
             }
+            return false;
+        }
+
+        protected virtual bool HasNoLinkens(Unit target)
+        {
+            if (!target.IsLinkensProtected())
+                return true;
+
+            foreach (var itemId in LinkensItemList)
+            {
+                var item = MyHero.GetItemById(itemId);
+                if (item != null && item.CanBeCasted(target) && item.CanHit(target))
+                {
+                    item.UseAbility(target);
+                    return true;
+                }
+            }
+
             return false;
         }
     }

@@ -6,6 +6,7 @@ using Ensage.Common;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
+using Zaio.Heroes;
 using Zaio.Interfaces;
 
 namespace Zaio
@@ -81,7 +82,10 @@ namespace Zaio
                     }
                 }
                 Game.PrintMessage(
-                    $"Zaio: <font color='#FF1133'>{Game.Localize(hero.Name)} is not supported! ({hero.ClassID})</font>");
+                    $"Zaio: <font color='#FF1133'>{Game.Localize(hero.Name)} is not supported! But items and orbwalking will still work.</font>");
+                _currentHero = new Generic();
+                _currentHero.OnLoad();
+                _currentHero.Activate();
             }
         }
     }
