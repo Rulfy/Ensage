@@ -74,8 +74,8 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ult.CanBeCasted(x) && ult.CanHit(x) &&
+                                         x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
                 if (enemy != null && HasNoLinkens(enemy))
                 {
                     Log.Debug(
@@ -96,8 +96,8 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && stun.CanBeCasted(x) && stun.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && stun.CanBeCasted(x) && stun.CanHit(x) &&
+                                         x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
                 if (enemy != null)
                 {
                     var speed = stun.GetAbilityData("speed");

@@ -264,7 +264,7 @@ namespace Zaio.Interfaces
         {
             var distance = MyHero.Distance2D(Target) - Target.HullRadius - MyHero.HullRadius;
 
-            var testRange = Math.Max(MyHero.GetAttackRange() * 1.1f, maximumRange);
+            var testRange = maximumRange == 0.0f ? MyHero.GetAttackRange() : maximumRange;
             if (distance <= testRange)
             {
                 return true;

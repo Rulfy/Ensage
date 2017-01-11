@@ -72,8 +72,8 @@ namespace Zaio.Heroes
 
                 var enemy = ObjectManager.GetEntitiesParallel<Hero>().FirstOrDefault(
                     x =>
-                        x.IsValid && x.IsAlive && x.Team != MyHero.Team &&
-                        ult.CanBeCasted(x) && ult.CanHit(x) && x.Health < threshold);
+                        x.IsValid && x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && 
+                        ult.CanBeCasted(x) && ult.CanHit(x) && x.Health < threshold && !x.IsLinkensProtected());
                 if (enemy != null)
                 {
                     Log.Debug($"using ult on {enemy.Name}: {enemy.Health} < {threshold}");
@@ -88,7 +88,7 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target))
+            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && HasNoLinkens(Target))
             {
                 var threshold =
                     ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)

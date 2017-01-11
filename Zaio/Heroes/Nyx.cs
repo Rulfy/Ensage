@@ -74,8 +74,8 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && impale.CanBeCasted(x) && impale.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && impale.CanBeCasted(x) && impale.CanHit(x) &&
+                                         x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
 
                 if (enemy != null)
                 {
@@ -100,8 +100,8 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && manaBurn.CanBeCasted(x) &&
-                                         manaBurn.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && manaBurn.CanBeCasted(x) &&
+                                         manaBurn.CanHit(x) && !x.IsLinkensProtected() &&
                                          x.Health <
                                          Math.Min(intMultiplier * x.TotalIntelligence, x.Mana) * GetSpellAmp() *
                                          (1 - x.MagicDamageResist));

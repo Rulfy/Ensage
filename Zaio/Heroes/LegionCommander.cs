@@ -85,7 +85,7 @@ namespace Zaio.Heroes
                         ObjectManager.GetEntitiesParallel<Unit>()
                                      .Where(
                                          x =>
-                                             x.IsValid && x.IsAlive && x != enemy && x.Team != MyHero.Team &&
+                                             x.IsValid && x.IsAlive && x != enemy && !x.IsIllusion && x.Team != MyHero.Team &&
                                              !x.IsMagicImmune() && x.IsSpawned && x.IsRealUnit2() &&
                                              x.Distance2D(enemy) <= radius);
 
