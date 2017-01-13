@@ -39,12 +39,14 @@ namespace Zaio
         private static MenuItem _killSteal;
         private static MenuItem _noTargetMode;
         private static MenuItem _orbwalkerMode;
+        private static MenuItem _blockKillSteal;
 
         public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int) _comboKey.GetValue<KeyBind>().Key);
         public static bool ShouldUseOrbwalker => _orbwalker.GetValue<bool>();
         public static bool ShouldDisplayAttackRange => _displayAttackRange.GetValue<bool>();
         public static bool ShouldLockTarget => _lockTarget.GetValue<bool>();
         public static bool ShouldKillSteal => _killSteal.GetValue<bool>();
+        public static bool ShouldBlockKillStealWhileComboing => _blockKillSteal.GetValue<bool>();
         public static NoTargetMode NoTargetMode { get; private set; }
 
         public static OrbwalkerMode OrbwalkerMode { get; private set; }
@@ -77,9 +79,13 @@ namespace Zaio
             _lockTarget.Tooltip = "Keep your target when losing sight on it.";
             general.AddItem(_lockTarget);
 
-            _killSteal = new MenuItem("zaioKillSteal", "Auto KillSteal").SetValue(true);
+            _killSteal = new MenuItem("zaioKillSteal", "Auto Killsteal").SetValue(true);
             _killSteal.Tooltip = "Uses items and abilities to killsteal when not comboing.";
             general.AddItem(_killSteal);
+
+            _blockKillSteal = new MenuItem("zaioBlockKillSteal", "Block Killsteal").SetValue(true);
+            _blockKillSteal.Tooltip = "Won't killsteal while you're using the combo hotkey on a target.";
+            general.AddItem(_blockKillSteal);
 
             _targetSelector =
                 new MenuItem("zaioTargetSelector", "Target Selector").SetValue(
@@ -130,7 +136,6 @@ namespace Zaio
             {
                 OrbwalkerMode = OrbwalkerMode.Attack;
             }
-            ;
         }
 
         private static void _orbwalkerMode_ValueChanged(object sender, OnValueChangeEventArgs e)

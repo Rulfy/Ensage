@@ -41,6 +41,20 @@ namespace Zaio.Interfaces
             ItemId.item_heavens_halberd
         };
 
+        protected readonly ItemId[] ItemList =
+        {
+            ItemId.item_veil_of_discord,
+            ItemId.item_ethereal_blade,
+            ItemId.item_urn_of_shadows,
+            ItemId.item_rod_of_atos,
+            ItemId.item_dagon,
+            ItemId.item_dagon_2,
+            ItemId.item_dagon_3,
+            ItemId.item_dagon_4,
+            ItemId.item_dagon_5,
+            ItemId.item_shivas_guard
+        };
+
         protected readonly ItemId[] LinkensItemList =
         {
             ItemId.item_force_staff,
@@ -58,25 +72,12 @@ namespace Zaio.Interfaces
             ItemId.item_dagon_4,
             ItemId.item_dagon_5,
             ItemId.item_sheepstick,
-            ItemId.item_abyssal_blade, 
-        };
-
-        protected readonly ItemId[] ItemList =
-        {
-            ItemId.item_veil_of_discord,
-            ItemId.item_ethereal_blade,
-            ItemId.item_urn_of_shadows,
-            ItemId.item_rod_of_atos,
-            ItemId.item_dagon,
-            ItemId.item_dagon_2,
-            ItemId.item_dagon_3,
-            ItemId.item_dagon_4,
-            ItemId.item_dagon_5,
-            ItemId.item_shivas_guard
+            ItemId.item_abyssal_blade
         };
 
         private ParticleEffect _attackRangeEffect;
         private bool _executed;
+        private float _lastAttackRange;
         protected Hero MyHero;
         protected Orbwalker Orbwalker;
         protected Unit Target;
@@ -90,6 +91,8 @@ namespace Zaio.Interfaces
         {
             _repeatCombo = repeatCombo;
         }
+
+        protected float TotalAttackRange => MyHero.GetAttackRange() + MyHero.HullRadius;
 
         public abstract Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken());
 
@@ -116,9 +119,11 @@ namespace Zaio.Interfaces
 
         private void CreateAttackEffect()
         {
+            _lastAttackRange = TotalAttackRange;
+            Log.Debug($"Attack range {_lastAttackRange}");
             _attackRangeEffect = MyHero.AddParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf");
             _attackRangeEffect.SetControlPoint(1, new Vector3(255, 0, 222));
-            _attackRangeEffect.SetControlPoint(2, new Vector3(MyHero.GetAttackRange() + MyHero.HullRadius, 255, 0));
+            _attackRangeEffect.SetControlPoint(2, new Vector3(_lastAttackRange, 255, 0));
             _attackRangeEffect.SetControlPoint(3, new Vector3(5, 0, 0));
         }
 
@@ -155,13 +160,23 @@ namespace Zaio.Interfaces
 
         private void GameDispatcher_OnIngameUpdate(EventArgs args)
         {
-            if (ZaioMenu.ShouldKillSteal && !Game.IsPaused && MyHero.IsAlive)
+            if (ZaioMenu.ShouldKillSteal && !Game.IsPaused && MyHero.IsAlive &&
+                (!ZaioMenu.ShouldBlockKillStealWhileComboing || Target == null || !CanExecute()))
             {
                 Await.Block("zaio_killstealer", Killsteal);
             }
             else
             {
                 Await.Block("zaio.killstealerSleep", Sleep);
+            }
+
+            if (TotalAttackRange != _lastAttackRange)
+            {
+                if (ZaioMenu.ShouldDisplayAttackRange)
+                {
+                    DestroyAttackEffect();
+                    CreateAttackEffect();
+                }
             }
         }
 
@@ -191,7 +206,7 @@ namespace Zaio.Interfaces
         {
             if (!ZaioMenu.ShouldLockTarget || Target == null || !Target.IsAlive)
             {
-                Log.Debug($"Find new target");
+                //Log.Debug($"Find new target");
                 // todo: more select0rs
                 Target = TargetSelector.ClosestToMouse(MyHero);
                 if (Target == null)
@@ -212,9 +227,16 @@ namespace Zaio.Interfaces
                     return;
                 }
             }
-            await ExecuteComboAsync(Target, token);
-            await Await.Delay(250, token);
-            _executed = true;
+
+            try
+            {
+                await ExecuteComboAsync(Target, token);
+                await Await.Delay(250, token);
+            }
+            finally
+            {
+                _executed = true;
+            }
         }
 
         protected override bool CanExecute()
@@ -473,7 +495,9 @@ namespace Zaio.Interfaces
         protected virtual bool HasNoLinkens(Unit target)
         {
             if (!target.IsLinkensProtected())
+            {
                 return true;
+            }
 
             foreach (var itemId in LinkensItemList)
             {

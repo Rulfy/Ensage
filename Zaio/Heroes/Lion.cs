@@ -74,7 +74,8 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ult.CanBeCasted(x) && ult.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ult.CanBeCasted(x) &&
+                                         ult.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
                 if (enemy != null && HasNoLinkens(enemy))
                 {
@@ -96,18 +97,21 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && stun.CanBeCasted(x) && stun.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && stun.CanBeCasted(x) &&
+                                         stun.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
                 if (enemy != null)
                 {
+                    var castPoint = stun.FindCastPoint();
                     var speed = stun.GetAbilityData("speed");
-                    var time = enemy.Distance2D(MyHero) / speed * 1000.0f;
+                    var time = (castPoint + enemy.Distance2D(MyHero) / speed) * 1000.0f;
 
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) time);
                     Log.Debug(
                         $"use killsteal stun because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicDamageResist)} ");
                     stun.UseAbility(predictedPos);
-                    await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping));
+
+                    await Await.Delay((int) (castPoint * 1000.0 + Game.Ping));
                     return true;
                 }
             }
@@ -165,17 +169,18 @@ namespace Zaio.Heroes
                 maxRange = Math.Max(maxRange, stun.CastRange);
                 if (stun.CanBeCasted(Target))
                 {
-                    if (hex.CanHit(Target))
+                    if (stun.CanHit(Target))
                     {
+                        var castPoint = stun.FindCastPoint();
                         var speed = stun.GetAbilityData("speed");
-                        var time = Target.Distance2D(MyHero) / speed * 1000.0f;
+                        var time = (castPoint + Target.Distance2D(MyHero) / speed) * 1000.0f;
 
                         var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
                         if (MyHero.Distance2D(predictedPos) <= stun.GetCastRange())
                         {
                             Log.Debug($"use stun {duration} | {time}");
                             stun.UseAbility(predictedPos);
-                            await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                            await Await.Delay((int) (castPoint * 1000.0 + Game.Ping), tk);
                             return;
                         }
                     }
@@ -192,7 +197,8 @@ namespace Zaio.Heroes
 
             if (ult.CanBeCasted(Target) && ult.CanHit(Target) && HasNoLinkens(Target))
             {
-                if (Target.IsHexed() || Target.IsStunned() || ((float)Target.Health / Target.MaximumHealth) * (1.0f + Target.MagicDamageResist) < 0.5f  )
+                if (Target.IsHexed() || Target.IsStunned() ||
+                    (float) Target.Health / Target.MaximumHealth * (1.0f + Target.MagicDamageResist) < 0.5f)
                 {
                     Log.Debug($"use ult");
                     ult.UseAbility(Target);

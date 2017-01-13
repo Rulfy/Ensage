@@ -31,7 +31,7 @@ namespace Zaio.Heroes
         };
 
         private static readonly string[] KillstealAbilities =
-      {
+        {
             "rattletrap_rocket_flare",
             "rattletrap_hookshot"
         };
@@ -119,7 +119,9 @@ namespace Zaio.Heroes
                     var time = enemy.Distance2D(MyHero) / speed * 1000.0f;
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) time, true);
                     if (predictedPos == Vector3.Zero)
+                    {
                         continue;
+                    }
 
                     var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, predictedPos, radius);
 

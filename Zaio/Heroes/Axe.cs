@@ -72,13 +72,13 @@ namespace Zaio.Heroes
 
                 var enemy = ObjectManager.GetEntitiesParallel<Hero>().FirstOrDefault(
                     x =>
-                        x.IsValid && x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && 
+                        x.IsValid && x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion &&
                         ult.CanBeCasted(x) && ult.CanHit(x) && x.Health < threshold && !x.IsLinkensProtected());
                 if (enemy != null)
                 {
                     Log.Debug($"using ult on {enemy.Name}: {enemy.Health} < {threshold}");
                     ult.UseAbility(enemy);
-                    await Await.Delay((int)(ult.FindCastPoint() * 1000.0 + Game.Ping));
+                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping));
                 }
             }
             return false;
@@ -98,7 +98,7 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"using ult {Target.Health} < {threshold}");
                     ult.UseAbility(Target);
-                    await Await.Delay((int)(ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
             }
 
@@ -131,7 +131,7 @@ namespace Zaio.Heroes
 
                 Log.Debug($"using call");
                 call.UseAbility();
-                await Await.Delay((int)(call.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                await Await.Delay((int) (call.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)

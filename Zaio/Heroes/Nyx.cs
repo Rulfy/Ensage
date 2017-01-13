@@ -74,20 +74,23 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && impale.CanBeCasted(x) && impale.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && impale.CanBeCasted(x) &&
+                                         impale.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
 
                 if (enemy != null)
                 {
                     Log.Debug($"use impale killsteal {enemy.Health} < {damage * (1 - enemy.MagicDamageResist)}");
 
+                    var castPoint = impale.FindCastPoint();
                     var speed = impale.GetAbilityData("speed");
-                    var time = enemy.Distance2D(MyHero) / speed * 1000.0f;
+                    var time = (castPoint + enemy.Distance2D(MyHero) / speed) * 1000.0f;
 
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) time);
 
                     impale.UseAbility(predictedPos);
-                    await Await.Delay((int) (impale.FindCastPoint() * 1000.0 + Game.Ping));
+
+                    await Await.Delay((int) (castPoint * 1000.0 + Game.Ping));
                     return true;
                 }
             }
@@ -139,8 +142,9 @@ namespace Zaio.Heroes
                 }
                 if (stun.CanBeCasted(Target) && stun.CanHit(Target))
                 {
-                    var speed = stun.AbilitySpecialData.First(x => x.Name == "speed").Value;
-                    var time = Target.Distance2D(MyHero) / speed * 1000.0f;
+                    var castPoint = stun.FindCastPoint();
+                    var speed = stun.GetAbilityData("speed");
+                    var time = (castPoint + Target.Distance2D(MyHero) / speed) * 1000.0f;
 
                     var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
                     if (MyHero.Distance2D(predictedPos) <= stun.GetCastRange())
@@ -148,7 +152,7 @@ namespace Zaio.Heroes
                         stun.UseAbility(predictedPos);
 
                         Log.Debug($"Use stun");
-                        await Await.Delay((int) (stun.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        await Await.Delay((int) (castPoint * 1000.0 + Game.Ping), tk);
                     }
                 }
 

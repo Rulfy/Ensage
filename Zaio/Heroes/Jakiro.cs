@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -46,10 +45,10 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             HasNoLinkens(Target);
-            
+
             var stun = MyHero.Spellbook.SpellW;
             var eulsModifier = Target.FindModifier("modifier_eul_cyclone");
-            if ((stun.CanBeCasted(Target) || (eulsModifier != null && stun.CanBeCasted())  )&& stun.CanHit(target))
+            if ((stun.CanBeCasted(Target) || eulsModifier != null && stun.CanBeCasted()) && stun.CanHit(target))
             {
                 var stunCastpoint = stun.FindCastPoint();
                 var delay = stun.GetAbilityData("path_delay");
@@ -97,19 +96,17 @@ namespace Zaio.Heroes
                                 await Await.Delay(125, tk);
                                 return;
                             }
-                            else
+                            // check if we are near the enemy
+                            if (!await MoveOrBlinkToEnemy(tk, 250, euls.GetCastRange()))
                             {
-                                // check if we are near the enemy
-                                if (!await MoveOrBlinkToEnemy(tk,250,euls.GetCastRange()))
-                                {
-                                    Log.Debug($"return because of blink");
-                                    return;
-                                }
+                                Log.Debug($"return because of blink");
+                                return;
                             }
                         }
-                        
 
-                        var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) ((stunCastpoint + delay) * 1000));
+
+                        var predictedPos = Prediction.Prediction.PredictPosition(Target,
+                            (int) ((stunCastpoint + delay) * 1000));
 
                         Log.Debug($"using stun on target with predicted pos {predictedPos}");
                         stun.UseAbility(predictedPos);
@@ -134,11 +131,12 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"using ult because target is stunned");
                     ult.UseAbility(Target.NetworkPosition);
-                    await Await.Delay((int)(ult.FindCastPoint() * 1500.0 + Game.Ping), tk);
+                    await Await.Delay((int) (ult.FindCastPoint() * 1500.0 + Game.Ping), tk);
                 }
                 else
                 {
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int)(ult.FindCastPoint() * 1000.0));
+                    var predictedPos = Prediction.Prediction.PredictPosition(Target,
+                        (int) (ult.FindCastPoint() * 1000.0));
                     var radius = ult.GetAbilityData("path_radius");
 
                     var dir = predictedPos - MyHero.NetworkPosition;
@@ -148,7 +146,8 @@ namespace Zaio.Heroes
                             ? "cast_range_scepter"
                             : "cast_range");
 
-                    var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, MyHero.NetworkPosition + dir, radius);
+                    var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, MyHero.NetworkPosition + dir,
+                        radius);
                     var hasMoreEnemies =
                         ObjectManager.GetEntitiesParallel<Hero>()
                                      .Any(
@@ -159,7 +158,7 @@ namespace Zaio.Heroes
                     {
                         Log.Debug($"using ult because more enemies");
                         ult.UseAbility(predictedPos);
-                        await Await.Delay((int)(ult.FindCastPoint() * 1500.0 + Game.Ping), tk);
+                        await Await.Delay((int) (ult.FindCastPoint() * 1500.0 + Game.Ping), tk);
                     }
                 }
             }
@@ -169,7 +168,7 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using Q");
                 dual.UseAbility(Target.NetworkPosition);
-                await Await.Delay((int)(dual.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                await Await.Delay((int) (dual.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
             var orb = MyHero.Spellbook.SpellE;
@@ -177,7 +176,7 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"using orb");
                 orb.UseAbility(Target);
-                await Await.Delay((int)(orb.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                await Await.Delay((int) (orb.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
             // check if we are near the enemy
