@@ -89,7 +89,7 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalk(450);
+                Orbwalk();
             }
             else
             {

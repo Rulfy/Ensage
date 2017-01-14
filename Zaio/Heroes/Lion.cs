@@ -76,11 +76,11 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ult.CanBeCasted(x) &&
                                          ult.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null && HasNoLinkens(enemy))
                 {
                     Log.Debug(
-                        $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicDamageResist)} ");
+                        $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicResistance())} ");
                     ult.UseAbility(enemy);
                     await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping));
                     return true;
@@ -99,7 +99,7 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && stun.CanBeCasted(x) &&
                                          stun.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null)
                 {
                     var castPoint = stun.FindCastPoint();
@@ -108,7 +108,7 @@ namespace Zaio.Heroes
 
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) time);
                     Log.Debug(
-                        $"use killsteal stun because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicDamageResist)} ");
+                        $"use killsteal stun because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicResistance())} ");
                     stun.UseAbility(predictedPos);
 
                     await Await.Delay((int) (castPoint * 1000.0 + Game.Ping));
@@ -128,10 +128,10 @@ namespace Zaio.Heroes
             {
                 var damage =
                     ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) ? "damage_scepter" : "damage");
-                if (Target.Health <= damage * (1.0f - Target.MagicDamageResist))
+                if (Target.Health <= damage * (1.0f - Target.MagicResistance()))
                 {
                     Log.Debug(
-                        $"use ult because enough damage {Target.Health} <= {damage * (1.0f - Target.MagicDamageResist)} ");
+                        $"use ult because enough damage {Target.Health} <= {damage * (1.0f - Target.MagicResistance())} ");
                     ult.UseAbility(Target);
                     await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
@@ -198,7 +198,7 @@ namespace Zaio.Heroes
             if (ult.CanBeCasted(Target) && ult.CanHit(Target) && HasNoLinkens(Target))
             {
                 if (Target.IsHexed() || Target.IsStunned() ||
-                    (float) Target.Health / Target.MaximumHealth * (1.0f + Target.MagicDamageResist) < 0.5f)
+                    (float) Target.Health / Target.MaximumHealth * (1.0f + Target.MagicResistance()) < 0.5f)
                 {
                     Log.Debug($"use ult");
                     ult.UseAbility(Target);
@@ -232,7 +232,7 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalk(450);
+                Orbwalk();
             }
             else
             {

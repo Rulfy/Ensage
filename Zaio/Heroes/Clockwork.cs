@@ -13,6 +13,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using Zaio.Prediction;
 
 namespace Zaio.Heroes
 {
@@ -83,7 +84,7 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && flare.CanBeCasted(x) &&
                                          x.Distance2D(MyHero) < 5000 &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
 
                 if (enemy != null)
                 {
@@ -109,7 +110,7 @@ namespace Zaio.Heroes
                                  .Where(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
 
                 var speed = ult.GetAbilityData("speed");
                 var radius = ult.GetAbilityData("latch_radius");
@@ -130,7 +131,7 @@ namespace Zaio.Heroes
                                                       .Any(
                                                           x =>
                                                               x.IsValid && x != enemy && x.IsAlive && x != MyHero &&
-                                                              x.IsSpawned && x.IsRealUnit2() &&
+                                                              x.IsSpawned && x.IsRealUnit() &&
                                                               x.Distance2D(enemy) >= radius &&
                                                               rec.IsInside(x.NetworkPosition));
                     if (!isUnitBlocking)
@@ -167,7 +168,7 @@ namespace Zaio.Heroes
                                                       .Any(
                                                           x =>
                                                               x.IsValid && x != Target && x.IsAlive && x != MyHero &&
-                                                              x.IsSpawned && x.IsRealUnit2() &&
+                                                              x.IsSpawned && x.IsRealUnit() &&
                                                               x.Distance2D(Target) >= radius &&
                                                               rec.IsInside(x.NetworkPosition));
                     if (!isUnitBlocking)

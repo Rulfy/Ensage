@@ -5,7 +5,7 @@ using ClipperLib;
 using Ensage;
 using SharpDX;
 
-namespace Zaio.Helpers
+namespace Zaio.Prediction
 {
     /// <summary>
     ///     Provides methods regarding geometry math.

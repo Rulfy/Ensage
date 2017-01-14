@@ -16,6 +16,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using SpacebarToFarm;
 using Attribute = Ensage.Attribute;
+using Zaio.Helpers;
 
 namespace Zaio.Interfaces
 {
@@ -31,6 +32,7 @@ namespace Zaio.Interfaces
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private readonly bool _repeatCombo;
+
 
         protected readonly ItemId[] DisableItemList =
         {
@@ -322,7 +324,7 @@ namespace Zaio.Interfaces
             return false;
         }
 
-        protected void Orbwalk(float distance = 0.0f)
+        protected void Orbwalk()
         {
             switch (ZaioMenu.OrbwalkerMode)
             {
@@ -330,9 +332,18 @@ namespace Zaio.Interfaces
                     Orbwalker.OrbwalkOn(Target);
                     break;
                 case OrbwalkerMode.Target:
-                    var pos = (Target.NetworkPosition - MyHero.NetworkPosition).Normalized();
-                    pos *= distance;
-                    Orbwalker.OrbwalkOn(Target, Target.NetworkPosition - pos);
+                    var distance = MyHero.IsRanged ? MyHero.GetAttackRange() / 2 : 0;
+                    var currentDistance = Target.Distance2D(MyHero);
+                    if (currentDistance <= distance)
+                    {
+                        Orbwalker.Attack(Target, true);
+                    }
+                    else
+                    {
+                        var pos = (Target.NetworkPosition - MyHero.NetworkPosition).Normalized();
+                        pos *= distance;
+                        Orbwalker.OrbwalkOn(Target, Target.NetworkPosition - pos);
+                    }
                     break;
                 case OrbwalkerMode.Attack:
                     Orbwalker.Attack(Target, true);
@@ -453,14 +464,14 @@ namespace Zaio.Interfaces
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && eth.CanBeCasted(x) && eth.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         x.IsAlive && x.Team != MyHero.Team && eth.CanBeCasted(x) && eth.CanHit(x) && !x.IsMagicImmune() &&
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null)
                 {
                     eth.UseAbility(enemy);
                     var speed = eth.GetAbilityData("projectile_speed");
                     var time = enemy.Distance2D(MyHero) / speed;
-                    Log.Debug($"killsteal for eth {time} with damage {damage} ({damage * (1 - enemy.MagicDamageResist)}");
+                    Log.Debug($"killsteal for eth {time} with damage {damage} ({damage * (1 - enemy.MagicResistance())}");
                     eth.UseAbility(enemy);
                     await Await.Delay((int) (time * 1000.0f + Game.Ping));
                     return true;
@@ -478,12 +489,12 @@ namespace Zaio.Interfaces
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && dagon.CanBeCasted(x) && dagon.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         x.IsAlive && x.Team != MyHero.Team && dagon.CanBeCasted(x) && dagon.CanHit(x) && !x.IsMagicImmune() &&
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null)
                 {
                     Log.Debug(
-                        $"killsteal dagon {index} damage: {damage} ({damage * (1 - enemy.MagicDamageResist)}) - {dagon.CastRange}");
+                        $"killsteal dagon {index} damage: {damage} ({damage * (1 - enemy.MagicResistance())}) - {dagon.CastRange}");
                     dagon.UseAbility(enemy);
                     await Await.Delay(125);
                     return true;

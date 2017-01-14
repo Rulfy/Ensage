@@ -76,13 +76,13 @@ namespace Zaio.Heroes
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ult.CanBeCasted(x) &&
-                                         ult.CanHit(x) &&
-                                         x.Health < damage * (hasScepter ? 1 : 1 - x.MagicDamageResist) &&
-                                         !x.IsLinkensProtected());
+                                         ult.CanHit(x) && (hasScepter || !x.IsMagicImmune()) &&
+                                         x.Health < damage * (hasScepter ? 1 : 1 - x.MagicResistance()) &&
+                                         !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null && HasNoLinkens(enemy))
                 {
                     Log.Debug(
-                        $"use killsteal ult because enough damage {enemy.Health} <= {damage * (hasScepter ? 1 : 1 - enemy.MagicDamageResist)} ");
+                        $"use killsteal ult because enough damage {enemy.Health} <= {damage * (hasScepter ? 1 : 1 - enemy.MagicResistance())} ");
                     ult.UseAbility(enemy);
                     await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping));
                     return true;
@@ -100,8 +100,8 @@ namespace Zaio.Heroes
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && salve.CanBeCasted(x) &&
-                                         salve.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         salve.CanHit(x) && !x.IsMagicImmune() &&
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null)
                 {
                     var castPoint = salve.FindCastPoint();
@@ -110,7 +110,7 @@ namespace Zaio.Heroes
 
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) time);
                     Log.Debug(
-                        $"use killsteal Q because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicDamageResist)} ");
+                        $"use killsteal Q because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicResistance())} ");
                     salve.UseAbility(predictedPos);
 
                     await Await.Delay((int) (castPoint * 1000.0 + Game.Ping));
@@ -224,7 +224,7 @@ namespace Zaio.Heroes
             if (ult.CanBeCasted(Target) && ult.CanHit(Target) && HasNoLinkens(Target))
             {
                 if (Target.IsHexed() || Target.IsStunned() ||
-                    (float) Target.Health / Target.MaximumHealth * (1.0f + Target.MagicDamageResist) < 0.5f)
+                    (float) Target.Health / Target.MaximumHealth * (1.0f + Target.MagicResistance()) < 0.5f)
                 {
                     Log.Debug($"using ult");
                     ult.UseAbility(Target);
@@ -241,7 +241,7 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalk(450);
+                Orbwalk();
                 Log.Debug($"orbwalking");
             }
             else

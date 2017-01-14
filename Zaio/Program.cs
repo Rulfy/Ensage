@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
+using Ensage.Common.Extensions;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
@@ -22,7 +23,7 @@ namespace Zaio
             Events.OnLoad += Events_OnLoad;
             Events.OnClose += Events_OnClose;
             Drawing.OnDraw += Drawing_OnDraw;
-            //Game.OnIngameUpdate += Game_OnIngameUpdate;
+            Game.OnIngameUpdate += Game_OnIngameUpdate;
         }
 
         private static void Game_OnIngameUpdate(EventArgs args)
@@ -32,6 +33,8 @@ namespace Zaio
             {
                 return;
             }
+
+            Console.WriteLine(hero.IsMagicImmune());
 
             foreach (var heroModifier in hero.Modifiers)
             {

@@ -76,11 +76,11 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && impale.CanBeCasted(x) &&
                                          impale.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist) && !x.IsLinkensProtected());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
 
                 if (enemy != null)
                 {
-                    Log.Debug($"use impale killsteal {enemy.Health} < {damage * (1 - enemy.MagicDamageResist)}");
+                    Log.Debug($"use impale killsteal {enemy.Health} < {damage * (1 - enemy.MagicResistance())}");
 
                     var castPoint = impale.FindCastPoint();
                     var speed = impale.GetAbilityData("speed");
@@ -104,15 +104,15 @@ namespace Zaio.Heroes
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && manaBurn.CanBeCasted(x) &&
-                                         manaBurn.CanHit(x) && !x.IsLinkensProtected() &&
+                                         manaBurn.CanHit(x) && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled() &&
                                          x.Health <
                                          Math.Min(intMultiplier * x.TotalIntelligence, x.Mana) * GetSpellAmp() *
-                                         (1 - x.MagicDamageResist));
+                                         (1 - x.MagicResistance()));
 
                 if (enemy != null)
                 {
                     Log.Debug(
-                        $"use manaburn killsteal {enemy.Health} < {Math.Min(intMultiplier * enemy.TotalIntelligence, enemy.Mana) * GetSpellAmp() * (1 - enemy.MagicDamageResist)}");
+                        $"use manaburn killsteal {enemy.Health} < {Math.Min(intMultiplier * enemy.TotalIntelligence, enemy.Mana) * GetSpellAmp() * (1 - enemy.MagicResistance())}");
                     manaBurn.UseAbility(enemy);
                     await Await.Delay((int) (manaBurn.FindCastPoint() * 1000.0 + Game.Ping));
                     return true;

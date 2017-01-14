@@ -76,7 +76,7 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && odds.CanBeCasted(x) && odds.CanHit(x));
+                                         x.IsAlive && x.Team != MyHero.Team && odds.CanBeCasted(x) && odds.CanHit(x) && !x.CantBeAttacked() && !x.CantBeKilled());
 
                 var spellAmp = GetSpellAmp();
                 foreach (var enemy in enemies)
@@ -87,7 +87,7 @@ namespace Zaio.Heroes
                                          x =>
                                              x.IsValid && x.IsAlive && x != enemy && !x.IsIllusion &&
                                              x.Team != MyHero.Team &&
-                                             !x.IsMagicImmune() && x.IsSpawned && x.IsRealUnit2() &&
+                                             !x.IsMagicImmune() && x.IsSpawned && x.IsRealUnit() &&
                                              x.Distance2D(enemy) <= radius);
 
                     var enemyDamage = damage;
@@ -95,7 +95,7 @@ namespace Zaio.Heroes
                     enemyDamage += additionalTargetCount.Count(x => x is Hero) * damagePerHero;
                     enemyDamage *= spellAmp;
 
-                    if (enemy.Health <= enemyDamage * (1 - enemy.MagicDamageResist))
+                    if (enemy.Health <= enemyDamage * (1 - enemy.MagicResistance()))
                     {
                         var predictedPos = Prediction.Prediction.PredictPosition(enemy,
                             (int) (odds.FindCastPoint() * 1000.0));
@@ -132,7 +132,7 @@ namespace Zaio.Heroes
                                  .Where(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() &&
-                                         x.IsRealUnit2() &&
+                                         x.IsRealUnit() &&
                                          x.Distance2D(Target) <= radius);
                 var heroes = targets.Where(x => x is Hero);
                 if (heroes.Any() || targets.Count() >= 5)

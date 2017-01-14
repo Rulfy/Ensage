@@ -11,6 +11,7 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using Zaio.Prediction;
 
 namespace Zaio.Heroes
 {
@@ -188,7 +189,7 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalk(450);
+                Orbwalk();
                 Log.Debug($"orbwalking");
             }
             else

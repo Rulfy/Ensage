@@ -65,7 +65,7 @@
   <ItemGroup>
     <Compile Include="Helpers\KeyEventArgs.cs" />
     <Compile Include="Helpers\BoolEventArgs.cs" />
-    <Compile Include="Helpers\Geometry.cs" />
+    <Compile Include="Prediction\Geometry.cs" />
     <Compile Include="Helpers\HeroAttribute.cs" />
     <Compile Include="Helpers\MyUnitExtension.cs" />
     <Compile Include="Heroes\Clockwork.cs" />

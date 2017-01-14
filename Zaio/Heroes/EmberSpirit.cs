@@ -39,7 +39,7 @@ namespace Zaio.Heroes
         private int MinimumRemnants => _minimumRemnantItem.GetValue<Slider>().Value;
 
         private int CurrentRemnants
-            => MyHero.FindModifier("modifier_ember_spirit_fire_remnant_charge_counter").StackCount;
+            => MyHero.FindModifier("modifier_ember_spirit_fire_remnant_charge_counter")?.StackCount ?? 0;
 
         private IEnumerable<Unit> Remnants
             => ObjectManager.GetEntities<Unit>().Where(x => x.Name == "npc_dota_ember_spirit_remnant");
@@ -99,7 +99,7 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && sleight.CanBeCasted(x) &&
                                          sleight.CanHit(x) &&
-                                         x.Health < damage * (1 - x.DamageResist));
+                                         x.Health < damage * (1 - x.DamageResist) && !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null)
                 {
                     Log.Debug(
@@ -123,14 +123,14 @@ namespace Zaio.Heroes
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ult.CanBeCasted(x) &&
-                                         ult.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicDamageResist));
+                                         ult.CanHit(x) && !x.IsMagicImmune() &&
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
 
 
                 if (enemy != null)
                 {
                     Log.Debug(
-                        $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1 - enemy.MagicDamageResist)} ");
+                        $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1 - enemy.MagicResistance())} ");
 
                     var castPoint = ult.FindCastPoint();
                     var speed = MyHero.MovementSpeed * (ult.GetAbilityData("speed_multiplier") / 100);
@@ -171,7 +171,7 @@ namespace Zaio.Heroes
                 }, false))
             {
                 Log.Debug($"in sleight mode");
-                if (stun.CanBeCasted(Target) && stun.CanHit(Target))
+                if (stun.CanBeCasted(Target) && stun.CanHit(Target) && !Target.IsMagicImmune())
                 {
                     Log.Debug($"use our Q because we are using W or ult and are near the target!");
                     stun.UseAbility();
@@ -225,7 +225,7 @@ namespace Zaio.Heroes
             }
 
             var ultActivate = MyHero.GetAbilityById(AbilityId.ember_spirit_activate_fire_remnant);
-            if (!IsInRange(MyHero.AttackRange * 2.0f))
+            if (!IsInRange(MyHero.AttackRange * 2.0f) && !Target.IsMagicImmune())
             {
                 if (ult.CanBeCasted() && ultActivate.CanBeCasted() &&
                     (MinimumRemnants == 0 || MinimumRemnants < CurrentRemnants))
@@ -267,12 +267,12 @@ namespace Zaio.Heroes
                 await Await.Delay(125, tk);
             }
 
-            if (ult.CanBeCasted(Target) && ultActivate.CanBeCasted() && ult.CanHit(Target) &&
+            if (ult.CanBeCasted(Target) && ultActivate.CanBeCasted() && ult.CanHit(Target) && !Target.IsMagicImmune() &&
                 (MinimumRemnants == 0 || MinimumRemnants < CurrentRemnants))
             {
                 var damage = ult.GetAbilityData("damage");
                 damage *= GetSpellAmp();
-                if (Target.Health < damage * (1 - Target.MagicDamageResist))
+                if (Target.Health < damage * (1 - Target.MagicResistance()))
                 {
                     var castPoint = ult.FindCastPoint();
                     var speed = MyHero.MovementSpeed * (ult.GetAbilityData("speed_multiplier") / 100);
@@ -300,7 +300,7 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalk(450);
+                Orbwalk();
                 Log.Debug($"orbwalking");
             }
             else

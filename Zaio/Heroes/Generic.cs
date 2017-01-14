@@ -23,7 +23,7 @@ namespace Zaio.Heroes
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
-                Orbwalk(MyHero.IsRanged ? 450 : 0);
+                Orbwalk();
                 Log.Debug($"orbwalking");
             }
             else

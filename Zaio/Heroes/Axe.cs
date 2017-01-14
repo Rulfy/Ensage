@@ -73,7 +73,7 @@ namespace Zaio.Heroes
                 var enemy = ObjectManager.GetEntitiesParallel<Hero>().FirstOrDefault(
                     x =>
                         x.IsValid && x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion &&
-                        ult.CanBeCasted(x) && ult.CanHit(x) && x.Health < threshold && !x.IsLinkensProtected());
+                        ult.CanBeCasted(x) && ult.CanHit(x) && x.Health < threshold && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilledByAxeUlt());
                 if (enemy != null)
                 {
                     Log.Debug($"using ult on {enemy.Name}: {enemy.Health} < {threshold}");
