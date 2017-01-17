@@ -45,7 +45,7 @@ namespace Zaio.Heroes
             await UseItems(tk);
 
             // make him disabled
-            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
@@ -67,10 +67,10 @@ namespace Zaio.Heroes
             {
                 Log.Debug($"use toss");
                 var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
-
+                var grab = toss.GetAbilityData("grab_radius");
                 var closestUnit =
                     ObjectManager.GetEntitiesFast<Unit>()
-                                 .Where(x => x != MyHero && x.IsAlive && x.Distance2D(MyHero) <= toss.CastRange)
+                                 .Where(x => x != MyHero && x.IsAlive && x.Distance2D(MyHero) <= grab)
                                  .OrderBy(x => x.Distance2D(MyHero))
                                  .FirstOrDefault();
                 Log.Debug($"Closest unit for toss: {closestUnit?.Name}");
@@ -78,14 +78,14 @@ namespace Zaio.Heroes
                 {
                     toss.UseAbility(Target);
                     Log.Debug($"use toss!!");
-                    await Await.Delay(125, tk);
+                    await Await.Delay(100, tk);
                 }
             }
             if (avalanche.CanBeCasted(Target) && avalanche.CanHit(Target))
             {
                 Log.Debug($"use avalanche");
                 avalanche.UseAbility(Target.NetworkPosition);
-                await Await.Delay(125, tk);
+                await Await.Delay(100, tk);
             }
 
             // check if we are near the enemy
@@ -102,7 +102,7 @@ namespace Zaio.Heroes
                 await Await.Delay(250, tk);
             }
 
-            if (ZaioMenu.ShouldUseOrbwalker)
+            if (ZaioMenu.ShouldUseOrbwalker && !Target.HasModifier("modifier_tiny_toss"))
             {
                 Orbwalk();
             }

@@ -42,6 +42,7 @@ namespace Zaio.Helpers
         {
             return unit.HasModifiers(CantKillModifiers, false);
         }
+
         public static bool CantBeKilledByAxeUlt(this Unit unit)
         {
             return unit.HasModifiers(CantKillModifiersAxe, false);

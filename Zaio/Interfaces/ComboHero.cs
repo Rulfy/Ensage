@@ -15,8 +15,8 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using SpacebarToFarm;
-using Attribute = Ensage.Attribute;
 using Zaio.Helpers;
+using Attribute = Ensage.Attribute;
 
 namespace Zaio.Interfaces
 {
@@ -233,7 +233,7 @@ namespace Zaio.Interfaces
             try
             {
                 await ExecuteComboAsync(Target, token);
-                await Await.Delay(250, token);
+                await Await.Delay(1, token);
             }
             finally
             {
@@ -302,8 +302,9 @@ namespace Zaio.Interfaces
                 {
                     var pos = (Target.NetworkPosition - MyHero.NetworkPosition).Normalized();
                     pos *= minimumRange;
-                    blink.UseAbility(Target.NetworkPosition - pos);
-                    await Await.Delay(125, tk);
+                    pos = Target.NetworkPosition - pos;
+                    blink.UseAbility(pos);
+                    await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000), tk);
                     return false;
                 }
             }
@@ -353,7 +354,8 @@ namespace Zaio.Interfaces
             }
         }
 
-        protected DisabledState DisableEnemy(CancellationToken tk = default(CancellationToken), float minimumTime = 0)
+        protected async Task<DisabledState> DisableEnemy(CancellationToken tk = default(CancellationToken),
+            float minimumTime = 0)
         {
             // make him disabled
             float duration = 0;
@@ -370,6 +372,7 @@ namespace Zaio.Interfaces
                 {
                     Log.Debug($"using disable item {item.Name}");
                     item.UseAbility(Target);
+                    await Await.Delay(100, tk);
                     return DisabledState.UsedAbilityToDisable;
                 }
             }
@@ -405,6 +408,7 @@ namespace Zaio.Interfaces
                 var item = MyHero.GetItemById(itemId);
                 if (item != null && item.CanBeCasted(Target) && item.CanHit(Target))
                 {
+                    Log.Debug($"using item {item.Name}");
                     if (item.AbilityBehavior.HasFlag(AbilityBehavior.UnitTarget))
                     {
                         item.UseAbility(Target);
@@ -416,17 +420,19 @@ namespace Zaio.Interfaces
                             if (speed != 0.0f)
                             {
                                 var time = Target.Distance2D(MyHero) / speed;
-                                await Await.Delay((int) (time * 1000.0f + Game.Ping), tk);
+                                await Await.Delay((int) (time * 1000.0f + Game.Ping) + 100, tk);
                             }
                         }
                     }
                     else if (item.AbilityBehavior.HasFlag(AbilityBehavior.Point))
                     {
                         item.UseAbility(Target.NetworkPosition);
+                        await Await.Delay(100, tk);
                     }
                     else if (item.AbilityBehavior.HasFlag(AbilityBehavior.NoTarget))
                     {
                         item.UseAbility();
+                        await Await.Delay(100, tk);
                     }
                 }
             }
@@ -464,8 +470,10 @@ namespace Zaio.Interfaces
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && eth.CanBeCasted(x) && eth.CanHit(x) && !x.IsMagicImmune() &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.IsAlive && x.Team != MyHero.Team && eth.CanBeCasted(x) && eth.CanHit(x) &&
+                                         !x.IsMagicImmune() &&
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
+                                         !x.CantBeKilled());
                 if (enemy != null)
                 {
                     eth.UseAbility(enemy);
@@ -473,7 +481,7 @@ namespace Zaio.Interfaces
                     var time = enemy.Distance2D(MyHero) / speed;
                     Log.Debug($"killsteal for eth {time} with damage {damage} ({damage * (1 - enemy.MagicResistance())}");
                     eth.UseAbility(enemy);
-                    await Await.Delay((int) (time * 1000.0f + Game.Ping));
+                    await Await.Delay((int) (time * 1000.0f + Game.Ping) + 100);
                     return true;
                 }
             }
@@ -489,8 +497,10 @@ namespace Zaio.Interfaces
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && dagon.CanBeCasted(x) && dagon.CanHit(x) && !x.IsMagicImmune() &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.IsAlive && x.Team != MyHero.Team && dagon.CanBeCasted(x) && dagon.CanHit(x) &&
+                                         !x.IsMagicImmune() &&
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
+                                         !x.CantBeKilled());
                 if (enemy != null)
                 {
                     Log.Debug(

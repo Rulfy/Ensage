@@ -76,7 +76,8 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && odds.CanBeCasted(x) && odds.CanHit(x) && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.IsAlive && x.Team != MyHero.Team && odds.CanBeCasted(x) && odds.CanHit(x) &&
+                                         !x.CantBeAttacked() && !x.CantBeKilled());
 
                 var spellAmp = GetSpellAmp();
                 foreach (var enemy in enemies)
@@ -179,7 +180,7 @@ namespace Zaio.Heroes
                 return;
             }
             // make him disabled
-            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;

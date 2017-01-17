@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.Extensions.SharpDX;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using SharpDX;

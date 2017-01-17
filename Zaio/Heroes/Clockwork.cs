@@ -84,7 +84,8 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && flare.CanBeCasted(x) &&
                                          x.Distance2D(MyHero) < 5000 &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
+                                         !x.CantBeKilled());
 
                 if (enemy != null)
                 {
@@ -99,6 +100,11 @@ namespace Zaio.Heroes
                 }
             }
 
+            if (Target != null)
+            {
+                return false;
+            }
+
             var ult = MyHero.Spellbook.SpellR;
             if (MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) && ult.CanBeCasted())
             {
@@ -110,7 +116,8 @@ namespace Zaio.Heroes
                                  .Where(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
+                                         !x.CantBeKilled());
 
                 var speed = ult.GetAbilityData("speed");
                 var radius = ult.GetAbilityData("latch_radius");
@@ -183,7 +190,7 @@ namespace Zaio.Heroes
             await UseItems(tk);
 
             // make him disabled
-            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;

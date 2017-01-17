@@ -23,7 +23,7 @@ namespace Zaio
             Events.OnLoad += Events_OnLoad;
             Events.OnClose += Events_OnClose;
             Drawing.OnDraw += Drawing_OnDraw;
-            //Game.OnIngameUpdate += Game_OnIngameUpdate;
+            // Game.OnIngameUpdate += Game_OnIngameUpdate;
         }
 
         private static void Game_OnIngameUpdate(EventArgs args)

@@ -101,7 +101,8 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && salve.CanBeCasted(x) &&
                                          salve.CanHit(x) && !x.IsMagicImmune() &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
+                                         !x.CantBeKilled());
                 if (enemy != null)
                 {
                     var castPoint = salve.FindCastPoint();
@@ -200,7 +201,7 @@ namespace Zaio.Heroes
             await UseItems(tk);
 
             // make him disabled
-            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;

@@ -19,7 +19,7 @@ namespace Zaio.Heroes
             await UseItems(tk);
 
             // make him disabled
-            DisableEnemy(tk);
+            await DisableEnemy(tk);
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {

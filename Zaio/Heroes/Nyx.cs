@@ -66,7 +66,7 @@ namespace Zaio.Heroes
             }
 
             var impale = MyHero.Spellbook.SpellQ;
-            if (impale.CanBeCasted())
+            if (Target == null && impale.CanBeCasted())
             {
                 var damage = (float) impale.GetDamage(impale.Level - 1);
                 damage *= GetSpellAmp();
@@ -76,7 +76,8 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && impale.CanBeCasted(x) &&
                                          impale.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() &&
+                                         !x.CantBeAttacked() && !x.CantBeKilled());
 
                 if (enemy != null)
                 {
@@ -104,7 +105,8 @@ namespace Zaio.Heroes
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && manaBurn.CanBeCasted(x) &&
-                                         manaBurn.CanHit(x) && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled() &&
+                                         manaBurn.CanHit(x) && !x.IsLinkensProtected() && !x.CantBeAttacked() &&
+                                         !x.CantBeKilled() &&
                                          x.Health <
                                          Math.Min(intMultiplier * x.TotalIntelligence, x.Mana) * GetSpellAmp() *
                                          (1 - x.MagicResistance()));
@@ -134,7 +136,7 @@ namespace Zaio.Heroes
                     await UseItems(tk);
 
                     // make him disabled
-                    if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+                    if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
                     {
                         Log.Debug($"disabled!");
                         // return;

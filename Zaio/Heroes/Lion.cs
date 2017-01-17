@@ -76,7 +76,8 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ult.CanBeCasted(x) &&
                                          ult.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() &&
+                                         !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null && HasNoLinkens(enemy))
                 {
                     Log.Debug(
@@ -85,6 +86,11 @@ namespace Zaio.Heroes
                     await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping));
                     return true;
                 }
+            }
+
+            if (Target != null)
+            {
+                return false;
             }
 
             var stun = MyHero.Spellbook.SpellQ;
@@ -99,7 +105,8 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && stun.CanBeCasted(x) &&
                                          stun.CanHit(x) &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() &&
+                                         !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null)
                 {
                     var castPoint = stun.FindCastPoint();
@@ -138,7 +145,7 @@ namespace Zaio.Heroes
             }
 
             // make him disabled
-            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;

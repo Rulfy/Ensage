@@ -99,7 +99,8 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && sleight.CanBeCasted(x) &&
                                          sleight.CanHit(x) &&
-                                         x.Health < damage * (1 - x.DamageResist) && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.Health < damage * (1 - x.DamageResist) && !x.CantBeAttacked() &&
+                                         !x.CantBeKilled());
                 if (enemy != null)
                 {
                     Log.Debug(
@@ -109,6 +110,11 @@ namespace Zaio.Heroes
                     await Await.Delay(125);
                     return true;
                 }
+            }
+
+            if (Target != null)
+            {
+                return false;
             }
 
             var ult = MyHero.GetAbilityById(AbilityId.ember_spirit_fire_remnant);
@@ -124,7 +130,8 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ult.CanBeCasted(x) &&
                                          ult.CanHit(x) && !x.IsMagicImmune() &&
-                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() && !x.CantBeKilled());
+                                         x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
+                                         !x.CantBeKilled());
 
 
                 if (enemy != null)
@@ -183,7 +190,7 @@ namespace Zaio.Heroes
             await UseItems(tk);
 
             // make him disabled
-            if (DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;

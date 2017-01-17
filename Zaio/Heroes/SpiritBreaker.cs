@@ -79,7 +79,7 @@ namespace Zaio.Heroes
 
             var ult = MyHero.Spellbook.SpellR;
             // make him disabled
-            if (DisableEnemy(tk, ult.CanBeCasted(Target) ? (float) ult.FindCastPoint() : 0) ==
+            if (await DisableEnemy(tk, ult.CanBeCasted(Target) ? (float) ult.FindCastPoint() : 0) ==
                 DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled enemy");
