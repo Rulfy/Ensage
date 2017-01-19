@@ -86,11 +86,12 @@ namespace Zaio.Prediction
             var inFront = Ensage.Common.Prediction.InFront(target, maxDistance);
             inFront.Z = target.NetworkPosition.Z;
 
-            if (time <= 400)
+            if (time <= 400 || true)
             {
+                Log.Debug($"using infront {inFront}");
                 return inFront;
             }
-
+           // TODO: better -> fix it
             bool completed;
             var path = Pathfinding.CalculateStaticLongPath(
                 target.NetworkPosition,
@@ -100,6 +101,7 @@ namespace Zaio.Prediction
                 out completed).ToList();
             if (!completed)
             {
+                Log.Debug($"using gridnav not completed {inFront}");
                 return inFront;
             }
 
@@ -119,6 +121,7 @@ namespace Zaio.Prediction
 
             var dir = lastNode.Normalized();
             dir *= maxDistance - distance;
+            Log.Debug($"using gridnav  {lastNode + dir}");
             return lastNode + dir;
         }
 

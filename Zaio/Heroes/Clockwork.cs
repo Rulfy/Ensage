@@ -78,7 +78,7 @@ namespace Zaio.Heroes
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && flare.CanBeCasted(x) &&
-                                         x.Distance2D(MyHero) < 5000 &&
+                                         x.Distance2D(MyHero) < 5000 && !x.IsIllusion &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
 
@@ -110,7 +110,7 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) && !x.IsIllusion &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
 
