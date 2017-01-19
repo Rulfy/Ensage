@@ -89,7 +89,7 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && HasNoLinkens(Target))
+            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && await HasNoLinkens(Target, tk))
             {
                 var threshold =
                     ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)

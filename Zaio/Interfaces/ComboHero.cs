@@ -182,7 +182,7 @@ namespace Zaio.Interfaces
             }
         }
 
-        private async Task Sleep()
+        protected async Task Sleep()
         {
             await Task.Delay(500);
         }
@@ -513,7 +513,7 @@ namespace Zaio.Interfaces
             return false;
         }
 
-        protected virtual bool HasNoLinkens(Unit target)
+        protected virtual async Task<bool> HasNoLinkens(Unit target, CancellationToken tk = default(CancellationToken))
         {
             if (!target.IsLinkensProtected())
             {
@@ -526,6 +526,7 @@ namespace Zaio.Interfaces
                 if (item != null && item.CanBeCasted(target) && item.CanHit(target))
                 {
                     item.UseAbility(target);
+                    await Await.Delay(100, tk);
                     return true;
                 }
             }

@@ -78,7 +78,7 @@ namespace Zaio.Heroes
                                          ult.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() &&
                                          !x.CantBeAttacked() && !x.CantBeKilled());
-                if (enemy != null && HasNoLinkens(enemy))
+                if (enemy != null && await HasNoLinkens(enemy))
                 {
                     Log.Debug(
                         $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicResistance())} ");
@@ -202,7 +202,7 @@ namespace Zaio.Heroes
                 }
             }
 
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && HasNoLinkens(Target))
+            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && await HasNoLinkens(Target, tk))
             {
                 if (Target.IsHexed() || Target.IsStunned() ||
                     (float) Target.Health / Target.MaximumHealth * (1.0f + Target.MagicResistance()) < 0.5f)

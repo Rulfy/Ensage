@@ -187,7 +187,7 @@ namespace Zaio.Heroes
             }
 
             // test if ulti is good
-            if (duel.CanBeCasted(Target) && HasNoLinkens(Target))
+            if (duel.CanBeCasted(Target) && await HasNoLinkens(Target, tk))
             {
                 var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
                 if (bladeMail != null && bladeMail.CanBeCasted())

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,10 +35,6 @@ namespace Zaio.Heroes
             "rattletrap_rocket_flare",
             "rattletrap_hookshot"
         };
-
-        private readonly List<Vector3> pos = new List<Vector3>();
-
-        private readonly List<Geometry.Polygon.Rectangle> rects = new List<Geometry.Polygon.Rectangle>();
 
         public override void OnLoad()
         {
