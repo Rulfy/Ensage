@@ -45,7 +45,7 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            HasNoLinkens(Target);
+            await HasNoLinkens(Target, tk);
 
             var stun = MyHero.Spellbook.SpellW;
             var eulsModifier = Target.FindModifier("modifier_eul_cyclone");

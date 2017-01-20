@@ -41,7 +41,7 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            HasNoLinkens(Target);
+            await HasNoLinkens(Target, tk);
             await UseItems(tk);
 
             // make him disabled

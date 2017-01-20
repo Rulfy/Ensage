@@ -132,7 +132,7 @@ namespace Zaio.Heroes
                 var manaNeeded = stun.CanBeCasted(Target) ? stun.ManaCost + 100 : 0;
                 if (manaNeeded <= MyHero.Mana)
                 {
-                    HasNoLinkens(Target);
+                    await HasNoLinkens(Target, tk);
                     await UseItems(tk);
 
                     // make him disabled

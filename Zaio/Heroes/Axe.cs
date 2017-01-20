@@ -103,7 +103,7 @@ namespace Zaio.Heroes
                 }
             }
 
-            HasNoLinkens(Target);
+            await HasNoLinkens(Target, tk);
             await UseItems(tk);
 
             // make him disabled

@@ -54,7 +54,7 @@ namespace Zaio.Heroes
             {
                 return;
             }
-            HasNoLinkens(Target);
+            await HasNoLinkens(Target, tk);
             await UseItems(tk);
 
             if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)

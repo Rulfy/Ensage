@@ -68,6 +68,19 @@ namespace Zaio.Prediction
             return false;
         }
 
+        public static IEnumerable<Vector3> PredictMyRoute(Unit target, int time, Vector3 targetPosition)
+        {
+            var maxDistance = time / 1000.0f * target.MovementSpeed + target.HullRadius;
+            bool completed;
+            var path = Pathfinding.CalculateStaticLongPath(
+                target.NetworkPosition,
+                targetPosition,
+                target.MovementSpeed * time * 4,
+                true,
+                out completed).ToList();
+            return !completed ? new List<Vector3> {targetPosition} : path;
+        }
+
         public static Vector3 PredictPosition(Unit target, int time, bool noTurning = false,
             PredictionType type = PredictionType.GridNav)
         {
@@ -91,7 +104,7 @@ namespace Zaio.Prediction
                 Log.Debug($"using infront {inFront}");
                 return inFront;
             }
-           // TODO: better -> fix it
+            // TODO: better -> fix it
             bool completed;
             var path = Pathfinding.CalculateStaticLongPath(
                 target.NetworkPosition,

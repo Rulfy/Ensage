@@ -36,6 +36,10 @@ namespace Zaio.Heroes
             "rattletrap_hookshot"
         };
 
+        private MenuItem _circleTillHook;
+       
+        private bool ShouldCircleHook => _circleTillHook.GetValue<bool>();
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -51,6 +55,10 @@ namespace Zaio.Heroes
             var supportedKillsteal = new MenuItem("zaioClockworkKillstealAbilities", string.Empty);
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
+
+            _circleTillHook = new MenuItem("zaioClockworkStopTillHook", "Circle on blocked Hook").SetValue(true);
+            _circleTillHook.Tooltip = "Moves on a circle when your hook is blocked.";
+            heroMenu.AddItem(_circleTillHook);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
         }
@@ -115,7 +123,7 @@ namespace Zaio.Heroes
                                          !x.CantBeKilled());
 
                 var speed = ult.GetAbilityData("speed");
-                var radius = ult.GetAbilityData("latch_radius");
+                var radius = ult.GetAbilityData("latch_radius") * 2;
 
                 foreach (var enemy in enemies)
                 {
@@ -156,7 +164,7 @@ namespace Zaio.Heroes
             if (ult.CanBeCasted(Target) && ult.CanHit(Target))
             {
                 var speed = ult.GetAbilityData("speed");
-                var radius = ult.GetAbilityData("latch_radius");
+                var radius = ult.GetAbilityData("latch_radius") * 2;
 
 
                 var time = Target.Distance2D(MyHero) / speed * 1000.0f;
@@ -178,6 +186,15 @@ namespace Zaio.Heroes
                         Log.Debug($"use ult");
                         ult.UseAbility(predictedPos);
                         await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    }
+                    else if (ShouldCircleHook)
+                    {
+                        //MyHero.Hold();
+                        var dir = (Game.MousePosition - Target.NetworkPosition).Normalized();
+                        var distance = (Target.NetworkPosition - MyHero.NetworkPosition).Length();
+                        var targetPos = Target.NetworkPosition + dir * distance;
+                        MyHero.Move(Prediction.Prediction.PredictMyRoute(MyHero, 500, targetPos).Last());
+                        return;
                     }
                 }
             }
@@ -238,7 +255,7 @@ namespace Zaio.Heroes
                 await Await.Delay((int) (flare.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
-            HasNoLinkens(Target);
+            await HasNoLinkens(Target, tk);
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {

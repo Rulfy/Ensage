@@ -141,7 +141,6 @@ namespace Zaio.Heroes
                         return true;
                     }
                 }
-                return false;
             }
 
             var q = MyHero.GetAbilityById(AbilityId.monkey_king_boundless_strike);
@@ -161,6 +160,7 @@ namespace Zaio.Heroes
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) castPoint);
                     q.UseAbility(predictedPos);
                     await Await.Delay((int) (castPoint + Game.Ping));
+                    return true;
                 }
             }
 
@@ -216,7 +216,7 @@ namespace Zaio.Heroes
                 return;
             }
 
-            HasNoLinkens(Target);
+            await HasNoLinkens(Target, tk);
             await UseItems(tk);
 
             // make him disabled
