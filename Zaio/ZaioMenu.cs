@@ -40,6 +40,7 @@ namespace Zaio
         private static MenuItem _noTargetMode;
         private static MenuItem _orbwalkerMode;
         private static MenuItem _blockKillSteal;
+        private static MenuItem _shouldUseBlinkDagger;
 
         public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int) _comboKey.GetValue<KeyBind>().Key);
         public static bool ShouldUseOrbwalker => _orbwalker.GetValue<bool>();
@@ -47,6 +48,7 @@ namespace Zaio
         public static bool ShouldLockTarget => _lockTarget.GetValue<bool>();
         public static bool ShouldKillSteal => _killSteal.GetValue<bool>();
         public static bool ShouldBlockKillStealWhileComboing => _blockKillSteal.GetValue<bool>();
+        public static bool ShouldUseBlinkDagger => _shouldUseBlinkDagger.GetValue<bool>();
         public static NoTargetMode NoTargetMode { get; private set; }
 
         public static OrbwalkerMode OrbwalkerMode { get; private set; }
@@ -86,6 +88,10 @@ namespace Zaio
             _blockKillSteal = new MenuItem("zaioBlockKillSteal", "Block Killsteal").SetValue(true);
             _blockKillSteal.Tooltip = "Won't killsteal while you're using the combo hotkey on a target.";
             general.AddItem(_blockKillSteal);
+
+            _shouldUseBlinkDagger = new MenuItem("zaioUseBlinkDagger", "Use Blink Dagger").SetValue(true);
+            _shouldUseBlinkDagger.Tooltip = "Uses Blink Dagger to engage the target.";
+            general.AddItem(_shouldUseBlinkDagger);
 
             _targetSelector =
                 new MenuItem("zaioTargetSelector", "Target Selector").SetValue(

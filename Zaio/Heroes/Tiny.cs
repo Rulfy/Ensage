@@ -84,7 +84,6 @@ namespace Zaio.Heroes
                 Log.Debug($"use throwbacktoss");
                 var tossRange = _tossAbility.GetCastRange();
 
-                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
                 var grab = _tossAbility.GetAbilityData("grab_radius");
                 var closestUnit =
                     ObjectManager.GetEntitiesParallel<Unit>()
@@ -195,7 +194,6 @@ namespace Zaio.Heroes
             if (_tossAbility.CanBeCasted(Target) && _tossAbility.CanHit(Target))
             {
                 Log.Debug($"use toss");
-                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
                 var grab = _tossAbility.GetAbilityData("grab_radius");
                 var closestUnit =
                     ObjectManager.GetEntitiesFast<Unit>()
@@ -203,7 +201,7 @@ namespace Zaio.Heroes
                                  .OrderBy(x => x.Distance2D(MyHero))
                                  .FirstOrDefault();
                 Log.Debug($"Closest unit for toss: {closestUnit?.Name}");
-                if (closestUnit == Target || blink.Cooldown > 0)
+                if (closestUnit == Target )
                 {
                     _tossAbility.UseAbility(Target);
                     Log.Debug($"use toss!!");

@@ -303,13 +303,16 @@ namespace Zaio.Interfaces
                 return true;
             }
 
-            var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
-            if (blink != null && blink.CanBeCasted())
+            if (ZaioMenu.ShouldUseBlinkDagger)
             {
-                var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
-                if (distance - testDistance <= blinkRange)
+                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+                if (blink != null && blink.CanBeCasted())
                 {
-                    return true;
+                    var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
+                    if (distance - testDistance <= blinkRange)
+                    {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -331,18 +334,21 @@ namespace Zaio.Interfaces
                 return true;
             }
 
-            var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
-            if (blink != null && blink.CanBeCasted())
+            if (ZaioMenu.ShouldUseBlinkDagger)
             {
-                var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
-                if (distance <= blinkRange)
+                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+                if (blink != null && blink.CanBeCasted())
                 {
-                    var pos = (target.NetworkPosition - MyHero.NetworkPosition).Normalized();
-                    pos *= minimumRange;
-                    pos = target.NetworkPosition - pos;
-                    blink.UseAbility(pos);
-                    await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000), tk);
-                    return false;
+                    var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
+                    if (distance <= blinkRange)
+                    {
+                        var pos = (target.NetworkPosition - MyHero.NetworkPosition).Normalized();
+                        pos *= minimumRange;
+                        pos = target.NetworkPosition - pos;
+                        blink.UseAbility(pos);
+                        await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000), tk);
+                        return false;
+                    }
                 }
             }
             var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
