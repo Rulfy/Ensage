@@ -283,7 +283,7 @@ namespace Zaio.Heroes
                         var dir = (Game.MousePosition - Target.NetworkPosition).Normalized();
                         var distance = (Target.NetworkPosition - MyHero.NetworkPosition).Length();
                         var targetPos = Target.NetworkPosition + dir * distance;
-                        MyHero.Move(Prediction.Prediction.PredictMyRoute(MyHero,500,targetPos).Last());
+                        MyHero.Move(Prediction.Prediction.PredictMyRoute(MyHero, 500, targetPos).Last());
                         return;
                     }
                 }

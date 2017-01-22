@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="Helpers\KeyEventArgs.cs" />
     <Compile Include="Helpers\BoolEventArgs.cs" />
+    <Compile Include="Heroes\ShadowFiend.cs" />
     <Compile Include="Heroes\MonkeyKing.cs" />
     <Compile Include="Heroes\Pudge.cs" />
     <Compile Include="Prediction\Geometry.cs" />

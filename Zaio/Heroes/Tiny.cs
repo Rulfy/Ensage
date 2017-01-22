@@ -2,7 +2,10 @@
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Ensage;
+using Ensage.Common;
+using Ensage.Common.Combo;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
@@ -25,6 +28,16 @@ namespace Zaio.Heroes
             "tiny_toss"
         };
 
+        private Ability _avalancheAbility;
+
+        private Combo _throwBackCombo;
+
+        private MenuItem _throwBackComboKey;
+        private MenuItem _throwBackHeroCount;
+        private Ability _tossAbility;
+
+        private int ThrowBackHeroCount => _throwBackHeroCount.GetValue<Slider>().Value;
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -36,7 +49,125 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            _throwBackComboKey =
+                new MenuItem("zaioTinyThrowBack", "Throw Back").SetValue(new KeyBind(0, KeyBindType.Press));
+            _throwBackComboKey.Tooltip = "Throws an enemy back to your allies or under your tower.";
+            _throwBackComboKey.ValueChanged += _throwBackComboKey_ValueChanged;
+            heroMenu.AddItem(_throwBackComboKey);
+
+            _throwBackHeroCount =
+                new MenuItem("zaioTinyThrowBackHeroCount", "Throw Back Hero Count").SetValue(new Slider(2, 1, 4));
+            _throwBackHeroCount.Tooltip = "How many allied heroes must be close to throw back an enemy.";
+            heroMenu.AddItem(_throwBackHeroCount);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
+
+            _avalancheAbility = MyHero.GetAbilityById(AbilityId.tiny_avalanche);
+            _tossAbility = MyHero.GetAbilityById(AbilityId.tiny_toss);
+
+            _throwBackCombo = new Combo(ThrowBack,
+                KeyInterop.KeyFromVirtualKey((int) _throwBackComboKey.GetValue<KeyBind>().Key));
+            _throwBackCombo.Activate();
+        }
+
+        private async Task ThrowBack(CancellationToken tk)
+        {
+            var tossSource = TargetSelector.ClosestToMouse(MyHero);
+            if (tossSource == null)
+            {
+                await Await.Delay(100, tk);
+                return;
+            }
+            // test if toss/av combo is working
+            if (_tossAbility.CanBeCasted())
+            {
+                Log.Debug($"use throwbacktoss");
+                var tossRange = _tossAbility.GetCastRange();
+
+                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+                var grab = _tossAbility.GetAbilityData("grab_radius");
+                var closestUnit =
+                    ObjectManager.GetEntitiesParallel<Unit>()
+                                 .Where(
+                                     x =>
+                                         x.IsValid && x.IsAlive && x != MyHero && x.Distance2D(MyHero) <= grab &&
+                                         x.IsRealUnit())
+                                 .OrderBy(x => x.Distance2D(MyHero))
+                                 .FirstOrDefault();
+                Log.Debug($"Closest unit for toss: {closestUnit?.Name}");
+                // if (closestUnit == tossSource )
+                {
+                    // check if we can throw him to allied heroes (min 2) 
+                    var targetHeroes =
+                        ObjectManager.GetEntitiesParallel<Hero>()
+                                     .Where(
+                                         x =>
+                                             x.IsValid && x.IsAlive && x.Team == MyHero.Team && x != MyHero &&
+                                             x.Distance2D(MyHero) <= tossRange);
+                    foreach (var target in targetHeroes)
+                    {
+                        if (
+                            ObjectManager.GetEntitiesParallel<Hero>()
+                                         .Count(
+                                             x =>
+                                                 x.IsValid && x.IsAlive && x.Team == MyHero.Team && x != target &&
+                                                 x != MyHero &&
+                                                 x.Distance2D(target) < 500) == ThrowBackHeroCount - 1)
+                        {
+                            if (closestUnit == tossSource)
+                            {
+                                _tossAbility.UseAbility(target);
+                                Log.Debug($"use toss back to allied heroes! {target.Name}");
+                                await Await.Delay(100, tk);
+                            }
+                            else
+                            {
+                                await MoveOrBlinkToEnemy(tk, 0.1f, 0.1f, tossSource);
+                                Log.Debug($"return because of blink");
+                                return;
+                            }
+                        }
+                    }
+                    // check if we can throw him under the tower
+                    var towers =
+                        ObjectManager.GetEntitiesParallel<Tower>()
+                                     .Where(
+                                         x =>
+                                             x.IsValid && x.IsAlive && x.Team == MyHero.Team &&
+                                             x.Distance2D(MyHero) - x.AttackRange <= tossRange);
+                    var towerTarget =
+                        ObjectManager.GetEntitiesParallel<Unit>()
+                                     .Where(
+                                         x =>
+                                             x.IsValid && x.IsAlive && x.Team == MyHero.Team && !(x is Building) &&
+                                             x.Distance2D(MyHero) <= tossRange &&
+                                             towers.Any(y => y.Distance2D(x) <= y.AttackRange))
+                                     .OrderBy(x => towers.Min(y => y.Distance2D(x))).FirstOrDefault();
+                    if (towerTarget != null)
+                    {
+                        if (closestUnit == tossSource)
+                        {
+                            _tossAbility.UseAbility(towerTarget);
+                            Log.Debug($"use toss back to tower {towerTarget.Name}");
+                            await Await.Delay(100, tk);
+                        }
+                        else
+                        {
+                            await MoveOrBlinkToEnemy(tk, 0.1f, 0.1f, tossSource);
+                            Log.Debug($"return because of blink");
+                        }
+                    }
+                }
+            }
+        }
+
+        private void _throwBackComboKey_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            var newKey = e.GetNewValue<KeyBind>().Key;
+            if (e.GetOldValue<KeyBind>().Key != newKey)
+            {
+                _throwBackCombo.Key = KeyInterop.KeyFromVirtualKey((int) newKey);
+            }
         }
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
@@ -61,30 +192,28 @@ namespace Zaio.Heroes
             }
 
             // test if toss/av combo is working
-            var avalanche = MyHero.Spellbook.SpellQ;
-            var toss = MyHero.Spellbook.SpellW;
-            if (toss.CanBeCasted(Target) && toss.CanHit(Target))
+            if (_tossAbility.CanBeCasted(Target) && _tossAbility.CanHit(Target))
             {
                 Log.Debug($"use toss");
                 var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
-                var grab = toss.GetAbilityData("grab_radius");
+                var grab = _tossAbility.GetAbilityData("grab_radius");
                 var closestUnit =
                     ObjectManager.GetEntitiesFast<Unit>()
-                                 .Where(x => x != MyHero && x.IsAlive && x.Distance2D(MyHero) <= grab)
+                                 .Where(x => x != MyHero && x.IsAlive && x.Distance2D(MyHero) <= grab && x.IsRealUnit())
                                  .OrderBy(x => x.Distance2D(MyHero))
                                  .FirstOrDefault();
                 Log.Debug($"Closest unit for toss: {closestUnit?.Name}");
                 if (closestUnit == Target || blink.Cooldown > 0)
                 {
-                    toss.UseAbility(Target);
+                    _tossAbility.UseAbility(Target);
                     Log.Debug($"use toss!!");
                     await Await.Delay(100, tk);
                 }
             }
-            if (avalanche.CanBeCasted(Target) && avalanche.CanHit(Target))
+            if (_avalancheAbility.CanBeCasted(Target) && _avalancheAbility.CanHit(Target))
             {
                 Log.Debug($"use avalanche");
-                avalanche.UseAbility(Target.NetworkPosition);
+                _avalancheAbility.UseAbility(Target.NetworkPosition);
                 await Await.Delay(100, tk);
             }
 

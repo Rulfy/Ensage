@@ -78,11 +78,12 @@ namespace Zaio.Interfaces
         };
 
         private ParticleEffect _attackRangeEffect;
+        private ParticleEffect _comboTargetEffect;
         private bool _executed;
         private float _lastAttackRange;
+        private Unit _target;
         protected Hero MyHero;
         protected Orbwalker Orbwalker;
-        protected Unit Target;
 
         protected ComboHero() : base(ZaioMenu.ComboKey)
         {
@@ -92,6 +93,31 @@ namespace Zaio.Interfaces
         protected ComboHero(bool repeatCombo) : base(ZaioMenu.ComboKey)
         {
             _repeatCombo = repeatCombo;
+        }
+
+        protected Unit Target
+        {
+            get { return _target; }
+            set
+            {
+                _target = value;
+                if (_comboTargetEffect != null)
+                {
+                    _comboTargetEffect.Dispose();
+                    _comboTargetEffect = null;
+                }
+                if (_target != null)
+                {
+                    //target inditcator
+                    _comboTargetEffect =
+                        _target.AddParticleEffect(@"particles\ui_mouseactions\range_finder_tower_aoe.vpcf");
+                    _comboTargetEffect.SetControlPointEntity(2, MyHero);
+                    _comboTargetEffect.SetControlPoint(2, MyHero.NetworkPosition); //start point XYZ
+                    _comboTargetEffect.SetControlPoint(6, new Vector3(1, 0, 0)); // 1 means the particle is visible
+                    _comboTargetEffect.SetControlPoint(7, _target.NetworkPosition); //end point XYZ  
+                    _comboTargetEffect.SetControlPointEntity(7, _target);
+                }
+            }
         }
 
         protected float TotalAttackRange => MyHero.GetAttackRange() + MyHero.HullRadius;
@@ -179,6 +205,12 @@ namespace Zaio.Interfaces
                     DestroyAttackEffect();
                     CreateAttackEffect();
                 }
+            }
+
+            if (_comboTargetEffect != null && _target != null)
+            {
+                _comboTargetEffect.SetControlPoint(2, MyHero.NetworkPosition); //start point XYZ
+                _comboTargetEffect.SetControlPoint(7, _target.NetworkPosition); //end point XYZ  
             }
         }
 
@@ -284,9 +316,14 @@ namespace Zaio.Interfaces
         }
 
         protected async Task<bool> MoveOrBlinkToEnemy(CancellationToken tk = default(CancellationToken),
-            float minimumRange = 0.0f, float maximumRange = 0.0f)
+            float minimumRange = 0.0f, float maximumRange = 0.0f, Unit target = null)
         {
-            var distance = MyHero.Distance2D(Target) - Target.HullRadius - MyHero.HullRadius;
+            if (target == null)
+            {
+                target = Target;
+            }
+
+            var distance = MyHero.Distance2D(target) - target.HullRadius - MyHero.HullRadius;
 
             var testRange = maximumRange == 0.0f ? MyHero.GetAttackRange() : maximumRange;
             if (distance <= testRange)
@@ -300,9 +337,9 @@ namespace Zaio.Interfaces
                 var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
                 if (distance <= blinkRange)
                 {
-                    var pos = (Target.NetworkPosition - MyHero.NetworkPosition).Normalized();
+                    var pos = (target.NetworkPosition - MyHero.NetworkPosition).Normalized();
                     pos *= minimumRange;
-                    pos = Target.NetworkPosition - pos;
+                    pos = target.NetworkPosition - pos;
                     blink.UseAbility(pos);
                     await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000), tk);
                     return false;
@@ -319,7 +356,7 @@ namespace Zaio.Interfaces
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
             return false;

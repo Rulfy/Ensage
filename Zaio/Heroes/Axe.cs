@@ -128,6 +128,23 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"using blademail before call");
                     bladeMail.UseAbility();
+                    await Await.Delay(100, tk);
+                }
+
+                var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
+                if (lotus != null && lotus.CanBeCasted())
+                {
+                    Log.Debug($"using lotus orb before call");
+                    lotus.UseAbility(MyHero);
+                    await Await.Delay(100, tk);
+                }
+
+                var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
+                if (mjollnir != null && mjollnir.CanBeCasted())
+                {
+                    Log.Debug($"using mjollnir before call");
+                    mjollnir.UseAbility(MyHero);
+                    await Await.Delay(100, tk);
                 }
 
                 Log.Debug($"using call");

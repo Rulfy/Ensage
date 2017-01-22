@@ -129,7 +129,8 @@ namespace Zaio.Heroes
                         var predictedPos = Prediction.Prediction.PredictPosition(enemy,
                             (int) (125 + prop * e.ChannelTime() * 1000.0f));
                         e.UseAbility(predictedPos);
-                        Log.Debug($"Using E to killsteal on {enemy.Name} with {prop} time {(int)(125 + Game.Ping + prop * e.ChannelTime() * 1000)}");
+                        Log.Debug(
+                            $"Using E to killsteal on {enemy.Name} with {prop} time {(int) (125 + Game.Ping + prop * e.ChannelTime() * 1000)}");
                         await Await.Delay((int) (125 + Game.Ping + prop * e.ChannelTime() * 1000));
                         var eEarly = MyHero.GetAbilityById(AbilityId.monkey_king_primal_spring_early);
                         if (eEarly.CanBeCasted())
@@ -312,8 +313,9 @@ namespace Zaio.Heroes
         {
             var damage = e.GetAbilityData("impact_damage");
             var time = e.ChannelTime();
-            var health = (target.Health + target.HealthRegeneration * time) * (1.0f + target.MagicResistance()) * 1.1f; // todo: calc from monkey ms/travel speed?
-            Log.Debug($"health { health} | {target.HealthRegeneration * time}");
+            var health = (target.Health + target.HealthRegeneration * time) * (1.0f + target.MagicResistance()) * 1.1f;
+                // todo: calc from monkey ms/travel speed?
+            Log.Debug($"health {health} | {target.HealthRegeneration * time}");
             return Math.Min(1.0f, health / damage);
         }
     }

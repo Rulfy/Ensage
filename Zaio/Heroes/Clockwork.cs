@@ -37,7 +37,7 @@ namespace Zaio.Heroes
         };
 
         private MenuItem _circleTillHook;
-       
+
         private bool ShouldCircleHook => _circleTillHook.GetValue<bool>();
 
         public override void OnLoad()
@@ -118,7 +118,8 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) && !x.IsIllusion &&
+                                         x.IsAlive && x.Team != MyHero.Team && ult.CanBeCasted(x) && ult.CanHit(x) &&
+                                         !x.IsIllusion &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
 

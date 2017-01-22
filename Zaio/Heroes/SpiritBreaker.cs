@@ -2,7 +2,9 @@
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Ensage;
+using Ensage.Common.Combo;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
@@ -27,6 +29,13 @@ namespace Zaio.Heroes
             "item_silver_edge"
         };
 
+        private Ability _chargeAbility;
+
+        private Combo _chargeAway;
+
+        private MenuItem _chargeAwayKey;
+        private Ability _ultAbility;
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -38,7 +47,55 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            _chargeAwayKey =
+                new MenuItem("zaioSpiritBreakerChargeAway", "Charge Away").SetValue(new KeyBind(0, KeyBindType.Press));
+            _chargeAwayKey.Tooltip = "Hotkey for charging away.";
+            _chargeAwayKey.ValueChanged += _chargeAwayKey_ValueChanged;
+            ;
+            heroMenu.AddItem(_chargeAwayKey);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
+
+            _chargeAbility = MyHero.GetAbilityById(AbilityId.spirit_breaker_charge_of_darkness);
+            _ultAbility = MyHero.GetAbilityById(AbilityId.spirit_breaker_nether_strike);
+
+            _chargeAway = new Combo(ChargeAwayFunc,
+                KeyInterop.KeyFromVirtualKey((int) _chargeAwayKey.GetValue<KeyBind>().Key));
+            _chargeAway.Activate();
+        }
+
+        public override void OnClose()
+        {
+            _chargeAway.Deactivate();
+            base.OnClose();
+        }
+
+        private async Task ChargeAwayFunc(CancellationToken tk)
+        {
+            if (_chargeAbility.CanBeCasted() && !MyHero.IsChanneling())
+            {
+                var enemy = ObjectManager.GetEntitiesParallel<Unit>().Where(
+                                             x =>
+                                                 x.IsValid && x.IsAlive && x.Team != MyHero.Team && !(x is Building) &&
+                                                 x.IsRealUnit() && _chargeAbility.CanBeCasted(x))
+                                         .OrderByDescending(x => x.Distance2D(MyHero))
+                                         .FirstOrDefault();
+                if (enemy != null)
+                {
+                    Log.Debug($"Using charge away on {enemy.Name}");
+                    _chargeAbility.UseAbility(enemy);
+                    await Await.Delay((int) (_chargeAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
+            }
+        }
+
+        private void _chargeAwayKey_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            var newKey = e.GetNewValue<KeyBind>().Key;
+            if (e.GetOldValue<KeyBind>().Key != newKey)
+            {
+                _chargeAway.Key = KeyInterop.KeyFromVirtualKey((int) newKey);
+            }
         }
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
@@ -60,16 +117,14 @@ namespace Zaio.Heroes
                 }
                 return;
             }
-
-            var charge = MyHero.Spellbook.SpellQ;
             // check if we are near the enemy
             if (!await MoveOrBlinkToEnemy(tk))
             {
-                if (charge.CanBeCasted())
+                if (_chargeAbility.CanBeCasted())
                 {
                     Log.Debug($"charging enemy since too far");
-                    charge.UseAbility(Target);
-                    await Await.Delay((int) (charge.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    _chargeAbility.UseAbility(Target);
+                    await Await.Delay((int) (_chargeAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
 
                 return;
@@ -77,9 +132,8 @@ namespace Zaio.Heroes
             await HasNoLinkens(Target, tk);
             await UseItems(tk);
 
-            var ult = MyHero.Spellbook.SpellR;
             // make him disabled
-            if (await DisableEnemy(tk, ult.CanBeCasted(Target) ? (float) ult.FindCastPoint() : 0) ==
+            if (await DisableEnemy(tk, _ultAbility.CanBeCasted(Target) ? (float) _ultAbility.FindCastPoint() : 0) ==
                 DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled enemy");
@@ -93,15 +147,15 @@ namespace Zaio.Heroes
                 armlet.ToggleAbility();
             }
 
-            if (ult.CanBeCasted() && ult.CanHit(Target))
+            if (_ultAbility.CanBeCasted() && _ultAbility.CanHit(Target))
             {
                 Log.Debug($"using ult on target");
-                ult.UseAbility(Target);
-                await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                _ultAbility.UseAbility(Target);
+                await Await.Delay((int) (_ultAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
             var mask = MyHero.GetItemById(ItemId.item_mask_of_madness);
-            if (mask != null && mask.CanBeCasted() && ult.Cooldown > 0)
+            if (mask != null && mask.CanBeCasted() && _ultAbility.Cooldown > 0)
             {
                 Log.Debug($"using mask");
                 mask.UseAbility();
