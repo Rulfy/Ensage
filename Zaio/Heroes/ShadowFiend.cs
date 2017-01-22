@@ -137,9 +137,10 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            if (_ultAbility.CanBeCasted(Target) && !MyHero.IsVisibleToEnemies)
+            var eulsModifier = Target.FindModifier("modifier_eul_cyclone");
+            if ( (eulsModifier == null && _ultAbility.CanBeCasted(Target) && !MyHero.IsVisibleToEnemies) || (eulsModifier != null && _ultAbility.CanBeCasted()) )
             {
-                if (MyHero.IsInvisible())
+                if (MyHero.IsInvisible() || eulsModifier != null)
                 {
                     // Log.Debug($"using invis ult on enemy");
                     var distance = Target.Distance2D(MyHero);
@@ -162,7 +163,7 @@ namespace Zaio.Heroes
                         Log.Debug($"approaching target {distance}");
                         MyHero.Move(Target.NetworkPosition);
                     }
-                    else
+                    else if(eulsModifier == null || eulsModifier.RemainingTime < _ultAbility.FindCastPoint())
                     {
                         Log.Debug($"{_ultAbility.IsInAbilityPhase}");
                         if (!_ultAbility.IsInAbilityPhase)
@@ -188,6 +189,26 @@ namespace Zaio.Heroes
                     }
                 }
             }
+
+            var euls = MyHero.GetItemById(ItemId.item_cyclone);
+            if (euls != null && euls.CanBeCasted(Target) && _ultAbility.CanBeCasted(Target))
+            {
+                if (euls.CanHit(Target))
+                {
+                    Log.Debug($"using euls to disable enemy before stun");
+                    euls.UseAbility(Target);
+                    await Await.Delay(125, tk);
+                    return;
+                }
+                // check if we are near the enemy
+                if (!await MoveOrBlinkToEnemy(tk, 0.1f, euls.GetCastRange()))
+                {
+                    Log.Debug($"return because of blink and euls ready");
+                    return;
+                }
+            }
+
+
             await HasNoLinkens(Target, tk);
             await UseItems(tk);
 
