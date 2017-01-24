@@ -98,7 +98,7 @@ namespace Zaio.Heroes
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) time);
                     Log.Debug($"use flare killsteal");
                     flare.UseAbility(predictedPos);
-                    await Await.Delay((int) (flare.FindCastPoint() * 1000.0 + Game.Ping));
+                    await Await.Delay(GetAbilityDelay(enemy, flare));
                     return true;
                 }
             }
@@ -149,7 +149,7 @@ namespace Zaio.Heroes
                     {
                         Log.Debug($"use ult for killsteal");
                         ult.UseAbility(predictedPos);
-                        await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping));
+                        await Await.Delay(GetAbilityDelay(enemy, ult));
                         return true;
                     }
                 }
@@ -162,14 +162,14 @@ namespace Zaio.Heroes
         {
             var ult = MyHero.Spellbook.SpellR;
 
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target))
+            if (ult.CanBeCasted(target) && ult.CanHit(target))
             {
                 var speed = ult.GetAbilityData("speed");
                 var radius = ult.GetAbilityData("latch_radius") * 2;
 
 
-                var time = Target.Distance2D(MyHero) / speed * 1000.0f;
-                var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time, true);
+                var time = target.Distance2D(MyHero) / speed * 1000.0f;
+                var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time, true);
                 if (predictedPos != Vector3.Zero)
                 {
                     var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, predictedPos, radius);
@@ -178,22 +178,22 @@ namespace Zaio.Heroes
                     var isUnitBlocking = ObjectManager.GetEntitiesParallel<Unit>()
                                                       .Any(
                                                           x =>
-                                                              x.IsValid && x != Target && x.IsAlive && x != MyHero &&
+                                                              x.IsValid && x != target && x.IsAlive && x != MyHero &&
                                                               x.IsSpawned && x.IsRealUnit() &&
-                                                              x.Distance2D(Target) >= radius &&
+                                                              x.Distance2D(target) >= radius &&
                                                               rec.IsInside(x.NetworkPosition));
                     if (!isUnitBlocking)
                     {
                         Log.Debug($"use ult");
                         ult.UseAbility(predictedPos);
-                        await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        await Await.Delay(GetAbilityDelay(target, ult), tk);
                     }
                     else if (ShouldCircleHook)
                     {
                         //MyHero.Hold();
-                        var dir = (Game.MousePosition - Target.NetworkPosition).Normalized();
-                        var distance = (Target.NetworkPosition - MyHero.NetworkPosition).Length();
-                        var targetPos = Target.NetworkPosition + dir * distance;
+                        var dir = (Game.MousePosition - target.NetworkPosition).Normalized();
+                        var distance = (target.NetworkPosition - MyHero.NetworkPosition).Length();
+                        var targetPos = target.NetworkPosition + dir * distance;
                         MyHero.Move(Prediction.Prediction.PredictMyRoute(MyHero, 500, targetPos).Last());
                         return;
                     }
@@ -220,7 +220,7 @@ namespace Zaio.Heroes
             if (cogs.CanBeCasted())
             {
                 var radius = cogs.GetAbilityData("cogs_radius");
-                if (Target.Distance2D(MyHero) <= radius)
+                if (target.Distance2D(MyHero) <= radius)
                 {
                     Log.Debug($"use cogs");
                     cogs.UseAbility();
@@ -236,7 +236,7 @@ namespace Zaio.Heroes
             }
 
             var q = MyHero.Spellbook.SpellQ;
-            if (q.CanBeCasted(Target))
+            if (q.CanBeCasted(target))
             {
                 Log.Debug($"use Q");
                 q.UseAbility();
@@ -244,19 +244,19 @@ namespace Zaio.Heroes
             }
 
             var flare = MyHero.Spellbook.SpellQ;
-            if (flare.CanBeCasted(Target))
+            if (flare.CanBeCasted(target))
             {
                 var speed = flare.GetAbilityData("speed");
-                var time = Target.Distance2D(MyHero) / speed * 1000.0f;
+                var time = target.Distance2D(MyHero) / speed * 1000.0f;
 
-                var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
+                var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time);
 
                 Log.Debug($"use flare");
                 flare.UseAbility(predictedPos);
-                await Await.Delay((int) (flare.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                await Await.Delay(GetAbilityDelay(target, flare), tk);
             }
 
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {
@@ -264,7 +264,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

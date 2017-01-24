@@ -31,6 +31,9 @@ namespace Zaio.Heroes
             "axe_culling_blade"
         };
 
+        private Ability _callAbility;
+        private Ability _ultAbility;
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -48,6 +51,9 @@ namespace Zaio.Heroes
             heroMenu.AddItem(supportedKillsteal);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
+
+            _callAbility = MyHero.GetAbilityById(AbilityId.axe_berserkers_call);
+            _ultAbility = MyHero.GetAbilityById(AbilityId.axe_culling_blade);
         }
 
         protected override async Task<bool> Killsteal()
@@ -62,24 +68,24 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted())
+            if (_ultAbility.CanBeCasted())
             {
                 var threshold =
-                    ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
+                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
                         ? "kill_threshold_scepter"
                         : "kill_threshold");
 
                 var enemy = ObjectManager.GetEntitiesParallel<Hero>().FirstOrDefault(
                     x =>
                         x.IsValid && x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion &&
-                        ult.CanBeCasted(x) && ult.CanHit(x) && x.Health < threshold && !x.IsLinkensProtected() &&
+                        _ultAbility.CanBeCasted(x) && _ultAbility.CanHit(x) && x.Health < threshold &&
+                        !x.IsLinkensProtected() &&
                         !x.CantBeAttacked() && !x.CantBeKilledByAxeUlt());
                 if (enemy != null)
                 {
                     Log.Debug($"using ult on {enemy.Name}: {enemy.Health} < {threshold}");
-                    ult.UseAbility(enemy);
-                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping));
+                    _ultAbility.UseAbility(enemy);
+                    await Await.Delay(GetAbilityDelay(enemy, _ultAbility));
                 }
             }
             return false;
@@ -88,22 +94,22 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && await HasNoLinkens(Target, tk))
+            _ultAbility = MyHero.Spellbook.SpellR;
+            if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
             {
                 var threshold =
-                    ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
+                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
                         ? "kill_threshold_scepter"
                         : "kill_threshold");
-                if (Target.Health < threshold)
+                if (target.Health < threshold)
                 {
-                    Log.Debug($"using ult {Target.Health} < {threshold}");
-                    ult.UseAbility(Target);
-                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    Log.Debug($"using ult {target.Health} < {threshold}");
+                    _ultAbility.UseAbility(target);
+                    await Await.Delay(GetAbilityDelay(target, _ultAbility), tk);
                 }
             }
 
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
             await UseItems(tk);
 
             // make him disabled
@@ -120,36 +126,53 @@ namespace Zaio.Heroes
                 return;
             }
 
-            var call = MyHero.Spellbook.SpellQ;
-            if (call.CanBeCasted(Target) && call.CanHit(Target))
+            _callAbility = MyHero.Spellbook.SpellQ;
+            if (_callAbility.CanBeCasted(target))
             {
-                var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
-                if (bladeMail != null && bladeMail.CanBeCasted())
+                var delay = _callAbility.FindCastPoint() * 1000 + Game.Ping;
+                var radius = _callAbility.GetAbilityData("radius");
+                if (Prediction.Prediction.PredictPosition(target, (int) delay).Distance2D(MyHero) <= radius)
                 {
-                    Log.Debug($"using blademail before call");
-                    bladeMail.UseAbility();
-                    await Await.Delay(100, tk);
-                }
+                    var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
+                    if (bladeMail != null && bladeMail.CanBeCasted())
+                    {
+                        Log.Debug($"using blademail before call");
+                        bladeMail.UseAbility();
+                        await Await.Delay(100, tk);
+                    }
 
-                var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
-                if (lotus != null && lotus.CanBeCasted())
-                {
-                    Log.Debug($"using lotus orb before call");
-                    lotus.UseAbility(MyHero);
-                    await Await.Delay(100, tk);
-                }
+                    var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
+                    if (lotus != null && lotus.CanBeCasted())
+                    {
+                        Log.Debug($"using lotus orb before call");
+                        lotus.UseAbility(MyHero);
+                        await Await.Delay(100, tk);
+                    }
 
-                var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
-                if (mjollnir != null && mjollnir.CanBeCasted())
-                {
-                    Log.Debug($"using mjollnir before call");
-                    mjollnir.UseAbility(MyHero);
-                    await Await.Delay(100, tk);
+                    var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
+                    if (mjollnir != null && mjollnir.CanBeCasted())
+                    {
+                        Log.Debug($"using mjollnir before call");
+                        mjollnir.UseAbility(MyHero);
+                        await Await.Delay(100, tk);
+                    }
+                    var useCall = true;
+                    if (target.HasModifier("modifier_legion_commander_duel") || target.PhysicalResistance() == 1.0f)
+                    {
+                        useCall =
+                            ObjectManager.GetEntitiesParallel<Hero>()
+                                         .Any(
+                                             x =>
+                                                 x.IsValid && x.IsAlive && !x.IsIllusion && x.Team != MyHero.Team &&
+                                                 x != target && x.Distance2D(MyHero) <= radius);
+                    }
+                    if (useCall)
+                    {
+                        Log.Debug($"using call");
+                        _callAbility.UseAbility();
+                        await Await.Delay((int) (_callAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    }
                 }
-
-                Log.Debug($"using call");
-                call.UseAbility();
-                await Await.Delay((int) (call.FindCastPoint() * 1000.0 + Game.Ping), tk);
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)
@@ -158,7 +181,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

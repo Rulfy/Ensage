@@ -160,7 +160,7 @@ namespace Zaio.Heroes
                     var castPoint = q.FindCastPoint() * 1000;
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) castPoint);
                     q.UseAbility(predictedPos);
-                    await Await.Delay((int) (castPoint + Game.Ping));
+                    await Await.Delay(GetAbilityDelay(predictedPos, q));
                     return true;
                 }
             }
@@ -181,10 +181,10 @@ namespace Zaio.Heroes
                     if (_lastEPosition != Vector3.Zero)
                     {
                         var radius = e.GetAbilityData("impact_radius");
-                        var prediction = Prediction.Prediction.PredictPosition(Target,
-                            (int) (1.5f * Target.MovementSpeed));
+                        var prediction = Prediction.Prediction.PredictPosition(target,
+                            (int) (1.5f * target.MovementSpeed));
                         var dist = prediction.Distance2D(_lastEPosition);
-                        Log.Debug($"damage known pos: {GetEDamage(e, Target)} with dist {dist}");
+                        Log.Debug($"damage known pos: {GetEDamage(e, target)} with dist {dist}");
                         if (dist >= radius)
                         {
                             var eEarly = MyHero.GetAbilityById(AbilityId.monkey_king_primal_spring_early);
@@ -199,25 +199,25 @@ namespace Zaio.Heroes
                     }
                     else
                     {
-                        Log.Debug($"damage: {GetEDamage(e, Target)}");
+                        Log.Debug($"damage: {GetEDamage(e, target)}");
                     }
                 }
-                else if (e.CanBeCasted(Target) && e.CanHit(Target))
+                else if (e.CanBeCasted(target) && e.CanHit(target))
                 {
-                    var prop = GetNeededEProp(e, Target);
+                    var prop = GetNeededEProp(e, target);
                     var castPoint = e.FindCastPoint() * 1000;
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target,
+                    var predictedPos = Prediction.Prediction.PredictPosition(target,
                         (int) (castPoint + prop * e.ChannelTime() * 1000.0f));
                     e.UseAbility(predictedPos);
                     _lastEPosition = predictedPos;
                     Log.Debug($"Using E with prop {prop} to {predictedPos}");
-                    await Await.Delay((int) (castPoint + Game.Ping), tk);
+                    await Await.Delay(GetAbilityDelay(predictedPos, e), tk);
                 }
 
                 return;
             }
 
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
             await UseItems(tk);
 
             // make him disabled
@@ -228,32 +228,32 @@ namespace Zaio.Heroes
             }
 
             var q = MyHero.GetAbilityById(AbilityId.monkey_king_boundless_strike);
-            if (q.CanBeCasted(Target) && q.CanHit(Target))
+            if (q.CanBeCasted(target) && q.CanHit(target))
             {
-                if (IsBuffed || GetQDamage(q, Target) > Target.Health)
+                if (IsBuffed || GetQDamage(q, target) > target.Health)
                 {
                     var castPoint = q.FindCastPoint() * 1000;
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) castPoint);
+                    var predictedPos = Prediction.Prediction.PredictPosition(target, (int) castPoint);
                     q.UseAbility(predictedPos);
-                    await Await.Delay((int) (castPoint + Game.Ping), tk);
+                    await Await.Delay(GetAbilityDelay(predictedPos, q), tk);
                 }
             }
 
             var ult = MyHero.GetAbilityById(AbilityId.monkey_king_wukongs_command);
-            if (ult.CanBeCasted() && ult.CanHit(Target))
+            if (ult.CanBeCasted() && ult.CanHit(target))
             {
                 var radius = ult.GetAbilityData("leadership_radius");
                 var enemiesNearCount =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .Count(
                                      x =>
-                                         x.IsValid && x != Target && x.IsAlive && x.Team != MyHero.Team &&
-                                         !x.IsIllusion && x.Distance2D(Target) <= radius);
+                                         x.IsValid && x != target && x.IsAlive && x.Team != MyHero.Team &&
+                                         !x.IsIllusion && x.Distance2D(target) <= radius);
                 if (enemiesNearCount >= EnemyCountForUlt)
                 {
                     Log.Debug($"using ult since more enemies here");
-                    ult.UseAbility(Target.NetworkPosition);
-                    await Await.Delay((int) (ult.FindCastPoint() * 1000 + Game.Ping), tk);
+                    ult.UseAbility(target.NetworkPosition);
+                    await Await.Delay(GetAbilityDelay(target.NetworkPosition, ult), tk);
                 }
             }
             // check if we are near the enemy
@@ -270,7 +270,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }
@@ -292,7 +292,7 @@ namespace Zaio.Heroes
             {
                 crit = q.GetAbilityData("strike_crit_mult") / 100.0f;
             }
-            return damage * crit * (1 - target.DamageResist);
+            return damage * crit * (1 - target.PhysicalResistance());
         }
 
         private float GetEDamage(Ability e, Unit target)
@@ -314,7 +314,7 @@ namespace Zaio.Heroes
             var damage = e.GetAbilityData("impact_damage");
             var time = e.ChannelTime();
             var health = (target.Health + target.HealthRegeneration * time) * (1.0f + target.MagicResistance()) * 1.1f;
-                // todo: calc from monkey ms/travel speed?
+            // todo: calc from monkey ms/travel speed?
             Log.Debug($"health {health} | {target.HealthRegeneration * time}");
             return Math.Min(1.0f, health / damage);
         }

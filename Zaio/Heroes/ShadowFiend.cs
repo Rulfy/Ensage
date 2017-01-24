@@ -69,13 +69,16 @@ namespace Zaio.Heroes
                 var radius = ability.GetAbilityData("shadowraze_radius");
                 var point = MyHero.InFront(range);
                 var damage = ability.GetDamage(ability.Level - 1) * spellAmp;
+                var delay = ability.FindCastPoint() * 1000.0f;
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && ability.CanBeCasted(x) &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
-                                         !x.CantBeKilled() && x.Distance2D(point) < radius);
+                                         !x.CantBeKilled() &&
+                                         Prediction.Prediction.PredictPosition(x, (int) delay).Distance2D(point) <=
+                                         radius);
                 if (enemy != null)
                 {
                     Log.Debug($"using {ability.Name} on {enemy.Name}");
@@ -87,14 +90,16 @@ namespace Zaio.Heroes
             return false;
         }
 
-        private async Task<bool> UseRazeOnTarget(Ability ability)
+        private async Task<bool> UseRazeOnTarget(Unit target, Ability ability)
         {
-            if (ability.CanBeCasted(Target) && !Target.IsMagicImmune())
+            if (ability.CanBeCasted(target) && !target.IsMagicImmune())
             {
                 var range = ability.GetAbilityData("shadowraze_range");
                 var radius = ability.GetAbilityData("shadowraze_radius");
                 var point = MyHero.InFront(range);
-                if (Target.Distance2D(point) < radius)
+                var delay = ability.FindCastPoint() * 1000.0f;
+                var pos = Prediction.Prediction.PredictPosition(target, (int) delay);
+                if (pos.Distance2D(point) <= radius)
                 {
                     Log.Debug($"using {ability.Name}");
                     ability.UseAbility();
@@ -137,13 +142,14 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            var eulsModifier = Target.FindModifier("modifier_eul_cyclone");
-            if ( (eulsModifier == null && _ultAbility.CanBeCasted(Target) && !MyHero.IsVisibleToEnemies) || (eulsModifier != null && _ultAbility.CanBeCasted()) )
+            var eulsModifier = target.FindModifier("modifier_eul_cyclone");
+            if (eulsModifier == null && _ultAbility.CanBeCasted(target) && !MyHero.IsVisibleToEnemies ||
+                eulsModifier != null && _ultAbility.CanBeCasted())
             {
                 if (MyHero.IsInvisible() || eulsModifier != null)
                 {
                     // Log.Debug($"using invis ult on enemy");
-                    var distance = Target.Distance2D(MyHero);
+                    var distance = target.Distance2D(MyHero);
                     if (_ultAbility.IsInAbilityPhase)
                     {
                         if (distance > 400)
@@ -161,14 +167,14 @@ namespace Zaio.Heroes
                     if (distance > 50)
                     {
                         Log.Debug($"approaching target {distance}");
-                        MyHero.Move(Target.NetworkPosition);
+                        MyHero.Move(target.NetworkPosition);
                     }
-                    else if(eulsModifier == null || eulsModifier.RemainingTime < _ultAbility.FindCastPoint())
+                    else if (eulsModifier == null || eulsModifier.RemainingTime < _ultAbility.FindCastPoint())
                     {
                         Log.Debug($"{_ultAbility.IsInAbilityPhase}");
                         if (!_ultAbility.IsInAbilityPhase)
                         {
-                            Log.Debug($"using ult on {Target.Name}");
+                            Log.Debug($"using ult on {target.Name}");
                             _ultAbility.UseAbility();
                             await Await.Delay(250, tk);
                         }
@@ -179,7 +185,7 @@ namespace Zaio.Heroes
                 {
                     var shadowBlade = MyHero.GetItemById(ItemId.item_invis_sword) ??
                                       MyHero.GetItemById(ItemId.item_silver_edge);
-                    var distance = MyHero.Distance2D(Target);
+                    var distance = MyHero.Distance2D(target);
                     if (shadowBlade != null && shadowBlade.CanBeCasted() && distance < 6000)
                     {
                         Log.Debug($"using invis");
@@ -191,12 +197,12 @@ namespace Zaio.Heroes
             }
 
             var euls = MyHero.GetItemById(ItemId.item_cyclone);
-            if (euls != null && euls.CanBeCasted(Target) && _ultAbility.CanBeCasted(Target))
+            if (euls != null && euls.CanBeCasted(target) && _ultAbility.CanBeCasted(target))
             {
-                if (euls.CanHit(Target))
+                if (euls.CanHit(target))
                 {
                     Log.Debug($"using euls to disable enemy before stun");
-                    euls.UseAbility(Target);
+                    euls.UseAbility(target);
                     await Await.Delay(125, tk);
                     return;
                 }
@@ -209,12 +215,12 @@ namespace Zaio.Heroes
             }
 
 
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
             await UseItems(tk);
 
-            await UseRazeOnTarget(_raze1Ability);
-            await UseRazeOnTarget(_raze2Ability);
-            await UseRazeOnTarget(_raze3Ability);
+            await UseRazeOnTarget(target, _raze1Ability);
+            await UseRazeOnTarget(target, _raze2Ability);
+            await UseRazeOnTarget(target, _raze3Ability);
 
             // make him disabled
             if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
@@ -237,7 +243,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

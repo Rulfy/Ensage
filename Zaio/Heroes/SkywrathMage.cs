@@ -43,10 +43,11 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             var w = MyHero.Spellbook.SpellW;
-            if (w.CanBeCasted(Target) && w.CanHit(Target))
+            if (w.CanBeCasted(target) && w.CanHit(target))
             {
                 Log.Debug($"use W");
                 w.UseAbility();
+                await Await.Delay(100, tk);
             }
 
             // check if we are near the enemy
@@ -54,7 +55,7 @@ namespace Zaio.Heroes
             {
                 return;
             }
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
             await UseItems(tk);
 
             if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
@@ -64,27 +65,28 @@ namespace Zaio.Heroes
             }
 
             var q = MyHero.Spellbook.SpellQ;
-            if (q.CanBeCasted(Target))
+            if (q.CanBeCasted(target))
             {
                 Log.Debug($"use Q");
-                q.UseAbility(Target);
-                await Await.Delay((int) (q.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                q.UseAbility(target);
+                await Await.Delay(GetAbilityDelay(target, q), tk);
             }
             var e = MyHero.Spellbook.SpellE;
-            if (e.CanBeCasted(Target))
+            if (e.CanBeCasted(target))
             {
                 Log.Debug($"use e");
-                e.UseAbility(Target);
-                await Await.Delay((int) (e.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                e.UseAbility(target);
+                await Await.Delay(GetAbilityDelay(target, e), tk);
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted(Target) && (Target.IsRooted() || Target.MovementSpeed < 200 || !Target.IsMoving))
+            if (ult.CanBeCasted(target) && (target.IsRooted() || target.MovementSpeed < 200 || !target.IsMoving))
             {
-                Log.Debug($"use ult {Target.IsRooted()} | {Target.IsMoving} | {Target.MovementSpeed}");
+                Log.Debug($"use ult {target.IsRooted()} | {target.IsMoving} | {target.MovementSpeed}");
                 var castPoint = (float) ult.FindCastPoint();
-                ult.UseAbility(Ensage.Common.Prediction.InFront(Target, castPoint * Target.MovementSpeed));
-                await Await.Delay((int) (castPoint * 1000.0 + Game.Ping), tk);
+                var pos = Prediction.Prediction.PredictPosition(target, (int) (castPoint * target.MovementSpeed));
+                ult.UseAbility(pos);
+                await Await.Delay(GetAbilityDelay(pos, ult), tk);
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)
@@ -93,7 +95,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

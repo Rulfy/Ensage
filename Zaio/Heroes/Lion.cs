@@ -78,12 +78,12 @@ namespace Zaio.Heroes
                                          ult.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() &&
                                          !x.CantBeAttacked() && !x.CantBeKilled());
-                if (enemy != null && await HasNoLinkens(enemy))
+                if (enemy != null)
                 {
                     Log.Debug(
                         $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicResistance())} ");
                     ult.UseAbility(enemy);
-                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping));
+                    await Await.Delay(GetAbilityDelay(enemy, ult));
                     return true;
                 }
             }
@@ -117,8 +117,7 @@ namespace Zaio.Heroes
                     Log.Debug(
                         $"use killsteal stun because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicResistance())} ");
                     stun.UseAbility(predictedPos);
-
-                    await Await.Delay((int) (castPoint * 1000.0 + Game.Ping));
+                    await Await.Delay(GetAbilityDelay(predictedPos, stun));
                     return true;
                 }
             }
@@ -131,16 +130,16 @@ namespace Zaio.Heroes
             await UseItems(tk);
 
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && !Target.IsLinkensProtected())
+            if (ult.CanBeCasted(target) && ult.CanHit(target) && await HasNoLinkens(target, tk))
             {
                 var damage =
                     ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) ? "damage_scepter" : "damage");
-                if (Target.Health <= damage * (1.0f - Target.MagicResistance()))
+                if (target.Health <= damage * (1.0f - target.MagicResistance()))
                 {
                     Log.Debug(
-                        $"use ult because enough damage {Target.Health} <= {damage * (1.0f - Target.MagicResistance())} ");
-                    ult.UseAbility(Target);
-                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        $"use ult because enough damage {target.Health} <= {damage * (1.0f - target.MagicResistance())} ");
+                    ult.UseAbility(target);
+                    await Await.Delay(GetAbilityDelay(target, ult), tk);
                 }
             }
 
@@ -152,17 +151,17 @@ namespace Zaio.Heroes
             }
             float maxRange = 500;
             float duration;
-            if (!(Target.IsHexed(out duration) || Target.IsStunned(out duration)) || duration < 1.2)
+            if (!(target.IsHexed(out duration) || target.IsStunned(out duration)) || duration < 1.2)
             {
                 var hex = MyHero.Spellbook.SpellW;
                 maxRange = Math.Max(maxRange, hex.CastRange);
-                if (hex.CanBeCasted(Target))
+                if (hex.CanBeCasted(target))
                 {
-                    if (hex.CanHit(Target))
+                    if (hex.CanHit(target))
                     {
                         Log.Debug($"use hex {duration}");
-                        hex.UseAbility(Target);
-                        await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        hex.UseAbility(target);
+                        await Await.Delay(GetAbilityDelay(target, hex), tk);
                         return;
                     }
                     if (!await MoveOrBlinkToEnemy(tk, 250, hex.GetCastRange()))
@@ -174,20 +173,20 @@ namespace Zaio.Heroes
 
                 var stun = MyHero.Spellbook.SpellQ;
                 maxRange = Math.Max(maxRange, stun.CastRange);
-                if (stun.CanBeCasted(Target))
+                if (stun.CanBeCasted(target))
                 {
-                    if (stun.CanHit(Target))
+                    if (stun.CanHit(target))
                     {
                         var castPoint = stun.FindCastPoint();
                         var speed = stun.GetAbilityData("speed");
-                        var time = (castPoint + Target.Distance2D(MyHero) / speed) * 1000.0f;
+                        var time = (castPoint + target.Distance2D(MyHero) / speed) * 1000.0f;
 
-                        var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
+                        var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time);
                         if (MyHero.Distance2D(predictedPos) <= stun.GetCastRange())
                         {
                             Log.Debug($"use stun {duration} | {time}");
                             stun.UseAbility(predictedPos);
-                            await Await.Delay((int) (castPoint * 1000.0 + Game.Ping), tk);
+                            await Await.Delay(GetAbilityDelay(predictedPos, stun), tk);
                             return;
                         }
                     }
@@ -202,14 +201,14 @@ namespace Zaio.Heroes
                 }
             }
 
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && await HasNoLinkens(Target, tk))
+            if (ult.CanBeCasted(target) && ult.CanHit(target) && await HasNoLinkens(target, tk))
             {
-                if (Target.IsHexed() || Target.IsStunned() ||
-                    (float) Target.Health / Target.MaximumHealth * (1.0f + Target.MagicResistance()) < 0.5f)
+                if (target.IsHexed() || target.IsStunned() ||
+                    (float) target.Health / target.MaximumHealth * (1.0f + target.MagicResistance()) < 0.5f)
                 {
                     Log.Debug($"use ult");
-                    ult.UseAbility(Target);
-                    await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    ult.UseAbility(target);
+                    await Await.Delay(GetAbilityDelay(target, ult), tk);
                 }
             }
 
@@ -226,7 +225,7 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"use mana leech on illusion");
                     mana.UseAbility(illusion);
-                    await Await.Delay((int) (mana.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    await Await.Delay(GetAbilityDelay(illusion, mana), tk);
                 }
             }
 
@@ -243,7 +242,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

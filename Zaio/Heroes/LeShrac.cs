@@ -16,7 +16,7 @@ using Zaio.Interfaces;
 namespace Zaio.Heroes
 {
     [Hero(ClassID.CDOTA_Unit_Hero_Leshrac)]
-    internal class Leshrak : ComboHero
+    internal class Leshrac : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -45,11 +45,11 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
 
             var stun = MyHero.Spellbook.SpellQ;
-            var eulsModifier = Target.FindModifier("modifier_eul_cyclone");
-            if ((stun.CanBeCasted(Target) || eulsModifier != null && stun.CanBeCasted()) && stun.CanHit(Target))
+            var eulsModifier = target.FindModifier("modifier_eul_cyclone");
+            if ((stun.CanBeCasted(target) || eulsModifier != null && stun.CanBeCasted()) && stun.CanHit(target))
             {
                 var stunCastpoint = stun.FindCastPoint();
                 var delay = stun.GetAbilityData("delay");
@@ -60,40 +60,40 @@ namespace Zaio.Heroes
                     if (eulsModifier.RemainingTime < stunCastpoint + delay)
                     {
                         Log.Debug($"using stun on cycloned target");
-                        stun.UseAbility(Target.NetworkPosition);
-                        await Await.Delay((int) (stunCastpoint * 1200.0 + Game.Ping), tk);
+                        stun.UseAbility(target.NetworkPosition);
+                        await Await.Delay(GetAbilityDelay(target, stun) + 250, tk);
                     }
                 }
                 else
                 {
                     var disabled = 0.0f;
-                    if (Target.IsRooted(out disabled) || Target.IsStunned(out disabled))
+                    if (target.IsRooted(out disabled) || target.IsStunned(out disabled))
                     {
                         var time = disabled - stunCastpoint - delay;
                         if (time >= 0)
                         {
                             Log.Debug($"using stun on disabled target {time}");
-                            stun.UseAbility(Target.NetworkPosition);
-                            await Await.Delay((int) (stunCastpoint * 1200.0 + Game.Ping), tk);
+                            stun.UseAbility(target.NetworkPosition);
+                            await Await.Delay(GetAbilityDelay(target, stun) + 250, tk);
                         }
                         else
                         {
-                            var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time * -1000);
+                            var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time * -1000);
 
                             Log.Debug($"using stun on disabled target {time} with predicted pos {predictedPos}");
                             stun.UseAbility(predictedPos);
-                            await Await.Delay((int) (stunCastpoint * 1200.0 + Game.Ping), tk);
+                            await Await.Delay(GetAbilityDelay(target, stun) + 250, tk);
                         }
                     }
                     else
                     {
                         var euls = MyHero.GetItemById(ItemId.item_cyclone);
-                        if (euls != null && euls.CanBeCasted(Target))
+                        if (euls != null && euls.CanBeCasted(target))
                         {
-                            if (euls.CanHit(Target))
+                            if (euls.CanHit(target))
                             {
                                 Log.Debug($"using euls to disable enemy before stun");
-                                euls.UseAbility(Target);
+                                euls.UseAbility(target);
                                 await Await.Delay(125, tk);
                                 return;
                             }
@@ -107,13 +107,13 @@ namespace Zaio.Heroes
                         }
 
 
-                        var predictedPos = Prediction.Prediction.PredictPosition(Target,
+                        var predictedPos = Prediction.Prediction.PredictPosition(target,
                             (int) ((stunCastpoint + delay) * 1000), true);
                         if (predictedPos != Vector3.Zero)
                         {
                             Log.Debug($"using stun on target with predicted pos {predictedPos}");
                             stun.UseAbility(predictedPos);
-                            await Await.Delay((int) (stunCastpoint * 1200.0 + Game.Ping), tk);
+                            await Await.Delay(GetAbilityDelay(target, stun) + 250, tk);
                         }
                         else
                         {
@@ -133,7 +133,7 @@ namespace Zaio.Heroes
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if (!ult.IsToggled && ult.CanBeCasted(Target) && ult.CanHit(Target))
+            if (!ult.IsToggled && ult.CanBeCasted(target) && ult.CanHit(target))
             {
                 Log.Debug($"using ult");
                 ult.ToggleAbility();
@@ -141,7 +141,7 @@ namespace Zaio.Heroes
             }
 
             var edict = MyHero.Spellbook.SpellW;
-            if (edict.CanBeCasted(Target) && edict.CanHit(Target))
+            if (edict.CanBeCasted(target) && edict.CanHit(target))
             {
                 Log.Debug($"using edict");
                 edict.UseAbility();
@@ -149,11 +149,11 @@ namespace Zaio.Heroes
             }
 
             var lightning = MyHero.Spellbook.SpellE;
-            if (lightning.CanBeCasted(Target) && lightning.CanHit(Target))
+            if (lightning.CanBeCasted(target) && lightning.CanHit(target))
             {
                 Log.Debug($"using lightning");
-                lightning.UseAbility(Target);
-                await Await.Delay((int) (lightning.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                lightning.UseAbility(target);
+                await Await.Delay(GetAbilityDelay(target, lightning), tk);
             }
 
             // check if we are near the enemy
@@ -170,7 +170,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

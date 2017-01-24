@@ -38,6 +38,21 @@ namespace Zaio.Helpers
             return unit.HasModifier("modifier_oracle_fates_edict") ? 1.0f : unit.MagicDamageResist;
         }
 
+        public static float PhysicalResistance(this Unit unit)
+        {
+            return
+                unit.HasModifiers(
+                    new[]
+                    {
+                        "modifier_winter_wyvern_cold_embrace",
+                        "modifier_winter_wyvern_winters_curse_aura",
+                        "modifier_winter_wyvern_winters_curse",
+                        "modifier_omninight_guardian_angel"
+                    }, false)
+                    ? 1.0f
+                    : unit.DamageResist;
+        }
+
         public static bool CantBeKilled(this Unit unit)
         {
             return unit.HasModifiers(CantKillModifiers, false);

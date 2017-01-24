@@ -23,7 +23,14 @@ namespace Zaio
             Events.OnLoad += Events_OnLoad;
             Events.OnClose += Events_OnClose;
             Drawing.OnDraw += Drawing_OnDraw;
-            // Game.OnIngameUpdate += Game_OnIngameUpdate;
+
+            //Game.OnIngameUpdate += Game_OnIngameUpdate;
+            //ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
+        }
+
+        private static void ObjectManager_OnAddEntity(EntityEventArgs args)
+        {
+            Log.Debug($"{args.Entity.Name}");
         }
 
         private static void Game_OnIngameUpdate(EventArgs args)
@@ -85,7 +92,7 @@ namespace Zaio
                     }
                 }
                 Game.PrintMessage(
-                    $"Zaio: <font color='#FF1133'>{Game.Localize(hero.Name)} is not supported! But items and orbwalking will still work.</font>");
+                    $"Zaio: <font color='#FF1133'>The abilities of {Game.Localize(hero.Name)} are not supported!</font> But items and orbwalking will still work.");
                 _currentHero = new Generic();
                 _currentHero.OnLoad();
                 _currentHero.Activate();

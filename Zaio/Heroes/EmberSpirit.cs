@@ -99,12 +99,12 @@ namespace Zaio.Heroes
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && sleight.CanBeCasted(x) &&
                                          sleight.CanHit(x) &&
-                                         x.Health < damage * (1 - x.DamageResist) && !x.CantBeAttacked() &&
+                                         x.Health < damage * (1 - x.PhysicalResistance()) && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
                 if (enemy != null)
                 {
                     Log.Debug(
-                        $"use killsteal W because enough damage {enemy.Health} <= {enemy.Health < damage * (1 - enemy.DamageResist)} ");
+                        $"use killsteal W because enough damage {enemy.Health} <= {enemy.Health < damage * (1 - enemy.PhysicalResistance())} ");
 
                     sleight.UseAbility(enemy.NetworkPosition);
                     await Await.Delay(125);
@@ -178,7 +178,7 @@ namespace Zaio.Heroes
                 }, false))
             {
                 Log.Debug($"in sleight mode");
-                if (stun.CanBeCasted(Target) && stun.CanHit(Target) && !Target.IsMagicImmune())
+                if (stun.CanBeCasted(target) && stun.CanHit(target) && !target.IsMagicImmune())
                 {
                     Log.Debug($"use our Q because we are using W or ult and are near the target!");
                     stun.UseAbility();
@@ -186,7 +186,7 @@ namespace Zaio.Heroes
                 }
                 return;
             }
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
             await UseItems(tk);
 
             // make him disabled
@@ -197,15 +197,15 @@ namespace Zaio.Heroes
             }
 
             var sleight = MyHero.GetAbilityById(AbilityId.ember_spirit_sleight_of_fist);
-            if (sleight.CanBeCasted(Target) && sleight.CanHit(Target))
+            if (sleight.CanBeCasted(target) && sleight.CanHit(target))
             {
                 Log.Debug($"using sleigth");
-                sleight.UseAbility(Target.NetworkPosition);
+                sleight.UseAbility(target.NetworkPosition);
                 await Await.Delay(1, tk);
                 return;
             }
 
-            if (stun.CanBeCasted(Target) && stun.CanHit(Target))
+            if (stun.CanBeCasted(target) && stun.CanHit(target))
             {
                 Log.Debug($"use our Q");
                 stun.UseAbility();
@@ -232,19 +232,19 @@ namespace Zaio.Heroes
             }
 
             var ultActivate = MyHero.GetAbilityById(AbilityId.ember_spirit_activate_fire_remnant);
-            if (!IsInRange(MyHero.AttackRange * 2.0f) && !Target.IsMagicImmune())
+            if (!IsInRange(MyHero.AttackRange * 2.0f) && !target.IsMagicImmune())
             {
                 if (ult.CanBeCasted() && ultActivate.CanBeCasted() &&
                     (MinimumRemnants == 0 || MinimumRemnants < CurrentRemnants))
                 {
                     var castPoint = ult.FindCastPoint();
                     var speed = MyHero.MovementSpeed * (ult.GetAbilityData("speed_multiplier") / 100);
-                    var time = (castPoint + Target.Distance2D(MyHero) / speed) * 1000.0f;
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
+                    var time = (castPoint + target.Distance2D(MyHero) / speed) * 1000.0f;
+                    var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time);
 
                     // test if we already got a remnant near the enemy
                     var radius = ult.GetAbilityData("radius");
-                    var remnant = Remnants.FirstOrDefault(unit => unit.Distance2D(Target) < radius);
+                    var remnant = Remnants.FirstOrDefault(unit => unit.Distance2D(target) < radius);
                     if (remnant == null)
                     {
                         Log.Debug($"placing remnant first to approach!");
@@ -256,7 +256,7 @@ namespace Zaio.Heroes
                         Log.Debug($"already got a remnant near the enemy PogChamp to approach!");
                     }
                     ultActivate.UseAbility(predictedPos);
-                    await Await.Delay(1, tk);
+                    await Await.Delay(100, tk);
                     return;
                 }
             }
@@ -274,21 +274,21 @@ namespace Zaio.Heroes
                 await Await.Delay(125, tk);
             }
 
-            if (ult.CanBeCasted(Target) && ultActivate.CanBeCasted() && ult.CanHit(Target) && !Target.IsMagicImmune() &&
+            if (ult.CanBeCasted(target) && ultActivate.CanBeCasted() && ult.CanHit(target) && !target.IsMagicImmune() &&
                 (MinimumRemnants == 0 || MinimumRemnants < CurrentRemnants))
             {
                 var damage = ult.GetAbilityData("damage");
                 damage *= GetSpellAmp();
-                if (Target.Health < damage * (1 - Target.MagicResistance()))
+                if (target.Health < damage * (1 - target.MagicResistance()))
                 {
                     var castPoint = ult.FindCastPoint();
                     var speed = MyHero.MovementSpeed * (ult.GetAbilityData("speed_multiplier") / 100);
-                    var time = (castPoint + Target.Distance2D(MyHero) / speed) * 1000.0f;
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
+                    var time = (castPoint + target.Distance2D(MyHero) / speed) * 1000.0f;
+                    var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time);
 
                     // test if we already got a remnant near the enemy
                     var radius = ult.GetAbilityData("radius");
-                    var remnant = Remnants.FirstOrDefault(unit => unit.Distance2D(Target) < radius);
+                    var remnant = Remnants.FirstOrDefault(unit => unit.Distance2D(target) < radius);
                     if (remnant == null)
                     {
                         Log.Debug($"placing remnant first to kill!");
@@ -312,7 +312,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

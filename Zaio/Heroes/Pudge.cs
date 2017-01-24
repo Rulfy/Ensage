@@ -37,7 +37,11 @@ namespace Zaio.Heroes
         private MenuItem _autoDeny;
         private MenuItem _circleTillHook;
         private bool _hasHookModifier;
+        private Ability _hookAbility;
+
+        private Ability _rotAbility;
         private MenuItem _stopOnHook;
+        private Ability _ultAbility;
 
         private bool ShouldAutoDeny => _autoDeny.GetValue<bool>();
         private bool ShouldStopOnHook => _stopOnHook.GetValue<bool>();
@@ -72,6 +76,10 @@ namespace Zaio.Heroes
             heroMenu.AddItem(_circleTillHook);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
+
+            _rotAbility = MyHero.GetAbilityById(AbilityId.pudge_rot);
+            _ultAbility = MyHero.GetAbilityById(AbilityId.pudge_dismember);
+            _hookAbility = MyHero.GetAbilityById(AbilityId.pudge_meat_hook);
 
             GameDispatcher.OnIngameUpdate += GameDispatcher_OnIngameUpdate;
             Unit.OnModifierAdded += Unit_OnModifierAdded;
@@ -110,22 +118,22 @@ namespace Zaio.Heroes
                 return;
             }
 
-            var rot = MyHero.GetAbilityById(AbilityId.pudge_rot);
-            if (rot.CanBeCasted() && !rot.IsToggled && !MyHero.IsMagicImmune())
+
+            if (_rotAbility.CanBeCasted() && !_rotAbility.IsToggled && !MyHero.IsMagicImmune())
             {
-                var damage = rot.GetAbilityData("rot_damage");
+                var damage = _rotAbility.GetAbilityData("rot_damage");
                 var talent = MyHero.GetAbilityById(AbilityId.special_bonus_unique_pudge_2);
                 if (talent.Level > 0)
                 {
                     damage += talent.GetAbilityData("value");
                 }
-                var tick = rot.GetAbilityData("rot_tick");
+                var tick = _rotAbility.GetAbilityData("rot_tick");
                 damage *= tick * 3;
                 if (MyHero.Health < damage * (1 - MyHero.MagicResistance()))
                 {
                     Log.Debug($"Using rot to deny {MyHero.Health} < {damage * (1 - MyHero.MagicResistance())}!!");
 
-                    rot.ToggleAbility();
+                    _rotAbility.ToggleAbility();
                     Await.Block("zaio.pudgeDenySleep", Sleep);
                 }
             }
@@ -149,24 +157,24 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            var hook = MyHero.Spellbook.SpellQ;
-            if (hook.CanBeCasted())
+            if (_hookAbility.CanBeCasted())
             {
                 var damage = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
-                    ? hook.GetAbilityData("damage_scepter")
-                    : hook.GetDamage(hook.Level - 1);
+                    ? _hookAbility.GetAbilityData("damage_scepter")
+                    : _hookAbility.GetDamage(_hookAbility.Level - 1);
                 damage *= GetSpellAmp();
 
                 var enemies =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && hook.CanBeCasted(x) && hook.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && _hookAbility.CanBeCasted(x) &&
+                                         _hookAbility.CanHit(x) &&
                                          x.Health < damage && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
 
-                var speed = hook.GetAbilityData("hook_speed");
-                var radius = hook.GetAbilityData("hook_width") * 2;
+                var speed = _hookAbility.GetAbilityData("hook_speed");
+                var radius = _hookAbility.GetAbilityData("hook_width") * 2;
 
                 foreach (var enemy in enemies)
                 {
@@ -191,8 +199,8 @@ namespace Zaio.Heroes
                     if (!isUnitBlocking)
                     {
                         Log.Debug($"use hook for killsteal");
-                        hook.UseAbility(predictedPos);
-                        await Await.Delay((int) (hook.FindCastPoint() * 1000.0 + Game.Ping));
+                        _hookAbility.UseAbility(predictedPos);
+                        await Await.Delay(GetAbilityDelay(predictedPos, _hookAbility));
                         return true;
                     }
                 }
@@ -203,27 +211,29 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            if (MyHero.IsChanneling())
+            if (MyHero.IsChanneling() || MyHero.HasModifier("modifier_pudge_dismember"))
             {
+                if (_rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled && _rotAbility.CanHit(target))
+                {
+                    _rotAbility.ToggleAbility();
+                    await Await.Delay(100, tk);
+                }
                 return;
             }
 
-            var rot = MyHero.GetAbilityById(AbilityId.pudge_rot);
-            var ult = MyHero.GetAbilityById(AbilityId.pudge_dismember);
-
-            if (_hasHookModifier || Target.HasModifier("modifier_pudge_meat_hook"))
+            if (_hasHookModifier || target.HasModifier("modifier_pudge_meat_hook"))
             {
-                if (rot.CanBeCasted() && !rot.IsToggled)
+                if (_rotAbility.CanBeCasted() && !_rotAbility.IsToggled)
                 {
-                    rot.ToggleAbility();
+                    _rotAbility.ToggleAbility();
                     await Await.Delay(100, tk);
                 }
-                if (await HasNoLinkens(Target, tk) && ult.CanBeCasted(Target))
+                if (await HasNoLinkens(target, tk) && _ultAbility.CanBeCasted(target))
                 {
-                    if (ult.CanHit(Target))
+                    if (_ultAbility.CanHit(target))
                     {
-                        ult.UseAbility(Target);
-                        await Await.Delay((int) (ult.FindCastPoint() * 1000 + 100 + Game.Ping), tk);
+                        _ultAbility.UseAbility(target);
+                        await Await.Delay(GetAbilityDelay(target, _ultAbility) + 250, tk);
                     }
                     else if (ShouldStopOnHook)
                     {
@@ -233,31 +243,30 @@ namespace Zaio.Heroes
                 return;
             }
 
-            if (rot.CanBeCasted(Target) && !rot.IsToggled && rot.CanHit(Target))
+            if (_rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled && _rotAbility.CanHit(target))
             {
-                rot.ToggleAbility();
+                _rotAbility.ToggleAbility();
                 await Await.Delay(100, tk);
             }
 
-            if (ult.CanBeCasted(Target) && ult.CanHit(Target) && await HasNoLinkens(Target, tk))
+            if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
             {
-                if (ult.CanHit(Target))
+                if (_ultAbility.CanHit(target))
                 {
-                    ult.UseAbility(Target);
-                    await Await.Delay((int) (ult.FindCastPoint() * 1000 + 100 + Game.Ping), tk);
+                    _ultAbility.UseAbility(target);
+                    await Await.Delay(GetAbilityDelay(target, _ultAbility) + 250, tk);
                     return;
                 }
             }
 
-            var hook = MyHero.Spellbook.SpellQ;
-            if (hook.CanBeCasted(Target) && hook.CanHit(Target))
+            if (_hookAbility.CanBeCasted(target) && _hookAbility.CanHit(target))
             {
-                var speed = hook.GetAbilityData("hook_speed");
-                var radius = hook.GetAbilityData("hook_width") * 2;
+                var speed = _hookAbility.GetAbilityData("hook_speed");
+                var radius = _hookAbility.GetAbilityData("hook_width") * 2;
 
 
-                var time = Target.Distance2D(MyHero) / speed * 1000.0f;
-                var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time, true);
+                var time = target.Distance2D(MyHero) / speed * 1000.0f;
+                var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time, true);
                 if (predictedPos != Vector3.Zero)
                 {
                     var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, predictedPos, radius);
@@ -266,23 +275,23 @@ namespace Zaio.Heroes
                     var isUnitBlocking = ObjectManager.GetEntitiesParallel<Unit>()
                                                       .Any(
                                                           x =>
-                                                              x.IsValid && x != Target && x.IsAlive && x != MyHero &&
+                                                              x.IsValid && x != target && x.IsAlive && x != MyHero &&
                                                               x.IsSpawned && x.IsRealUnit() &&
-                                                              x.Distance2D(Target) >= radius &&
+                                                              x.Distance2D(target) >= radius &&
                                                               rec.IsInside(x.NetworkPosition));
                     if (!isUnitBlocking)
                     {
                         Log.Debug($"using hook");
-                        hook.UseAbility(predictedPos);
-                        await Await.Delay((int) (hook.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        _hookAbility.UseAbility(predictedPos);
+                        await Await.Delay(GetAbilityDelay(predictedPos, _hookAbility), tk);
                         return;
                     }
                     if (ShouldCircleHook)
                     {
                         //MyHero.Hold();
-                        var dir = (Game.MousePosition - Target.NetworkPosition).Normalized();
-                        var distance = (Target.NetworkPosition - MyHero.NetworkPosition).Length();
-                        var targetPos = Target.NetworkPosition + dir * distance;
+                        var dir = (Game.MousePosition - target.NetworkPosition).Normalized();
+                        var distance = (target.NetworkPosition - MyHero.NetworkPosition).Length();
+                        var targetPos = target.NetworkPosition + dir * distance;
                         MyHero.Move(Prediction.Prediction.PredictMyRoute(MyHero, 500, targetPos).Last());
                         return;
                     }
@@ -312,7 +321,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

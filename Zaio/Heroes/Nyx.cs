@@ -91,7 +91,7 @@ namespace Zaio.Heroes
 
                     impale.UseAbility(predictedPos);
 
-                    await Await.Delay((int) (castPoint * 1000.0 + Game.Ping));
+                    await Await.Delay(GetAbilityDelay(predictedPos, impale));
                     return true;
                 }
             }
@@ -116,7 +116,7 @@ namespace Zaio.Heroes
                     Log.Debug(
                         $"use manaburn killsteal {enemy.Health} < {Math.Min(intMultiplier * enemy.TotalIntelligence, enemy.Mana) * GetSpellAmp() * (1 - enemy.MagicResistance())}");
                     manaBurn.UseAbility(enemy);
-                    await Await.Delay((int) (manaBurn.FindCastPoint() * 1000.0 + Game.Ping));
+                    await Await.Delay(GetAbilityDelay(enemy, manaBurn));
                     return true;
                 }
             }
@@ -129,10 +129,10 @@ namespace Zaio.Heroes
             {
                 var stun = MyHero.Spellbook.SpellQ;
 
-                var manaNeeded = stun.CanBeCasted(Target) ? stun.ManaCost + 100 : 0;
+                var manaNeeded = stun.CanBeCasted(target) ? stun.ManaCost + 100 : 0;
                 if (manaNeeded <= MyHero.Mana)
                 {
-                    await HasNoLinkens(Target, tk);
+                    await HasNoLinkens(target, tk);
                     await UseItems(tk);
 
                     // make him disabled
@@ -142,29 +142,29 @@ namespace Zaio.Heroes
                         // return;
                     }
                 }
-                if (stun.CanBeCasted(Target) && stun.CanHit(Target))
+                if (stun.CanBeCasted(target) && stun.CanHit(target))
                 {
                     var castPoint = stun.FindCastPoint();
                     var speed = stun.GetAbilityData("speed");
-                    var time = (castPoint + Target.Distance2D(MyHero) / speed) * 1000.0f;
+                    var time = (castPoint + target.Distance2D(MyHero) / speed) * 1000.0f;
 
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target, (int) time);
+                    var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time);
                     if (MyHero.Distance2D(predictedPos) <= stun.GetCastRange())
                     {
                         stun.UseAbility(predictedPos);
 
                         Log.Debug($"Use stun");
-                        await Await.Delay((int) (castPoint * 1000.0 + Game.Ping), tk);
+                        await Await.Delay(GetAbilityDelay(predictedPos, stun), tk);
                     }
                 }
 
                 var manaBurn = MyHero.Spellbook.SpellW;
-                Log.Debug($"Use manaburn {manaBurn.CanBeCasted(Target)} | {manaBurn.CanHit(Target)}");
-                if (manaBurn.CanBeCasted(Target) && Target.Mana > 100 && manaBurn.CanHit(Target))
+                Log.Debug($"Use manaburn {manaBurn.CanBeCasted(target)} | {manaBurn.CanHit(target)}");
+                if (manaBurn.CanBeCasted(target) && target.Mana > 100 && manaBurn.CanHit(target))
                 {
-                    manaBurn.UseAbility(Target);
+                    manaBurn.UseAbility(target);
                     Log.Debug($"Use manaburn");
-                    await Await.Delay((int) (manaBurn.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    await Await.Delay(GetAbilityDelay(target, manaBurn), tk);
                 }
             }
 
@@ -188,7 +188,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

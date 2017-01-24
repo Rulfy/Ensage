@@ -108,7 +108,7 @@ namespace Zaio.Heroes
                             Log.Debug($"{unit.Name}");
                         }
                         odds.UseAbility(predictedPos);
-                        await Await.Delay((int) (odds.FindCastPoint() * 1000.0 + Game.Ping));
+                        await Await.Delay(GetAbilityDelay(enemy, odds));
                         return true;
                     }
                 }
@@ -125,25 +125,25 @@ namespace Zaio.Heroes
             }
             // maybe got some pre damage
             var odds = MyHero.Spellbook.SpellQ;
-            if (odds.CanBeCasted(Target) && MyHero.Mana > 300 && odds.CanHit(Target))
+            if (odds.CanBeCasted(target) && MyHero.Mana > 300 && odds.CanHit(target))
             {
                 var radius = odds.GetAbilityData("radius");
                 var targets =
                     ObjectManager.GetEntitiesParallel<Unit>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && x != Target && !x.IsMagicImmune() &&
+                                         x.IsAlive && x.Team != MyHero.Team && x != target && !x.IsMagicImmune() &&
                                          x.IsRealUnit() &&
-                                         x.Distance2D(Target) <= radius);
+                                         x.Distance2D(target) <= radius);
                 var heroes = targets.Where(x => x is Hero);
                 if (heroes.Any() || targets.Count() >= 5)
                 {
                     Log.Debug($"Using Q with {heroes.Count()} heroes and {targets.Count()} targets");
 
-                    var predictedPos = Prediction.Prediction.PredictPosition(Target,
+                    var predictedPos = Prediction.Prediction.PredictPosition(target,
                         (int) (odds.FindCastPoint() * 1000.0));
                     odds.UseAbility(predictedPos);
-                    await Await.Delay((int) (odds.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    await Await.Delay(GetAbilityDelay(target, odds), tk);
                 }
                 else
                 {
@@ -157,7 +157,7 @@ namespace Zaio.Heroes
             var duel = MyHero.Spellbook.SpellR;
             if (IsInRange(duel.GetCastRange()))
             {
-                var enemyHealth = (float) Target.Health / Target.MaximumHealth;
+                var enemyHealth = (float) target.Health / target.MaximumHealth;
                 if (!MyHero.HasModifier("modifier_press_the_attack") && enemyHealth > 0.33f)
                 {
                     var pressTheAttack = MyHero.Spellbook.SpellW;
@@ -187,7 +187,7 @@ namespace Zaio.Heroes
             }
 
             // test if ulti is good
-            if (duel.CanBeCasted(Target) && await HasNoLinkens(Target, tk))
+            if (duel.CanBeCasted(target) && await HasNoLinkens(target, tk))
             {
                 var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
                 if (bladeMail != null && bladeMail.CanBeCasted())
@@ -214,8 +214,8 @@ namespace Zaio.Heroes
                 }
 
                 Log.Debug($"using duel");
-                duel.UseAbility(Target);
-                await Await.Delay((int) (duel.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                duel.UseAbility(target);
+                await Await.Delay(GetAbilityDelay(target, duel), tk);
                 return;
             }
             if (ZaioMenu.ShouldUseOrbwalker)
@@ -224,7 +224,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

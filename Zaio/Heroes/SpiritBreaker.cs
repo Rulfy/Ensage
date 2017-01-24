@@ -106,13 +106,14 @@ namespace Zaio.Heroes
                 {
                     var shadowBlade = MyHero.GetItemById(ItemId.item_invis_sword) ??
                                       MyHero.GetItemById(ItemId.item_silver_edge);
-                    var distance = MyHero.Distance2D(Target);
+                    var distance = MyHero.Distance2D(target);
                     if (shadowBlade != null && shadowBlade.CanBeCasted() && !MyHero.IsVisibleToEnemies &&
                         distance > 1200 && distance < 6000)
                     {
                         Log.Debug($"using invis");
                         shadowBlade.UseAbility();
-                        await Await.Delay(500, tk);
+                        var fadeTime = shadowBlade.GetAbilityData("windwalk_fade_time") * 2 * 1000; // 0.3
+                        await Await.Delay((int) fadeTime, tk);
                     }
                 }
                 return;
@@ -123,17 +124,17 @@ namespace Zaio.Heroes
                 if (_chargeAbility.CanBeCasted())
                 {
                     Log.Debug($"charging enemy since too far");
-                    _chargeAbility.UseAbility(Target);
-                    await Await.Delay((int) (_chargeAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    _chargeAbility.UseAbility(target);
+                    await Await.Delay(GetAbilityDelay(target, _chargeAbility) + 250, tk);
                 }
 
                 return;
             }
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
             await UseItems(tk);
 
             // make him disabled
-            if (await DisableEnemy(tk, _ultAbility.CanBeCasted(Target) ? (float) _ultAbility.FindCastPoint() : 0) ==
+            if (await DisableEnemy(tk, _ultAbility.CanBeCasted(target) ? GetAbilityDelay(target, _ultAbility) : 0) ==
                 DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled enemy");
@@ -147,11 +148,11 @@ namespace Zaio.Heroes
                 armlet.ToggleAbility();
             }
 
-            if (_ultAbility.CanBeCasted() && _ultAbility.CanHit(Target))
+            if (_ultAbility.CanBeCasted() && _ultAbility.CanHit(target))
             {
                 Log.Debug($"using ult on target");
-                _ultAbility.UseAbility(Target);
-                await Await.Delay((int) (_ultAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                _ultAbility.UseAbility(target);
+                await Await.Delay(GetAbilityDelay(target, _ultAbility), tk);
             }
 
             var mask = MyHero.GetItemById(ItemId.item_mask_of_madness);
@@ -167,7 +168,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

@@ -70,6 +70,12 @@ namespace Zaio.Heroes
             _throwBackCombo.Activate();
         }
 
+        public override void OnClose()
+        {
+            _throwBackCombo.Deactivate();
+            base.OnClose();
+        }
+
         private async Task ThrowBack(CancellationToken tk)
         {
             var tossSource = TargetSelector.ClosestToMouse(MyHero);
@@ -171,7 +177,7 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
             await UseItems(tk);
 
             // make him disabled
@@ -191,7 +197,7 @@ namespace Zaio.Heroes
             }
 
             // test if toss/av combo is working
-            if (_tossAbility.CanBeCasted(Target) && _tossAbility.CanHit(Target))
+            if (_tossAbility.CanBeCasted(target) && _tossAbility.CanHit(target))
             {
                 Log.Debug($"use toss");
                 var grab = _tossAbility.GetAbilityData("grab_radius");
@@ -201,17 +207,17 @@ namespace Zaio.Heroes
                                  .OrderBy(x => x.Distance2D(MyHero))
                                  .FirstOrDefault();
                 Log.Debug($"Closest unit for toss: {closestUnit?.Name}");
-                if (closestUnit == Target )
+                if (closestUnit == target)
                 {
-                    _tossAbility.UseAbility(Target);
+                    _tossAbility.UseAbility(target);
                     Log.Debug($"use toss!!");
                     await Await.Delay(100, tk);
                 }
             }
-            if (_avalancheAbility.CanBeCasted(Target) && _avalancheAbility.CanHit(Target))
+            if (_avalancheAbility.CanBeCasted(target) && _avalancheAbility.CanHit(target))
             {
                 Log.Debug($"use avalanche");
-                _avalancheAbility.UseAbility(Target.NetworkPosition);
+                _avalancheAbility.UseAbility(target.NetworkPosition);
                 await Await.Delay(100, tk);
             }
 
@@ -229,13 +235,13 @@ namespace Zaio.Heroes
                 await Await.Delay(250, tk);
             }
 
-            if (ZaioMenu.ShouldUseOrbwalker && !Target.HasModifier("modifier_tiny_toss"))
+            if (ZaioMenu.ShouldUseOrbwalker && !target.HasModifier("modifier_tiny_toss"))
             {
                 Orbwalk();
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

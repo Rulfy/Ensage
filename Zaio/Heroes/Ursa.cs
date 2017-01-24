@@ -51,7 +51,7 @@ namespace Zaio.Heroes
                     await Await.Delay((int) (overpower.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
             }
-            await HasNoLinkens(Target, tk);
+            await HasNoLinkens(target, tk);
             await UseItems(tk);
 
             // make him disabled
@@ -60,13 +60,13 @@ namespace Zaio.Heroes
                 Log.Debug($"disabled!");
                 // return;
             }
-            if (!(Target.IsHexed() || Target.IsStunned()) && !Target.IsMagicImmune())
+            if (!(target.IsHexed() || target.IsStunned()) && !target.IsMagicImmune())
             {
-                var healthPercentage = (float) Target.Health / Target.MaximumHealth;
+                var healthPercentage = (float) target.Health / target.MaximumHealth;
                 if (healthPercentage > 0.5)
                 {
                     var earthshock = MyHero.Spellbook.SpellQ;
-                    if (earthshock.CanBeCasted(Target) && earthshock.CanHit(Target))
+                    if (earthshock.CanBeCasted(target) && earthshock.CanHit(target))
                     {
                         earthshock.UseAbility();
                         await Await.Delay((int) (earthshock.FindCastPoint() * 1000.0 + Game.Ping), tk);
@@ -86,7 +86,7 @@ namespace Zaio.Heroes
                     ObjectManager.GetEntitiesFast<Hero>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && x != Target &&
+                                         x.IsAlive && x.Team != MyHero.Team && x != target &&
                                          x.Distance2D(MyHero) < 600);
                 bool? hasEnemies = enemies.Any();
                 if (MyHero.IsStunned() || hasEnemies == true || (float) MyHero.Health / MyHero.MaximumHealth <= 0.25f)
@@ -102,7 +102,7 @@ namespace Zaio.Heroes
             }
             else
             {
-                MyHero.Attack(Target);
+                MyHero.Attack(target);
                 await Await.Delay(125, tk);
             }
         }

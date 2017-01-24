@@ -65,6 +65,9 @@
   <ItemGroup>
     <Compile Include="Helpers\KeyEventArgs.cs" />
     <Compile Include="Helpers\BoolEventArgs.cs" />
+    <Compile Include="Heroes\Slark.cs" />
+    <Compile Include="Heroes\Sniper.cs" />
+    <Compile Include="Heroes\PhantomAssassin.cs" />
     <Compile Include="Heroes\ShadowFiend.cs" />
     <Compile Include="Heroes\MonkeyKing.cs" />
     <Compile Include="Heroes\Pudge.cs" />
@@ -76,7 +79,7 @@
     <Compile Include="Heroes\LegionCommander.cs" />
     <Compile Include="Heroes\Jakiro.cs" />
     <Compile Include="Heroes\Lina.cs" />
-    <Compile Include="Heroes\LeShrak.cs" />
+    <Compile Include="Heroes\LeShrac.cs" />
     <Compile Include="Heroes\Lion.cs" />
     <Compile Include="Heroes\Nyx.cs" />
     <Compile Include="Heroes\SkywrathMage.cs" />

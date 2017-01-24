@@ -124,6 +124,16 @@ namespace Zaio.Interfaces
 
         public abstract Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken());
 
+        protected int GetAbilityDelay(Unit target, Ability ability)
+        {
+            return (int) ((ability.FindCastPoint() + MyHero.GetTurnTime(target)) * 1000.0 + Game.Ping);
+        }
+
+        protected int GetAbilityDelay(Vector3 targetPosition, Ability ability)
+        {
+            return (int) ((ability.FindCastPoint() + MyHero.GetTurnTime(targetPosition)) * 1000.0 + Game.Ping);
+        }
+
         public virtual void OnLoad()
         {
             MyHero = ObjectManager.LocalHero;
