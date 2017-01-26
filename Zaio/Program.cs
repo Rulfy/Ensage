@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using Ensage;
 using Ensage.Common;
-using Ensage.Common.Extensions;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
@@ -24,8 +23,8 @@ namespace Zaio
             Events.OnClose += Events_OnClose;
             Drawing.OnDraw += Drawing_OnDraw;
 
-            //Game.OnIngameUpdate += Game_OnIngameUpdate;
-            //ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
+           //  Game.OnIngameUpdate += Game_OnIngameUpdate;
+            // ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
         }
 
         private static void ObjectManager_OnAddEntity(EntityEventArgs args)
@@ -41,12 +40,14 @@ namespace Zaio
                 return;
             }
 
-            Console.WriteLine(hero.IsMagicImmune());
+            var enemy = ObjectManager.GetEntities<Entity>().First(x => x.Team != hero.Team);
 
-            foreach (var heroModifier in hero.Modifiers)
-            {
-                Console.WriteLine(heroModifier.Name);
-            }
+            //Console.WriteLine(hero.IsMagicImmune());
+
+            //foreach (var heroModifier in hero.Modifiers)
+            //{
+            //    Console.WriteLine(heroModifier.Name);
+            //}
         }
 
         private static void Drawing_OnDraw(EventArgs args)

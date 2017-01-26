@@ -37,6 +37,10 @@ namespace Zaio.Heroes
         private Vector3 _lastEPosition = Vector3.Zero;
 
         private MenuItem _minimumEnemyUltCount;
+        private Ability _springAbility;
+        private Ability _springEarlyAbility;
+        private Ability _stunAbility;
+        private Ability _ultAbility;
 
         private bool IsBuffed => MyHero.HasModifier("modifier_monkey_king_quadruple_tap_bonuses");
         private int EnemyCountForUlt => _minimumEnemyUltCount.GetValue<Slider>().Value;
@@ -63,6 +67,11 @@ namespace Zaio.Heroes
                 new MenuItem("zaioMonkeyKingMinEnemyCount", "Minimum Enemies for Ult").SetValue(new Slider(1, 0, 4));
             _minimumEnemyUltCount.Tooltip = "Minimum enemies besides your target to use ult.";
             heroMenu.AddItem(_minimumEnemyUltCount);
+
+            _stunAbility = MyHero.GetAbilityById(AbilityId.monkey_king_boundless_strike);
+            _springAbility = MyHero.GetAbilityById(AbilityId.monkey_king_primal_spring);
+            _springEarlyAbility = MyHero.GetAbilityById(AbilityId.monkey_king_primal_spring_early);
+            _ultAbility = MyHero.GetAbilityById(AbilityId.monkey_king_wukongs_command);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
         }
@@ -110,32 +119,31 @@ namespace Zaio.Heroes
                     new[] {"modifier_monkey_king_tree_dance_hidden", "modifier_monkey_king_tree_dance_activity"}, false))
             {
                 // dont interrupt the comboing
-                var e = MyHero.GetAbilityById(AbilityId.monkey_king_primal_spring);
-                if (!e.IsChanneling)
+                if (!_springAbility.IsChanneling)
                 {
-                    var damage = e.GetAbilityData("impact_damage");
+                    var damage = _springAbility.GetAbilityData("impact_damage");
 
                     var enemy =
                         ObjectManager.GetEntitiesParallel<Hero>()
                                      .FirstOrDefault(
                                          x =>
-                                             x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && e.CanBeCasted(x) &&
-                                             e.CanHit(x) && !x.IsMagicImmune() &&
+                                             x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion &&
+                                             _springAbility.CanBeCasted(x) &&
+                                             _springAbility.CanHit(x) && !x.IsMagicImmune() &&
                                              x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
                                              !x.CantBeKilled());
                     if (enemy != null)
                     {
-                        var prop = GetNeededEProp(e, enemy);
+                        var prop = GetNeededEProp(_springAbility, enemy);
                         var predictedPos = Prediction.Prediction.PredictPosition(enemy,
-                            (int) (125 + prop * e.ChannelTime() * 1000.0f));
-                        e.UseAbility(predictedPos);
+                            (int) (125 + prop * _springAbility.ChannelTime() * 1000.0f));
+                        _springAbility.UseAbility(predictedPos);
                         Log.Debug(
-                            $"Using E to killsteal on {enemy.Name} with {prop} time {(int) (125 + Game.Ping + prop * e.ChannelTime() * 1000)}");
-                        await Await.Delay((int) (125 + Game.Ping + prop * e.ChannelTime() * 1000));
-                        var eEarly = MyHero.GetAbilityById(AbilityId.monkey_king_primal_spring_early);
-                        if (eEarly.CanBeCasted())
+                            $"Using E to killsteal on {enemy.Name} with {prop} time {(int) (125 + Game.Ping + prop * _springAbility.ChannelTime() * 1000)}");
+                        await Await.Delay((int) (125 + Game.Ping + prop * _springAbility.ChannelTime() * 1000));
+                        if (_springEarlyAbility.CanBeCasted())
                         {
-                            eEarly.UseAbility();
+                            _springEarlyAbility.UseAbility();
                             Log.Debug($"jumping early to killsteal!");
                             await Await.Delay(125);
                         }
@@ -144,23 +152,23 @@ namespace Zaio.Heroes
                 }
             }
 
-            var q = MyHero.GetAbilityById(AbilityId.monkey_king_boundless_strike);
-            if (q.CanBeCasted())
+            if (_stunAbility.CanBeCasted())
             {
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && q.CanBeCasted(x) &&
-                                         q.CanHit(x) &&
-                                         x.Health < GetQDamage(q, x) && !x.CantBeAttacked() &&
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion &&
+                                         _stunAbility.CanBeCasted(x) &&
+                                         _stunAbility.CanHit(x) &&
+                                         x.Health < GetQDamage(_stunAbility, x) && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
                 if (enemy != null)
                 {
-                    var castPoint = q.FindCastPoint() * 1000;
+                    var castPoint = _stunAbility.FindCastPoint() * 1000;
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) castPoint);
-                    q.UseAbility(predictedPos);
-                    await Await.Delay(GetAbilityDelay(predictedPos, q));
+                    _stunAbility.UseAbility(predictedPos);
+                    await Await.Delay(GetAbilityDelay(predictedPos, _stunAbility));
                     return true;
                 }
             }
@@ -175,23 +183,26 @@ namespace Zaio.Heroes
                 MyHero.HasModifiers(
                     new[] {"modifier_monkey_king_tree_dance_hidden", "modifier_monkey_king_tree_dance_activity"}, false))
             {
-                var e = MyHero.GetAbilityById(AbilityId.monkey_king_primal_spring);
-                if (e.IsChanneling)
+                if (MyHero.IsSilenced())
+                {
+                    return;
+                }
+
+                if (_springAbility.IsChanneling)
                 {
                     if (_lastEPosition != Vector3.Zero)
                     {
-                        var radius = e.GetAbilityData("impact_radius");
+                        var radius = _springAbility.GetAbilityData("impact_radius");
                         var prediction = Prediction.Prediction.PredictPosition(target,
                             (int) (1.5f * target.MovementSpeed));
                         var dist = prediction.Distance2D(_lastEPosition);
-                        Log.Debug($"damage known pos: {GetEDamage(e, target)} with dist {dist}");
+                        Log.Debug($"damage known pos: {GetEDamage(_springAbility, target)} with dist {dist}");
                         if (dist >= radius)
                         {
-                            var eEarly = MyHero.GetAbilityById(AbilityId.monkey_king_primal_spring_early);
-                            if (eEarly.CanBeCasted())
+                            if (_springEarlyAbility.CanBeCasted())
                             {
                                 _lastEPosition = Vector3.Zero;
-                                eEarly.UseAbility();
+                                _springEarlyAbility.UseAbility();
                                 Log.Debug($"jumping early because enemy is escaping our target location!");
                                 await Await.Delay(125, tk);
                             }
@@ -199,19 +210,19 @@ namespace Zaio.Heroes
                     }
                     else
                     {
-                        Log.Debug($"damage: {GetEDamage(e, target)}");
+                        Log.Debug($"damage: {GetEDamage(_springAbility, target)}");
                     }
                 }
-                else if (e.CanBeCasted(target) && e.CanHit(target))
+                else if (_springAbility.CanBeCasted(target) && _springAbility.CanHit(target))
                 {
-                    var prop = GetNeededEProp(e, target);
-                    var castPoint = e.FindCastPoint() * 1000;
+                    var prop = GetNeededEProp(_springAbility, target);
+                    var castPoint = _springAbility.FindCastPoint() * 1000;
                     var predictedPos = Prediction.Prediction.PredictPosition(target,
-                        (int) (castPoint + prop * e.ChannelTime() * 1000.0f));
-                    e.UseAbility(predictedPos);
+                        (int) (castPoint + prop * _springAbility.ChannelTime() * 1000.0f));
+                    _springAbility.UseAbility(predictedPos);
                     _lastEPosition = predictedPos;
                     Log.Debug($"Using E with prop {prop} to {predictedPos}");
-                    await Await.Delay(GetAbilityDelay(predictedPos, e), tk);
+                    await Await.Delay(GetAbilityDelay(predictedPos, _springAbility), tk);
                 }
 
                 return;
@@ -227,35 +238,37 @@ namespace Zaio.Heroes
                 // return;
             }
 
-            var q = MyHero.GetAbilityById(AbilityId.monkey_king_boundless_strike);
-            if (q.CanBeCasted(target) && q.CanHit(target))
+            if (!MyHero.IsSilenced())
             {
-                if (IsBuffed || GetQDamage(q, target) > target.Health)
+                if (_stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target))
                 {
-                    var castPoint = q.FindCastPoint() * 1000;
-                    var predictedPos = Prediction.Prediction.PredictPosition(target, (int) castPoint);
-                    q.UseAbility(predictedPos);
-                    await Await.Delay(GetAbilityDelay(predictedPos, q), tk);
+                    if (IsBuffed || GetQDamage(_stunAbility, target) > target.Health)
+                    {
+                        var castPoint = _stunAbility.FindCastPoint() * 1000;
+                        var predictedPos = Prediction.Prediction.PredictPosition(target, (int) castPoint);
+                        _stunAbility.UseAbility(predictedPos);
+                        await Await.Delay(GetAbilityDelay(predictedPos, _stunAbility), tk);
+                    }
+                }
+
+                if (_ultAbility.CanBeCasted() && _ultAbility.CanHit(target))
+                {
+                    var radius = _ultAbility.GetAbilityData("leadership_radius");
+                    var enemiesNearCount =
+                        ObjectManager.GetEntitiesParallel<Hero>()
+                                     .Count(
+                                         x =>
+                                             x.IsValid && x != target && x.IsAlive && x.Team != MyHero.Team &&
+                                             !x.IsIllusion && x.Distance2D(target) <= radius);
+                    if (enemiesNearCount >= EnemyCountForUlt)
+                    {
+                        Log.Debug($"using ult since more enemies here");
+                        _ultAbility.UseAbility(target.NetworkPosition);
+                        await Await.Delay(GetAbilityDelay(target.NetworkPosition, _ultAbility), tk);
+                    }
                 }
             }
 
-            var ult = MyHero.GetAbilityById(AbilityId.monkey_king_wukongs_command);
-            if (ult.CanBeCasted() && ult.CanHit(target))
-            {
-                var radius = ult.GetAbilityData("leadership_radius");
-                var enemiesNearCount =
-                    ObjectManager.GetEntitiesParallel<Hero>()
-                                 .Count(
-                                     x =>
-                                         x.IsValid && x != target && x.IsAlive && x.Team != MyHero.Team &&
-                                         !x.IsIllusion && x.Distance2D(target) <= radius);
-                if (enemiesNearCount >= EnemyCountForUlt)
-                {
-                    Log.Debug($"using ult since more enemies here");
-                    ult.UseAbility(target.NetworkPosition);
-                    await Await.Delay(GetAbilityDelay(target.NetworkPosition, ult), tk);
-                }
-            }
             // check if we are near the enemy
             if (!await MoveOrBlinkToEnemy(tk))
             {

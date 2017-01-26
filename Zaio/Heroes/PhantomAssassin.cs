@@ -99,18 +99,21 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            if (_daggerAbility.CanBeCasted(target) && _daggerAbility.CanHit(target))
+            if (!MyHero.IsSilenced())
             {
-                _daggerAbility.UseAbility(target);
-                Log.Debug($"using dagger!");
-                await Await.Delay(GetAbilityDelay(target, _daggerAbility), tk);
-            }
+                if (_daggerAbility.CanBeCasted(target) && _daggerAbility.CanHit(target))
+                {
+                    _daggerAbility.UseAbility(target);
+                    Log.Debug($"using dagger!");
+                    await Await.Delay(GetAbilityDelay(target, _daggerAbility), tk);
+                }
 
-            if (_blinkAbility.CanBeCasted(target) && _blinkAbility.CanHit(target))
-            {
-                _blinkAbility.UseAbility(target);
-                Log.Debug($"using blink!");
-                await Await.Delay(GetAbilityDelay(target, _blinkAbility), tk);
+                if (_blinkAbility.CanBeCasted(target) && _blinkAbility.CanHit(target))
+                {
+                    _blinkAbility.UseAbility(target);
+                    Log.Debug($"using blink!");
+                    await Await.Delay(GetAbilityDelay(target, _blinkAbility), tk);
+                }
             }
 
             // make him disabled

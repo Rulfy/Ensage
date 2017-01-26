@@ -25,7 +25,8 @@ namespace Zaio.Heroes
         private static readonly string[] SupportedAbilities =
         {
             "tiny_avalanche",
-            "tiny_toss"
+            "tiny_toss",
+            "item_manta"
         };
 
         private Ability _avalancheAbility;
@@ -78,6 +79,11 @@ namespace Zaio.Heroes
 
         private async Task ThrowBack(CancellationToken tk)
         {
+            if (MyHero.IsSilenced())
+            {
+                return;
+            }
+
             var tossSource = TargetSelector.ClosestToMouse(MyHero);
             if (tossSource == null)
             {
@@ -196,29 +202,34 @@ namespace Zaio.Heroes
                 manta = null;
             }
 
-            // test if toss/av combo is working
-            if (_tossAbility.CanBeCasted(target) && _tossAbility.CanHit(target))
+            if (!MyHero.IsSilenced())
             {
-                Log.Debug($"use toss");
-                var grab = _tossAbility.GetAbilityData("grab_radius");
-                var closestUnit =
-                    ObjectManager.GetEntitiesFast<Unit>()
-                                 .Where(x => x != MyHero && x.IsAlive && x.Distance2D(MyHero) <= grab && x.IsRealUnit())
-                                 .OrderBy(x => x.Distance2D(MyHero))
-                                 .FirstOrDefault();
-                Log.Debug($"Closest unit for toss: {closestUnit?.Name}");
-                if (closestUnit == target)
+                // test if toss/av combo is working
+                if (_tossAbility.CanBeCasted(target) && _tossAbility.CanHit(target))
                 {
-                    _tossAbility.UseAbility(target);
-                    Log.Debug($"use toss!!");
+                    Log.Debug($"use toss");
+                    var grab = _tossAbility.GetAbilityData("grab_radius");
+                    var closestUnit =
+                        ObjectManager.GetEntitiesFast<Unit>()
+                                     .Where(
+                                         x =>
+                                             x != MyHero && x.IsAlive && x.Distance2D(MyHero) <= grab && x.IsRealUnit())
+                                     .OrderBy(x => x.Distance2D(MyHero))
+                                     .FirstOrDefault();
+                    Log.Debug($"Closest unit for toss: {closestUnit?.Name}");
+                    if (closestUnit == target)
+                    {
+                        _tossAbility.UseAbility(target);
+                        Log.Debug($"use toss!!");
+                        await Await.Delay(100, tk);
+                    }
+                }
+                if (_avalancheAbility.CanBeCasted(target) && _avalancheAbility.CanHit(target))
+                {
+                    Log.Debug($"use avalanche");
+                    _avalancheAbility.UseAbility(target.NetworkPosition);
                     await Await.Delay(100, tk);
                 }
-            }
-            if (_avalancheAbility.CanBeCasted(target) && _avalancheAbility.CanHit(target))
-            {
-                Log.Debug($"use avalanche");
-                _avalancheAbility.UseAbility(target.NetworkPosition);
-                await Await.Delay(100, tk);
             }
 
             // check if we are near the enemy

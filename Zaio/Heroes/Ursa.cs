@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
+using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
@@ -25,6 +26,11 @@ namespace Zaio.Heroes
             "ursa_enrage"
         };
 
+        private Ability _earthshockAbility;
+
+        private Ability _overpowerAbility;
+        private Ability _ultAbility;
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -37,6 +43,10 @@ namespace Zaio.Heroes
             heroMenu.AddItem(supportedStuff);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
+
+            _ultAbility = MyHero.GetAbilityById(AbilityId.ursa_enrage);
+            _earthshockAbility = MyHero.GetAbilityById(AbilityId.ursa_earthshock);
+            _overpowerAbility = MyHero.GetAbilityById(AbilityId.ursa_overpower);
         }
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
@@ -44,11 +54,10 @@ namespace Zaio.Heroes
             // overpower for teh damage
             if (IsInRange(MyHero.AttackRange) && !MyHero.HasModifier("modifier_ursa_overpower"))
             {
-                var overpower = MyHero.Spellbook.SpellW;
-                if (overpower.CanBeCasted())
+                if (!MyHero.IsSilenced() && _overpowerAbility.CanBeCasted())
                 {
-                    overpower.UseAbility();
-                    await Await.Delay((int) (overpower.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                    _overpowerAbility.UseAbility();
+                    await Await.Delay((int) (_overpowerAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
             }
             await HasNoLinkens(target, tk);
@@ -65,11 +74,11 @@ namespace Zaio.Heroes
                 var healthPercentage = (float) target.Health / target.MaximumHealth;
                 if (healthPercentage > 0.5)
                 {
-                    var earthshock = MyHero.Spellbook.SpellQ;
-                    if (earthshock.CanBeCasted(target) && earthshock.CanHit(target))
+                    if (!MyHero.IsSilenced() && _earthshockAbility.CanBeCasted(target) &&
+                        _earthshockAbility.CanHit(target))
                     {
-                        earthshock.UseAbility();
-                        await Await.Delay((int) (earthshock.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        _earthshockAbility.UseAbility();
+                        await Await.Delay((int) (_earthshockAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
                     }
                 }
             }
@@ -79,8 +88,7 @@ namespace Zaio.Heroes
                 return;
             }
             // test if ulti is good
-            var enrage = MyHero.Spellbook.SpellR;
-            if (enrage.CanBeCasted())
+            if (_ultAbility.CanBeCasted())
             {
                 var enemies =
                     ObjectManager.GetEntitiesFast<Hero>()
@@ -91,7 +99,7 @@ namespace Zaio.Heroes
                 bool? hasEnemies = enemies.Any();
                 if (MyHero.IsStunned() || hasEnemies == true || (float) MyHero.Health / MyHero.MaximumHealth <= 0.25f)
                 {
-                    enrage.UseAbility();
+                    _ultAbility.UseAbility();
                     await Await.Delay(125, tk);
                 }
             }

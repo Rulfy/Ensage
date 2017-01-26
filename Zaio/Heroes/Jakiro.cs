@@ -29,6 +29,11 @@ namespace Zaio.Heroes
             "item_cyclone"
         };
 
+        private Ability _dualAbility;
+        private Ability _orbAbility;
+        private Ability _stunAbility;
+        private Ability _ultAbility;
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -41,77 +46,85 @@ namespace Zaio.Heroes
             heroMenu.AddItem(supportedStuff);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
+
+            _ultAbility = MyHero.GetAbilityById(AbilityId.jakiro_macropyre);
+            _stunAbility = MyHero.GetAbilityById(AbilityId.jakiro_ice_path);
+            _dualAbility = MyHero.GetAbilityById(AbilityId.jakiro_dual_breath);
+            _orbAbility = MyHero.GetAbilityById(AbilityId.jakiro_liquid_fire);
         }
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             await HasNoLinkens(target, tk);
 
-            var stun = MyHero.Spellbook.SpellW;
-            var eulsModifier = target.FindModifier("modifier_eul_cyclone");
-            if ((stun.CanBeCasted(target) || eulsModifier != null && stun.CanBeCasted()) && stun.CanHit(target))
+            if (!MyHero.IsSilenced())
             {
-                var stunCastpoint = stun.FindCastPoint();
-                var delay = stun.GetAbilityData("path_delay");
-
-                if (eulsModifier != null)
+                var eulsModifier = target.FindModifier("modifier_eul_cyclone");
+                if ((_stunAbility.CanBeCasted(target) || eulsModifier != null && _stunAbility.CanBeCasted()) &&
+                    _stunAbility.CanHit(target))
                 {
-                    Log.Debug($"has euls {eulsModifier.RemainingTime}");
-                    if (eulsModifier.RemainingTime < stunCastpoint + delay)
-                    {
-                        Log.Debug($"using stun on cycloned target");
-                        stun.UseAbility(target.NetworkPosition);
-                        await Await.Delay(GetAbilityDelay(target, stun), tk);
-                    }
-                }
-                else
-                {
-                    var disabled = 0.0f;
-                    if (target.IsRooted(out disabled) || target.IsStunned(out disabled))
-                    {
-                        var time = disabled - stunCastpoint - delay;
-                        if (time >= 0)
-                        {
-                            Log.Debug($"using stun on disabled target {time}");
-                            stun.UseAbility(target.NetworkPosition);
-                            await Await.Delay(GetAbilityDelay(target, stun), tk);
-                        }
-                        else
-                        {
-                            var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time * -1000);
+                    var stunCastpoint = _stunAbility.FindCastPoint();
+                    var delay = _stunAbility.GetAbilityData("path_delay");
 
-                            Log.Debug($"using stun on disabled target {time} with predicted pos {predictedPos}");
-                            stun.UseAbility(predictedPos);
-                            await Await.Delay(GetAbilityDelay(target, stun), tk);
+                    if (eulsModifier != null)
+                    {
+                        Log.Debug($"has euls {eulsModifier.RemainingTime}");
+                        if (eulsModifier.RemainingTime < stunCastpoint + delay)
+                        {
+                            Log.Debug($"using stun on cycloned target");
+                            _stunAbility.UseAbility(target.NetworkPosition);
+                            await Await.Delay(GetAbilityDelay(target, _stunAbility), tk);
                         }
                     }
                     else
                     {
-                        var euls = MyHero.GetItemById(ItemId.item_cyclone);
-                        if (euls != null && euls.CanBeCasted(target))
+                        var disabled = 0.0f;
+                        if (target.IsRooted(out disabled) || target.IsStunned(out disabled))
                         {
-                            if (euls.CanHit(target))
+                            var time = disabled - stunCastpoint - delay;
+                            if (time >= 0)
                             {
-                                Log.Debug($"using euls to disable enemy before stun");
-                                euls.UseAbility(target);
-                                await Await.Delay(125, tk);
-                                return;
+                                Log.Debug($"using stun on disabled target {time}");
+                                _stunAbility.UseAbility(target.NetworkPosition);
+                                await Await.Delay(GetAbilityDelay(target, _stunAbility), tk);
                             }
-                            // check if we are near the enemy
-                            if (!await MoveOrBlinkToEnemy(tk, 250, euls.GetCastRange()))
+                            else
                             {
-                                Log.Debug($"return because of blink");
-                                return;
+                                var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time * -1000);
+
+                                Log.Debug($"using stun on disabled target {time} with predicted pos {predictedPos}");
+                                _stunAbility.UseAbility(predictedPos);
+                                await Await.Delay(GetAbilityDelay(target, _stunAbility), tk);
                             }
                         }
+                        else
+                        {
+                            var euls = MyHero.GetItemById(ItemId.item_cyclone);
+                            if (euls != null && euls.CanBeCasted(target))
+                            {
+                                if (euls.CanHit(target))
+                                {
+                                    Log.Debug($"using euls to disable enemy before stun");
+                                    euls.UseAbility(target);
+                                    await Await.Delay(125, tk);
+                                    return;
+                                }
+                                // check if we are near the enemy
+                                if (!await MoveOrBlinkToEnemy(tk, 250, euls.GetCastRange()))
+                                {
+                                    Log.Debug($"return because of blink");
+                                    return;
+                                }
+                            }
 
 
-                        var predictedPos = Prediction.Prediction.PredictPosition(target,
-                            (int) ((stunCastpoint + delay) * 1000));
+                            var predictedPos = Prediction.Prediction.PredictPosition(target,
+                                (int) ((stunCastpoint + delay) * 1000));
 
-                        Log.Debug($"using stun on target with predicted pos {predictedPos}");
-                        stun.UseAbility(predictedPos);
-                        await Await.Delay(GetAbilityDelay(target, stun), tk);
+                            Log.Debug($"using stun on target with predicted pos {predictedPos}");
+                            _stunAbility.UseAbility(predictedPos);
+                            await Await.Delay(GetAbilityDelay(target, _stunAbility), tk);
+                        }
                     }
                 }
             }
@@ -125,59 +138,59 @@ namespace Zaio.Heroes
                 // return;
             }
 
-            var ult = MyHero.Spellbook.SpellR;
-            if (ult.CanBeCasted(target) && ult.CanHit(target))
+            if (!MyHero.IsSilenced())
             {
-                if (target.IsStunned() || target.IsRooted())
+                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
                 {
-                    Log.Debug($"using ult because target is stunned");
-                    ult.UseAbility(target.NetworkPosition);
-                    await Await.Delay(GetAbilityDelay(target, ult) + 250, tk);
-                }
-                else
-                {
-                    var predictedPos = Prediction.Prediction.PredictPosition(target,
-                        (int) (ult.FindCastPoint() * 1000.0));
-                    var radius = ult.GetAbilityData("path_radius");
-
-                    var dir = predictedPos - MyHero.NetworkPosition;
-                    dir.Normalize();
-                    dir *=
-                        ult.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
-                            ? "cast_range_scepter"
-                            : "cast_range");
-
-                    var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, MyHero.NetworkPosition + dir,
-                        radius);
-                    var hasMoreEnemies =
-                        ObjectManager.GetEntitiesParallel<Hero>()
-                                     .Any(
-                                         x =>
-                                             x.IsValid && x != target && x.IsAlive && !x.IsMagicImmune() &&
-                                             x.Team != MyHero.Team && rec.IsInside(x.NetworkPosition));
-                    if (hasMoreEnemies)
+                    if (target.IsStunned() || target.IsRooted())
                     {
-                        Log.Debug($"using ult because more enemies");
-                        ult.UseAbility(predictedPos);
-                        await Await.Delay(GetAbilityDelay(target, ult) + 250, tk);
+                        Log.Debug($"using ult because target is stunned");
+                        _ultAbility.UseAbility(target.NetworkPosition);
+                        await Await.Delay(GetAbilityDelay(target, _ultAbility) + 250, tk);
+                    }
+                    else
+                    {
+                        var predictedPos = Prediction.Prediction.PredictPosition(target,
+                            (int) (_ultAbility.FindCastPoint() * 1000.0));
+                        var radius = _ultAbility.GetAbilityData("path_radius");
+
+                        var dir = predictedPos - MyHero.NetworkPosition;
+                        dir.Normalize();
+                        dir *=
+                            _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
+                                ? "cast_range_scepter"
+                                : "cast_range");
+
+                        var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, MyHero.NetworkPosition + dir,
+                            radius);
+                        var hasMoreEnemies =
+                            ObjectManager.GetEntitiesParallel<Hero>()
+                                         .Any(
+                                             x =>
+                                                 x.IsValid && x != target && x.IsAlive && !x.IsMagicImmune() &&
+                                                 x.Team != MyHero.Team && rec.IsInside(x.NetworkPosition));
+                        if (hasMoreEnemies)
+                        {
+                            Log.Debug($"using ult because more enemies");
+                            _ultAbility.UseAbility(predictedPos);
+                            await Await.Delay(GetAbilityDelay(target, _ultAbility) + 250, tk);
+                        }
                     }
                 }
-            }
 
-            var dual = MyHero.Spellbook.SpellQ;
-            if (dual.CanBeCasted(target) && dual.CanHit(target))
-            {
-                Log.Debug($"using Q");
-                dual.UseAbility(target.NetworkPosition);
-                await Await.Delay(GetAbilityDelay(target, dual), tk);
-            }
+                if (_dualAbility.CanBeCasted(target) && _dualAbility.CanHit(target))
+                {
+                    Log.Debug($"using Q");
+                    _dualAbility.UseAbility(target.NetworkPosition);
+                    await Await.Delay(GetAbilityDelay(target, _dualAbility), tk);
+                }
 
-            var orb = MyHero.Spellbook.SpellE;
-            if (orb.CanBeCasted(target) && orb.CanHit(target))
-            {
-                Log.Debug($"using orb");
-                orb.UseAbility(target);
-                await Await.Delay(GetAbilityDelay(target, orb), tk);
+                if (_orbAbility.CanBeCasted(target) && _orbAbility.CanHit(target))
+                {
+                    Log.Debug($"using orb");
+                    _orbAbility.UseAbility(target);
+                    await Await.Delay(GetAbilityDelay(target, _orbAbility), tk);
+                }
             }
 
             // check if we are near the enemy

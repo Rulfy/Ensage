@@ -29,6 +29,12 @@ namespace Zaio.Heroes
             "item_cyclone"
         };
 
+        private Ability _edictAbility;
+        private Ability _lightningAbility;
+
+        private Ability _stunAbility;
+        private Ability _ultAbility;
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -41,48 +47,54 @@ namespace Zaio.Heroes
             heroMenu.AddItem(supportedStuff);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
+
+            _stunAbility = MyHero.GetAbilityById(AbilityId.leshrac_split_earth);
+            _ultAbility = MyHero.GetAbilityById(AbilityId.leshrac_pulse_nova);
+            _edictAbility = MyHero.GetAbilityById(AbilityId.leshrac_diabolic_edict);
+            _lightningAbility = MyHero.GetAbilityById(AbilityId.leshrac_lightning_storm);
         }
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             await HasNoLinkens(target, tk);
 
-            var stun = MyHero.Spellbook.SpellQ;
+
             var eulsModifier = target.FindModifier("modifier_eul_cyclone");
-            if ((stun.CanBeCasted(target) || eulsModifier != null && stun.CanBeCasted()) && stun.CanHit(target))
+            if ((_stunAbility.CanBeCasted(target) || eulsModifier != null && _stunAbility.CanBeCasted()) &&
+                _stunAbility.CanHit(target))
             {
-                var stunCastpoint = stun.FindCastPoint();
-                var delay = stun.GetAbilityData("delay");
+                var stunCastpoint = _stunAbility.FindCastPoint();
+                var delay = _stunAbility.GetAbilityData("delay");
 
                 if (eulsModifier != null)
                 {
                     Log.Debug($"has euls {eulsModifier.RemainingTime}");
-                    if (eulsModifier.RemainingTime < stunCastpoint + delay)
+                    if (!MyHero.IsSilenced() && eulsModifier.RemainingTime < stunCastpoint + delay)
                     {
                         Log.Debug($"using stun on cycloned target");
-                        stun.UseAbility(target.NetworkPosition);
-                        await Await.Delay(GetAbilityDelay(target, stun) + 250, tk);
+                        _stunAbility.UseAbility(target.NetworkPosition);
+                        await Await.Delay(GetAbilityDelay(target, _stunAbility) + 250, tk);
                     }
                 }
                 else
                 {
                     var disabled = 0.0f;
-                    if (target.IsRooted(out disabled) || target.IsStunned(out disabled))
+                    if (!MyHero.IsSilenced() && target.IsRooted(out disabled) || target.IsStunned(out disabled))
                     {
                         var time = disabled - stunCastpoint - delay;
                         if (time >= 0)
                         {
                             Log.Debug($"using stun on disabled target {time}");
-                            stun.UseAbility(target.NetworkPosition);
-                            await Await.Delay(GetAbilityDelay(target, stun) + 250, tk);
+                            _stunAbility.UseAbility(target.NetworkPosition);
+                            await Await.Delay(GetAbilityDelay(target, _stunAbility) + 250, tk);
                         }
                         else
                         {
                             var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time * -1000);
 
                             Log.Debug($"using stun on disabled target {time} with predicted pos {predictedPos}");
-                            stun.UseAbility(predictedPos);
-                            await Await.Delay(GetAbilityDelay(target, stun) + 250, tk);
+                            _stunAbility.UseAbility(predictedPos);
+                            await Await.Delay(GetAbilityDelay(target, _stunAbility) + 250, tk);
                         }
                     }
                     else
@@ -109,15 +121,15 @@ namespace Zaio.Heroes
 
                         var predictedPos = Prediction.Prediction.PredictPosition(target,
                             (int) ((stunCastpoint + delay) * 1000), true);
-                        if (predictedPos != Vector3.Zero)
+                        if (!MyHero.IsSilenced() && predictedPos != Vector3.Zero)
                         {
                             Log.Debug($"using stun on target with predicted pos {predictedPos}");
-                            stun.UseAbility(predictedPos);
-                            await Await.Delay(GetAbilityDelay(target, stun) + 250, tk);
+                            _stunAbility.UseAbility(predictedPos);
+                            await Await.Delay(GetAbilityDelay(target, _stunAbility) + 250, tk);
                         }
                         else
                         {
-                            Log.Debug($"Not using stun due to enemy turning!");
+                            Log.Debug($"Not using stun due to enemy turning or silenced!");
                         }
                     }
                 }
@@ -132,28 +144,28 @@ namespace Zaio.Heroes
                 // return;
             }
 
-            var ult = MyHero.Spellbook.SpellR;
-            if (!ult.IsToggled && ult.CanBeCasted(target) && ult.CanHit(target))
+            if (!MyHero.IsSilenced())
             {
-                Log.Debug($"using ult");
-                ult.ToggleAbility();
-                await Await.Delay((int) (ult.FindCastPoint() * 1000.0 + Game.Ping), tk);
-            }
+                if (!_ultAbility.IsToggled && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
+                {
+                    Log.Debug($"using ult");
+                    _ultAbility.ToggleAbility();
+                    await Await.Delay((int) (_ultAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
 
-            var edict = MyHero.Spellbook.SpellW;
-            if (edict.CanBeCasted(target) && edict.CanHit(target))
-            {
-                Log.Debug($"using edict");
-                edict.UseAbility();
-                await Await.Delay((int) (edict.FindCastPoint() * 1000.0 + Game.Ping), tk);
-            }
+                if (_edictAbility.CanBeCasted(target) && _edictAbility.CanHit(target))
+                {
+                    Log.Debug($"using edict");
+                    _edictAbility.UseAbility();
+                    await Await.Delay((int) (_edictAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
 
-            var lightning = MyHero.Spellbook.SpellE;
-            if (lightning.CanBeCasted(target) && lightning.CanHit(target))
-            {
-                Log.Debug($"using lightning");
-                lightning.UseAbility(target);
-                await Await.Delay(GetAbilityDelay(target, lightning), tk);
+                if (_lightningAbility.CanBeCasted(target) && _lightningAbility.CanHit(target))
+                {
+                    Log.Debug($"using lightning");
+                    _lightningAbility.UseAbility(target);
+                    await Await.Delay(GetAbilityDelay(target, _lightningAbility), tk);
+                }
             }
 
             // check if we are near the enemy

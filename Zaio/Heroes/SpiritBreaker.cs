@@ -72,7 +72,7 @@ namespace Zaio.Heroes
 
         private async Task ChargeAwayFunc(CancellationToken tk)
         {
-            if (_chargeAbility.CanBeCasted() && !MyHero.IsChanneling())
+            if (!MyHero.IsSilenced() && _chargeAbility.CanBeCasted() && !MyHero.IsChanneling())
             {
                 var enemy = ObjectManager.GetEntitiesParallel<Unit>().Where(
                                              x =>
@@ -121,7 +121,7 @@ namespace Zaio.Heroes
             // check if we are near the enemy
             if (!await MoveOrBlinkToEnemy(tk))
             {
-                if (_chargeAbility.CanBeCasted())
+                if (!MyHero.IsSilenced() && _chargeAbility.CanBeCasted())
                 {
                     Log.Debug($"charging enemy since too far");
                     _chargeAbility.UseAbility(target);
@@ -148,7 +148,7 @@ namespace Zaio.Heroes
                 armlet.ToggleAbility();
             }
 
-            if (_ultAbility.CanBeCasted() && _ultAbility.CanHit(target))
+            if (!MyHero.IsSilenced() && _ultAbility.CanBeCasted() && _ultAbility.CanHit(target))
             {
                 Log.Debug($"using ult on target");
                 _ultAbility.UseAbility(target);

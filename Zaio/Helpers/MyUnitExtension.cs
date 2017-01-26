@@ -35,7 +35,9 @@ namespace Zaio.Helpers
 
         public static float MagicResistance(this Unit unit)
         {
-            return unit.HasModifier("modifier_oracle_fates_edict") ? 1.0f : unit.MagicDamageResist;
+            return unit.HasModifiers(new[] {"modifier_oracle_fates_edict", "modifier_medusa_stone_gaze_stone"}, false)
+                ? 1.0f
+                : unit.MagicDamageResist;
         }
 
         public static float PhysicalResistance(this Unit unit)
@@ -66,6 +68,11 @@ namespace Zaio.Helpers
         public static bool CantBeAttacked(this Unit unit)
         {
             return unit.HasModifiers(CantAttackModifiers, false);
+        }
+
+        public static bool IsMuted(this Unit unit)
+        {
+            return unit.UnitState.HasFlag(UnitState.Muted);
         }
     }
 }

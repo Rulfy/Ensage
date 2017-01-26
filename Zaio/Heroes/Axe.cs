@@ -23,7 +23,9 @@ namespace Zaio.Heroes
         {
             "axe_berserkers_call",
             "axe_culling_blade",
-            "item_blade_mail"
+            "item_blade_mail",
+            "item_lotus_orb",
+            "item_mjollnir"
         };
 
         private static readonly string[] KillstealAbilities =
@@ -86,6 +88,7 @@ namespace Zaio.Heroes
                     Log.Debug($"using ult on {enemy.Name}: {enemy.Health} < {threshold}");
                     _ultAbility.UseAbility(enemy);
                     await Await.Delay(GetAbilityDelay(enemy, _ultAbility));
+                    return true;
                 }
             }
             return false;
@@ -95,7 +98,8 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             _ultAbility = MyHero.Spellbook.SpellR;
-            if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
+            if (!MyHero.IsSilenced() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
+                await HasNoLinkens(target, tk))
             {
                 var threshold =
                     _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
@@ -127,7 +131,7 @@ namespace Zaio.Heroes
             }
 
             _callAbility = MyHero.Spellbook.SpellQ;
-            if (_callAbility.CanBeCasted(target))
+            if (!MyHero.IsSilenced() && _callAbility.CanBeCasted(target))
             {
                 var delay = _callAbility.FindCastPoint() * 1000 + Game.Ping;
                 var radius = _callAbility.GetAbilityData("radius");
@@ -138,7 +142,7 @@ namespace Zaio.Heroes
                     {
                         Log.Debug($"using blademail before call");
                         bladeMail.UseAbility();
-                        await Await.Delay(100, tk);
+                        await Await.Delay(ItemDelay, tk);
                     }
 
                     var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
@@ -146,7 +150,7 @@ namespace Zaio.Heroes
                     {
                         Log.Debug($"using lotus orb before call");
                         lotus.UseAbility(MyHero);
-                        await Await.Delay(100, tk);
+                        await Await.Delay(ItemDelay, tk);
                     }
 
                     var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
@@ -154,7 +158,7 @@ namespace Zaio.Heroes
                     {
                         Log.Debug($"using mjollnir before call");
                         mjollnir.UseAbility(MyHero);
-                        await Await.Delay(100, tk);
+                        await Await.Delay(ItemDelay, tk);
                     }
                     var useCall = true;
                     if (target.HasModifier("modifier_legion_commander_duel") || target.PhysicalResistance() == 1.0f)

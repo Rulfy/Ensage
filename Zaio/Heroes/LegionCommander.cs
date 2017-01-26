@@ -25,6 +25,8 @@ namespace Zaio.Heroes
             "legion_commander_press_the_attack",
             "legion_commander_duel",
             "item_blade_mail",
+            "item_lotus_orb",
+            "item_mjollnir",
             "item_armlet"
         };
 
@@ -32,6 +34,10 @@ namespace Zaio.Heroes
         {
             "legion_commander_overwhelming_odds"
         };
+
+        private Ability _duelAbility;
+        private Ability _oddsAbility;
+        private Ability _pressTheAttackAbility;
 
         public override void OnLoad()
         {
@@ -50,6 +56,10 @@ namespace Zaio.Heroes
             heroMenu.AddItem(supportedKillsteal);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
+
+            _oddsAbility = MyHero.GetAbilityById(AbilityId.legion_commander_overwhelming_odds);
+            _duelAbility = MyHero.GetAbilityById(AbilityId.legion_commander_duel);
+            _pressTheAttackAbility = MyHero.GetAbilityById(AbilityId.legion_commander_press_the_attack);
         }
 
         protected override async Task<bool> Killsteal()
@@ -64,19 +74,19 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            var odds = MyHero.Spellbook.SpellQ;
-            if (odds.CanBeCasted())
+            if (_oddsAbility.CanBeCasted())
             {
-                var damage = odds.GetAbilityData("damage");
-                var damagePerUnit = odds.GetAbilityData("damage_per_unit");
-                var damagePerHero = odds.GetAbilityData("damage_per_hero");
-                var radius = odds.GetAbilityData("radius");
+                var damage = _oddsAbility.GetAbilityData("damage");
+                var damagePerUnit = _oddsAbility.GetAbilityData("damage_per_unit");
+                var damagePerHero = _oddsAbility.GetAbilityData("damage_per_hero");
+                var radius = _oddsAbility.GetAbilityData("radius");
 
                 var enemies =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && odds.CanBeCasted(x) && odds.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && _oddsAbility.CanBeCasted(x) &&
+                                         _oddsAbility.CanHit(x) &&
                                          !x.CantBeAttacked() && !x.CantBeKilled());
 
                 var spellAmp = GetSpellAmp();
@@ -99,7 +109,7 @@ namespace Zaio.Heroes
                     if (enemy.Health <= enemyDamage * (1 - enemy.MagicResistance()))
                     {
                         var predictedPos = Prediction.Prediction.PredictPosition(enemy,
-                            (int) (odds.FindCastPoint() * 1000.0));
+                            (int) (_oddsAbility.FindCastPoint() * 1000.0));
                         Log.Debug(
                             $"using odds to killsteal! {enemyDamage} units: {additionalTargetCount.Count(x => !(x is Hero))} heroes: {additionalTargetCount.Count(x => x is Hero)}");
 
@@ -107,8 +117,8 @@ namespace Zaio.Heroes
                         {
                             Log.Debug($"{unit.Name}");
                         }
-                        odds.UseAbility(predictedPos);
-                        await Await.Delay(GetAbilityDelay(enemy, odds));
+                        _oddsAbility.UseAbility(predictedPos);
+                        await Await.Delay(GetAbilityDelay(enemy, _oddsAbility));
                         return true;
                     }
                 }
@@ -124,10 +134,10 @@ namespace Zaio.Heroes
                 return;
             }
             // maybe got some pre damage
-            var odds = MyHero.Spellbook.SpellQ;
-            if (odds.CanBeCasted(target) && MyHero.Mana > 300 && odds.CanHit(target))
+            if (!MyHero.IsSilenced() && _oddsAbility.CanBeCasted(target) && MyHero.Mana > 300 &&
+                _oddsAbility.CanHit(target))
             {
-                var radius = odds.GetAbilityData("radius");
+                var radius = _oddsAbility.GetAbilityData("radius");
                 var targets =
                     ObjectManager.GetEntitiesParallel<Unit>()
                                  .Where(
@@ -141,9 +151,9 @@ namespace Zaio.Heroes
                     Log.Debug($"Using Q with {heroes.Count()} heroes and {targets.Count()} targets");
 
                     var predictedPos = Prediction.Prediction.PredictPosition(target,
-                        (int) (odds.FindCastPoint() * 1000.0));
-                    odds.UseAbility(predictedPos);
-                    await Await.Delay(GetAbilityDelay(target, odds), tk);
+                        (int) (_oddsAbility.FindCastPoint() * 1000.0));
+                    _oddsAbility.UseAbility(predictedPos);
+                    await Await.Delay(GetAbilityDelay(target, _oddsAbility), tk);
                 }
                 else
                 {
@@ -154,17 +164,15 @@ namespace Zaio.Heroes
             await UseItems(tk);
 
             // press the attack for teh damage
-            var duel = MyHero.Spellbook.SpellR;
-            if (IsInRange(duel.GetCastRange()))
+            if (IsInRange(_duelAbility.GetCastRange()))
             {
                 var enemyHealth = (float) target.Health / target.MaximumHealth;
-                if (!MyHero.HasModifier("modifier_press_the_attack") && enemyHealth > 0.33f)
+                if (!MyHero.IsSilenced() && !MyHero.HasModifier("modifier_press_the_attack") && enemyHealth > 0.33f)
                 {
-                    var pressTheAttack = MyHero.Spellbook.SpellW;
-                    if (pressTheAttack.CanBeCasted())
+                    if (_pressTheAttackAbility.CanBeCasted())
                     {
-                        pressTheAttack.UseAbility(MyHero);
-                        await Await.Delay((int) (pressTheAttack.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        _pressTheAttackAbility.UseAbility(MyHero);
+                        await Await.Delay((int) (_pressTheAttackAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
                     }
                 }
                 var armlet = MyHero.GetItemById(ItemId.item_armlet);
@@ -187,14 +195,14 @@ namespace Zaio.Heroes
             }
 
             // test if ulti is good
-            if (duel.CanBeCasted(target) && await HasNoLinkens(target, tk))
+            if (!MyHero.IsSilenced() && _duelAbility.CanBeCasted(target) && await HasNoLinkens(target, tk))
             {
                 var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
                 if (bladeMail != null && bladeMail.CanBeCasted())
                 {
                     Log.Debug($"using blademail");
                     bladeMail.UseAbility();
-                    await Await.Delay(100, tk);
+                    await Await.Delay(ItemDelay, tk);
                 }
 
                 var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
@@ -202,7 +210,7 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"using lotus orb before call");
                     lotus.UseAbility(MyHero);
-                    await Await.Delay(100, tk);
+                    await Await.Delay(ItemDelay, tk);
                 }
 
                 var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
@@ -210,12 +218,12 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"using mjollnir before call");
                     mjollnir.UseAbility(MyHero);
-                    await Await.Delay(100, tk);
+                    await Await.Delay(ItemDelay, tk);
                 }
 
                 Log.Debug($"using duel");
-                duel.UseAbility(target);
-                await Await.Delay(GetAbilityDelay(target, duel), tk);
+                _duelAbility.UseAbility(target);
+                await Await.Delay(GetAbilityDelay(target, _duelAbility), tk);
                 return;
             }
             if (ZaioMenu.ShouldUseOrbwalker)

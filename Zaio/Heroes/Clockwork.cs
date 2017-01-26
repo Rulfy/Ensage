@@ -162,7 +162,7 @@ namespace Zaio.Heroes
         {
             var ult = MyHero.Spellbook.SpellR;
 
-            if (ult.CanBeCasted(target) && ult.CanHit(target))
+            if (!MyHero.IsSilenced() && ult.CanBeCasted(target) && ult.CanHit(target))
             {
                 var speed = ult.GetAbilityData("speed");
                 var radius = ult.GetAbilityData("latch_radius") * 2;
@@ -216,44 +216,48 @@ namespace Zaio.Heroes
                 return;
             }
 
-            var cogs = MyHero.Spellbook.SpellW;
-            if (cogs.CanBeCasted())
+            if (!MyHero.IsSilenced())
             {
-                var radius = cogs.GetAbilityData("cogs_radius");
-                if (target.Distance2D(MyHero) <= radius)
+                var cogs = MyHero.Spellbook.SpellW;
+                if (cogs.CanBeCasted())
                 {
-                    Log.Debug($"use cogs");
-                    cogs.UseAbility();
-                    await Await.Delay((int) (cogs.FindCastPoint() * 1000.0 + 125 + Game.Ping), tk);
-
-                    var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
-                    if (bladeMail != null && bladeMail.CanBeCasted())
+                    var radius = cogs.GetAbilityData("cogs_radius");
+                    if (target.Distance2D(MyHero) <= radius)
                     {
-                        Log.Debug($"using blademail");
-                        bladeMail.UseAbility();
+                        Log.Debug($"use cogs");
+                        cogs.UseAbility();
+                        await Await.Delay((int) (cogs.FindCastPoint() * 1000.0 + 125 + Game.Ping), tk);
+
+                        var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
+                        if (bladeMail != null && bladeMail.CanBeCasted())
+                        {
+                            Log.Debug($"using blademail");
+                            bladeMail.UseAbility();
+                            await Await.Delay(ItemDelay, tk);
+                        }
                     }
                 }
-            }
 
-            var q = MyHero.Spellbook.SpellQ;
-            if (q.CanBeCasted(target))
-            {
-                Log.Debug($"use Q");
-                q.UseAbility();
-                await Await.Delay((int) (q.FindCastPoint() * 1000.0 + Game.Ping), tk);
-            }
+                var q = MyHero.Spellbook.SpellQ;
+                if (q.CanBeCasted(target))
+                {
+                    Log.Debug($"use Q");
+                    q.UseAbility();
+                    await Await.Delay((int) (q.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                }
 
-            var flare = MyHero.Spellbook.SpellQ;
-            if (flare.CanBeCasted(target))
-            {
-                var speed = flare.GetAbilityData("speed");
-                var time = target.Distance2D(MyHero) / speed * 1000.0f;
+                var flare = MyHero.Spellbook.SpellQ;
+                if (flare.CanBeCasted(target))
+                {
+                    var speed = flare.GetAbilityData("speed");
+                    var time = target.Distance2D(MyHero) / speed * 1000.0f;
 
-                var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time);
+                    var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time);
 
-                Log.Debug($"use flare");
-                flare.UseAbility(predictedPos);
-                await Await.Delay(GetAbilityDelay(target, flare), tk);
+                    Log.Debug($"use flare");
+                    flare.UseAbility(predictedPos);
+                    await Await.Delay(GetAbilityDelay(target, flare), tk);
+                }
             }
 
             await HasNoLinkens(target, tk);

@@ -41,6 +41,7 @@ namespace Zaio
         private static MenuItem _orbwalkerMode;
         private static MenuItem _blockKillSteal;
         private static MenuItem _shouldUseBlinkDagger;
+        private static MenuItem _shouldRespectEvader;
 
         public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int) _comboKey.GetValue<KeyBind>().Key);
         public static bool ShouldUseOrbwalker => _orbwalker.GetValue<bool>();
@@ -49,6 +50,7 @@ namespace Zaio
         public static bool ShouldKillSteal => _killSteal.GetValue<bool>();
         public static bool ShouldBlockKillStealWhileComboing => _blockKillSteal.GetValue<bool>();
         public static bool ShouldUseBlinkDagger => _shouldUseBlinkDagger.GetValue<bool>();
+        public static bool ShouldRespectEvader => _shouldRespectEvader.GetValue<bool>();
         public static NoTargetMode NoTargetMode { get; private set; }
 
         public static OrbwalkerMode OrbwalkerMode { get; private set; }
@@ -92,6 +94,10 @@ namespace Zaio
             _shouldUseBlinkDagger = new MenuItem("zaioUseBlinkDagger", "Use Blink Dagger").SetValue(true);
             _shouldUseBlinkDagger.Tooltip = "Uses Blink Dagger to engage the target.";
             general.AddItem(_shouldUseBlinkDagger);
+
+            _shouldRespectEvader = new MenuItem("zaioRespectEvader", "Prioritize Evader").SetValue(true);
+            _shouldRespectEvader.Tooltip = "Will disable the combo mode while the evader is active.";
+            general.AddItem(_shouldRespectEvader);
 
             _targetSelector =
                 new MenuItem("zaioTargetSelector", "Target Selector").SetValue(

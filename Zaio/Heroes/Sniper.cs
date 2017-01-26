@@ -88,7 +88,7 @@ namespace Zaio.Heroes
                                              _ultAbility.CanHit(x) &&
                                              x.Health < damage * (1 - x.PhysicalResistance()) && !x.CantBeAttacked() &&
                                              !x.CantBeKilled());
-                    if (enemy != null && !IsEnemyNear(enemy))
+                    if (enemy != null && !IsEnemyNear())
                     {
                         Log.Debug(
                             $"use killsteal agha ult because enough damage {enemy.Health} <= {damage * (1 - enemy.PhysicalResistance())} ");
@@ -146,53 +146,56 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && !IsEnemyNear(target) &&
-                !MyHero.IsInvisible())
+            if (!MyHero.IsSilenced())
             {
-                var hasAgha = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
-                if (hasAgha)
+                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && !IsEnemyNear() &&
+                    !MyHero.IsInvisible())
                 {
-                    var critBonus = _ultAbility.GetAbilityData("scepter_crit_bonus"); // 280
-                    var damage = critBonus / 100.0f * (MyHero.MinimumDamage + MyHero.BonusDamage);
-
-                    if (target.Health < damage * (1 - target.PhysicalResistance()) || target.IsStunned() ||
-                        target.IsHexed())
+                    var hasAgha = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
+                    if (hasAgha)
                     {
-                        Log.Debug(
-                            $"use agha ult, damage {target.Health} <= {damage * (1 - target.PhysicalResistance())} ");
-                        _ultAbility.UseAbility(target.NetworkPosition);
-                        await Await.Delay(GetAbilityDelay(target, _ultAbility), tk);
-                        return;
+                        var critBonus = _ultAbility.GetAbilityData("scepter_crit_bonus"); // 280
+                        var damage = critBonus / 100.0f * (MyHero.MinimumDamage + MyHero.BonusDamage);
+
+                        if (target.Health < damage * (1 - target.PhysicalResistance()) || target.IsStunned() ||
+                            target.IsHexed())
+                        {
+                            Log.Debug(
+                                $"use agha ult, damage {target.Health} <= {damage * (1 - target.PhysicalResistance())} ");
+                            _ultAbility.UseAbility(target.NetworkPosition);
+                            await Await.Delay(GetAbilityDelay(target, _ultAbility), tk);
+                            return;
+                        }
+                    }
+                    else if (!target.IsLinkensProtected() || target.MagicResistance() == 1.0f)
+                    {
+                        var damage = (float) _ultAbility.GetDamage(_ultAbility.Level - 1);
+                        damage *= GetSpellAmp();
+
+                        if (target.Health < damage * (1 - target.MagicResistance()) || target.IsStunned() ||
+                            target.IsHexed())
+                        {
+                            Log.Debug(
+                                $"use ult, damage {target.Health} <= {damage * (1 - target.MagicResistance())} ");
+                            _ultAbility.UseAbility(target);
+                            await Await.Delay(GetAbilityDelay(target, _ultAbility), tk);
+                            return;
+                        }
                     }
                 }
-                else if (!target.IsLinkensProtected() || target.MagicResistance() == 1.0f)
-                {
-                    var damage = (float) _ultAbility.GetDamage(_ultAbility.Level - 1);
-                    damage *= GetSpellAmp();
 
-                    if (target.Health < damage * (1 - target.MagicResistance()) || target.IsStunned() ||
-                        target.IsHexed())
+                if (_shrapnelAbility.CanBeCasted(target) && _shrapnelAbility.CanHit(target))
+                {
+                    var castPoint = _shrapnelAbility.FindCastPoint() * 1000.0f;
+                    var delay = _shrapnelAbility.GetAbilityData("damage_delay") * 1000.0f;
+                    var pos = Prediction.Prediction.PredictPosition(target, (int) (castPoint + delay + Game.Ping));
+                    if (!IsUnderShrapnel(pos))
                     {
-                        Log.Debug(
-                            $"use ult, damage {target.Health} <= {damage * (1 - target.MagicResistance())} ");
-                        _ultAbility.UseAbility(target);
-                        await Await.Delay(GetAbilityDelay(target, _ultAbility), tk);
-                        return;
+                        _shrapnelInfo.Add(new ShrapnelInfo(pos, Game.RawGameTime));
+                        _shrapnelAbility.UseAbility(pos);
+                        Log.Debug($"using shrapnel!");
+                        await Await.Delay(GetAbilityDelay(pos, _shrapnelAbility), tk);
                     }
-                }
-            }
-
-            if (_shrapnelAbility.CanBeCasted(target) && _shrapnelAbility.CanHit(target))
-            {
-                var castPoint = _shrapnelAbility.FindCastPoint() * 1000.0f;
-                var delay = _shrapnelAbility.GetAbilityData("damage_delay") * 1000.0f;
-                var pos = Prediction.Prediction.PredictPosition(target, (int) (castPoint + delay + Game.Ping));
-                if (!IsUnderShrapnel(pos))
-                {
-                    _shrapnelInfo.Add(new ShrapnelInfo(pos, Game.RawGameTime));
-                    _shrapnelAbility.UseAbility(pos);
-                    Log.Debug($"using shrapnel!");
-                    await Await.Delay(GetAbilityDelay(pos, _shrapnelAbility), tk);
                 }
             }
 

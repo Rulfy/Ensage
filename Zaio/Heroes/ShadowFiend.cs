@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
+using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
 
@@ -32,10 +34,13 @@ namespace Zaio.Heroes
             "nevermore_shadowraze1"
         };
 
-        private Ability _raze1Ability;
-        private Ability _raze2Ability;
-        private Ability _raze3Ability;
+        private MenuItem _drawRazesItem;
+
+        private readonly Ability[] _razeAbilities = new Ability[3];
+
+        private readonly ParticleEffect[] _razeEffects = new ParticleEffect[3];
         private Ability _ultAbility;
+        private bool ShouldDrawRazes => _drawRazesItem.GetValue<bool>();
 
         public override void OnLoad()
         {
@@ -53,12 +58,80 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            _razeAbilities[0] = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze1);
+            _razeAbilities[1] = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze2);
+            _razeAbilities[2] = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze3);
+
+            _drawRazesItem = new MenuItem("zaioShadowFiendDrawRazes", "Draw Razes").SetValue(true);
+            _drawRazesItem.Tooltip = "Draws the hitbox of each raze with a circle.";
+            _drawRazesItem.ValueChanged += _drawRazesItem_ValueChanged;
+            heroMenu.AddItem(_drawRazesItem);
+
+
+            ToggleRazeEffects(_drawRazesItem.GetValue<bool>());
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
-            _raze1Ability = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze1);
-            _raze2Ability = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze2);
-            _raze3Ability = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze3);
             _ultAbility = MyHero.GetAbilityById(AbilityId.nevermore_requiem);
+
+            GameDispatcher.OnIngameUpdate += GameDispatcher_OnIngameUpdate;
+        }
+
+        public override void OnClose()
+        {
+            GameDispatcher.OnIngameUpdate -= GameDispatcher_OnIngameUpdate;
+            base.OnClose();
+        }
+
+        private void GameDispatcher_OnIngameUpdate(EventArgs args)
+        {
+            for (var index = 0; index < _razeEffects.Length; index++)
+            {
+                var ability = _razeAbilities[index];
+                var effect = _razeEffects[index];
+                if (ability == null || effect == null)
+                {
+                    Await.Block("zaio.updateRazes", Sleep);
+                    continue;
+                }
+                var range = ability.GetAbilityData("shadowraze_range");
+                effect.SetControlPoint(0, MyHero.InFront(range));
+            }
+        }
+
+        private void ToggleRazeEffects(bool value)
+        {
+            if (value)
+            {
+                for (var index = 0; index < _razeEffects.Length; index++)
+                {
+                    var ability = _razeAbilities[index];
+                    var range = ability.GetAbilityData("shadowraze_range");
+                    var radius = ability.GetAbilityData("shadowraze_radius");
+
+                    var effect = new ParticleEffect(@"particles\ui_mouseactions\drag_selected_ring.vpcf", MyHero,
+                        ParticleAttachment.AbsOrigin);
+
+                    effect.SetControlPoint(0, MyHero.InFront(range));
+                    effect.SetControlPoint(1, new Vector3(255, 0, 0));
+                    effect.SetControlPoint(2, new Vector3(radius, 255, 0));
+                    effect.SetControlPoint(3, new Vector3(5, 0, 0));
+                    _razeEffects[index] = effect;
+                }
+            }
+            else
+            {
+                for (var index = 0; index < _razeEffects.Length; index++)
+                {
+                    _razeEffects[index].Dispose();
+                    _razeEffects[index] = null;
+                }
+            }
+        }
+
+        private void _drawRazesItem_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            ToggleRazeEffects(e.GetNewValue<bool>());
         }
 
         private async Task<bool> UseKillstealRaze(Ability ability, float spellAmp)
@@ -123,17 +196,12 @@ namespace Zaio.Heroes
             }
 
             var spellAmp = GetSpellAmp();
-            if (await UseKillstealRaze(_raze1Ability, spellAmp))
+            foreach (var razeAbility in _razeAbilities)
             {
-                return true;
-            }
-            if (await UseKillstealRaze(_raze2Ability, spellAmp))
-            {
-                return true;
-            }
-            if (await UseKillstealRaze(_raze3Ability, spellAmp))
-            {
-                return true;
+                if (await UseKillstealRaze(razeAbility, spellAmp))
+                {
+                    return true;
+                }
             }
 
             return false;
@@ -172,7 +240,7 @@ namespace Zaio.Heroes
                     else if (eulsModifier == null || eulsModifier.RemainingTime < _ultAbility.FindCastPoint())
                     {
                         Log.Debug($"{_ultAbility.IsInAbilityPhase}");
-                        if (!_ultAbility.IsInAbilityPhase)
+                        if (!MyHero.IsSilenced() && !_ultAbility.IsInAbilityPhase)
                         {
                             Log.Debug($"using ult on {target.Name}");
                             _ultAbility.UseAbility();
@@ -218,9 +286,13 @@ namespace Zaio.Heroes
             await HasNoLinkens(target, tk);
             await UseItems(tk);
 
-            await UseRazeOnTarget(target, _raze1Ability);
-            await UseRazeOnTarget(target, _raze2Ability);
-            await UseRazeOnTarget(target, _raze3Ability);
+            if (!MyHero.IsSilenced())
+            {
+                foreach (var razeAbility in _razeAbilities)
+                {
+                    await UseRazeOnTarget(target, razeAbility);
+                }
+            }
 
             // make him disabled
             if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)

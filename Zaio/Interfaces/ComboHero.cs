@@ -95,6 +95,8 @@ namespace Zaio.Interfaces
             _repeatCombo = repeatCombo;
         }
 
+        protected static int ItemDelay => 50;
+
         protected Unit Target
         {
             get { return _target; }
@@ -222,6 +224,14 @@ namespace Zaio.Interfaces
                 _comboTargetEffect.SetControlPoint(2, MyHero.NetworkPosition); //start point XYZ
                 _comboTargetEffect.SetControlPoint(7, _target.NetworkPosition); //end point XYZ  
             }
+
+            var prioritizeEvade = ZaioMenu.ShouldRespectEvader;
+
+            if (prioritizeEvade && !Utils.SleepCheck("Evader.Avoiding"))
+            {
+                Log.Debug($"abort because evade1");
+                Cancel();
+            }
         }
 
         protected async Task Sleep()
@@ -248,11 +258,20 @@ namespace Zaio.Interfaces
 
         protected override async Task Execute(CancellationToken token)
         {
+            var prioritizeEvade = ZaioMenu.ShouldRespectEvader;
+
             if (!ZaioMenu.ShouldLockTarget || Target == null || !Target.IsAlive)
             {
                 //Log.Debug($"Find new target");
                 // todo: more select0rs
                 Target = TargetSelector.ClosestToMouse(MyHero);
+
+                if (prioritizeEvade && !Utils.SleepCheck("Evader.Avoiding"))
+                {
+                    Log.Debug($"abort because evade2");
+                    return;
+                }
+
                 if (Target == null)
                 {
                     switch (ZaioMenu.NoTargetMode)
@@ -271,6 +290,13 @@ namespace Zaio.Interfaces
                     return;
                 }
             }
+
+            if (prioritizeEvade && !Utils.SleepCheck("Evader.Avoiding"))
+            {
+                Log.Debug($"abort because evade3");
+                return;
+            }
+
 
             try
             {
@@ -313,7 +339,7 @@ namespace Zaio.Interfaces
                 return true;
             }
 
-            if (ZaioMenu.ShouldUseBlinkDagger)
+            if (ZaioMenu.ShouldUseBlinkDagger && !MyHero.IsMuted())
             {
                 var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
                 if (blink != null && blink.CanBeCasted())
@@ -344,27 +370,36 @@ namespace Zaio.Interfaces
                 return true;
             }
 
-            if (ZaioMenu.ShouldUseBlinkDagger)
+            if (!MyHero.IsMuted())
             {
-                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
-                if (blink != null && blink.CanBeCasted())
+                if (ZaioMenu.ShouldUseBlinkDagger)
                 {
-                    var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
-                    if (distance <= blinkRange)
+                    var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+                    if (blink != null && blink.CanBeCasted())
                     {
-                        var pos = (target.NetworkPosition - MyHero.NetworkPosition).Normalized();
-                        pos *= minimumRange;
-                        pos = target.NetworkPosition - pos;
-                        blink.UseAbility(pos);
-                        await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000), tk);
-                        return false;
+                        var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
+                        if (distance <= blinkRange)
+                        {
+                            if (minimumRange == 0.0f)
+                            {
+                                minimumRange = MyHero.GetAttackRange() / 2;
+                            }
+
+                            var pos = (target.NetworkPosition - MyHero.NetworkPosition).Normalized();
+                            pos *= minimumRange;
+                            pos = target.NetworkPosition - pos;
+                            blink.UseAbility(pos);
+                            await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000) + ItemDelay, tk);
+                            return false;
+                        }
                     }
                 }
-            }
-            var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
-            if (phaseBoots != null && phaseBoots.CanBeCasted())
-            {
-                phaseBoots.UseAbility();
+                var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
+                if (phaseBoots != null && phaseBoots.CanBeCasted())
+                {
+                    phaseBoots.UseAbility();
+                    await Await.Delay(ItemDelay, tk);
+                }
             }
             if (ZaioMenu.ShouldUseOrbwalker)
             {
@@ -418,15 +453,18 @@ namespace Zaio.Interfaces
                 return DisabledState.AlreadyDisabled;
             }
 
-            foreach (var itemName in DisableItemList)
+            if (!MyHero.IsMuted())
             {
-                var item = MyHero.GetItemById(itemName);
-                if (item != null && item.CanBeCasted(Target) && item.CanHit(Target))
+                foreach (var itemName in DisableItemList)
                 {
-                    Log.Debug($"using disable item {item.Name}");
-                    item.UseAbility(Target);
-                    await Await.Delay(100, tk);
-                    return DisabledState.UsedAbilityToDisable;
+                    var item = MyHero.GetItemById(itemName);
+                    if (item != null && item.CanBeCasted(Target) && item.CanHit(Target))
+                    {
+                        Log.Debug($"using disable item {item.Name}");
+                        item.UseAbility(Target);
+                        await Await.Delay(ItemDelay, tk);
+                        return DisabledState.UsedAbilityToDisable;
+                    }
                 }
             }
             return DisabledState.NotDisabled;
@@ -456,6 +494,11 @@ namespace Zaio.Interfaces
 
         protected virtual async Task UseItems(CancellationToken tk = default(CancellationToken))
         {
+            if (MyHero.IsMuted())
+            {
+                return;
+            }
+
             foreach (var itemId in ItemList)
             {
                 var item = MyHero.GetItemById(itemId);
@@ -470,22 +513,19 @@ namespace Zaio.Interfaces
                         if (item.ID == (uint) ItemId.item_ethereal_blade)
                         {
                             var speed = item.GetAbilityData("projectile_speed");
-                            if (speed != 0.0f)
-                            {
-                                var time = Target.Distance2D(MyHero) / speed;
-                                await Await.Delay((int) (time * 1000.0f + Game.Ping) + 100, tk);
-                            }
+                            var time = Target.Distance2D(MyHero) / speed;
+                            await Await.Delay((int) (time * 1000.0f + Game.Ping) + ItemDelay, tk);
                         }
                     }
                     else if (item.AbilityBehavior.HasFlag(AbilityBehavior.Point))
                     {
                         item.UseAbility(Target.NetworkPosition);
-                        await Await.Delay(100, tk);
+                        await Await.Delay(ItemDelay, tk);
                     }
                     else if (item.AbilityBehavior.HasFlag(AbilityBehavior.NoTarget))
                     {
                         item.UseAbility();
-                        await Await.Delay(100, tk);
+                        await Await.Delay(ItemDelay, tk);
                     }
                 }
             }
@@ -493,7 +533,7 @@ namespace Zaio.Interfaces
 
         protected virtual async Task<bool> Killsteal()
         {
-            if (MyHero.UnitState.HasFlag(UnitState.Muted) || MyHero.IsStunned() || MyHero.IsHexed())
+            if (MyHero.IsMuted() || MyHero.IsStunned() || MyHero.IsHexed())
             {
                 return true;
             }
@@ -523,7 +563,8 @@ namespace Zaio.Interfaces
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && eth.CanBeCasted(x) && eth.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && eth.CanBeCasted(x) &&
+                                         eth.CanHit(x) &&
                                          !x.IsMagicImmune() &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
@@ -534,7 +575,7 @@ namespace Zaio.Interfaces
                     var time = enemy.Distance2D(MyHero) / speed;
                     Log.Debug($"killsteal for eth {time} with damage {damage} ({damage * (1 - enemy.MagicResistance())}");
                     eth.UseAbility(enemy);
-                    await Await.Delay((int) (time * 1000.0f + Game.Ping) + 100);
+                    await Await.Delay((int) (time * 1000.0f + Game.Ping) + ItemDelay);
                     return true;
                 }
             }
@@ -550,7 +591,8 @@ namespace Zaio.Interfaces
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .FirstOrDefault(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && dagon.CanBeCasted(x) && dagon.CanHit(x) &&
+                                         x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion && dagon.CanBeCasted(x) &&
+                                         dagon.CanHit(x) &&
                                          !x.IsMagicImmune() &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
@@ -559,7 +601,7 @@ namespace Zaio.Interfaces
                     Log.Debug(
                         $"killsteal dagon {index} damage: {damage} ({damage * (1 - enemy.MagicResistance())}) - {dagon.CastRange}");
                     dagon.UseAbility(enemy);
-                    await Await.Delay(125);
+                    await Await.Delay(ItemDelay);
                     return true;
                 }
             }
@@ -572,15 +614,17 @@ namespace Zaio.Interfaces
             {
                 return true;
             }
-
-            foreach (var itemId in LinkensItemList)
+            if (!MyHero.IsMuted())
             {
-                var item = MyHero.GetItemById(itemId);
-                if (item != null && item.CanBeCasted(target) && item.CanHit(target))
+                foreach (var itemId in LinkensItemList)
                 {
-                    item.UseAbility(target);
-                    await Await.Delay(100, tk);
-                    return true;
+                    var item = MyHero.GetItemById(itemId);
+                    if (item != null && item.CanBeCasted(target) && item.CanHit(target))
+                    {
+                        item.UseAbility(target);
+                        await Await.Delay(ItemDelay, tk);
+                        return true;
+                    }
                 }
             }
 
