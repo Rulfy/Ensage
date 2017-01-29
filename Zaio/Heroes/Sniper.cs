@@ -71,7 +71,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_ultAbility.CanBeCasted())
+            if (_ultAbility.CanBeCasted() && !IsEnemyNear())
             {
                 var hasAgha = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
                 if (hasAgha)
@@ -88,7 +88,7 @@ namespace Zaio.Heroes
                                              _ultAbility.CanHit(x) &&
                                              x.Health < damage * (1 - x.PhysicalResistance()) && !x.CantBeAttacked() &&
                                              !x.CantBeKilled());
-                    if (enemy != null && !IsEnemyNear())
+                    if (enemy != null)
                     {
                         Log.Debug(
                             $"use killsteal agha ult because enough damage {enemy.Health} <= {damage * (1 - enemy.PhysicalResistance())} ");
@@ -111,7 +111,7 @@ namespace Zaio.Heroes
                                              _ultAbility.CanHit(x) && !x.IsMagicImmune() && !x.IsLinkensProtected() &&
                                              x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
                                              !x.CantBeKilled());
-                    if (enemy != null && !IsEnemyNear(enemy))
+                    if (enemy != null)
                     {
                         Log.Debug(
                             $"use killsteal ult because enough damage {enemy.Health} <= {damage * (1 - enemy.MagicResistance())} ");

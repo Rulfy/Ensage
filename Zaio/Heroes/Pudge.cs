@@ -112,7 +112,7 @@ namespace Zaio.Heroes
 
         private void GameDispatcher_OnIngameUpdate(EventArgs args)
         {
-            if (!ShouldAutoDeny || !MyHero.IsAlive)
+            if (!ShouldAutoDeny || !MyHero.IsAlive || MyHero.IsSilenced())
             {
                 Await.Block("zaio.pudgeDenySleep", Sleep);
                 return;
@@ -213,7 +213,8 @@ namespace Zaio.Heroes
         {
             if (MyHero.IsChanneling() || MyHero.HasModifier("modifier_pudge_dismember"))
             {
-                if (_rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled && _rotAbility.CanHit(target))
+                if (!MyHero.IsSilenced() && _rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled &&
+                    _rotAbility.CanHit(target))
                 {
                     _rotAbility.ToggleAbility();
                     await Await.Delay(100, tk);
@@ -223,14 +224,14 @@ namespace Zaio.Heroes
 
             if (_hasHookModifier || target.HasModifier("modifier_pudge_meat_hook"))
             {
-                if (_rotAbility.CanBeCasted() && !_rotAbility.IsToggled)
+                if (!MyHero.IsSilenced() && _rotAbility.CanBeCasted() && !_rotAbility.IsToggled)
                 {
                     _rotAbility.ToggleAbility();
-                    await Await.Delay(100, tk);
+                    await Await.Delay(ItemDelay, tk);
                 }
                 if (await HasNoLinkens(target, tk) && _ultAbility.CanBeCasted(target))
                 {
-                    if (_ultAbility.CanHit(target))
+                    if (!MyHero.IsSilenced() && _ultAbility.CanHit(target))
                     {
                         _ultAbility.UseAbility(target);
                         await Await.Delay(GetAbilityDelay(target, _ultAbility) + 250, tk);
@@ -243,57 +244,60 @@ namespace Zaio.Heroes
                 return;
             }
 
-            if (_rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled && _rotAbility.CanHit(target))
+            if (!MyHero.IsSilenced())
             {
-                _rotAbility.ToggleAbility();
-                await Await.Delay(100, tk);
-            }
-
-            if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
-            {
-                if (_ultAbility.CanHit(target))
+                if (_rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled && _rotAbility.CanHit(target))
                 {
-                    _ultAbility.UseAbility(target);
-                    await Await.Delay(GetAbilityDelay(target, _ultAbility) + 250, tk);
-                    return;
+                    _rotAbility.ToggleAbility();
+                    await Await.Delay(100, tk);
                 }
-            }
 
-            if (_hookAbility.CanBeCasted(target) && _hookAbility.CanHit(target))
-            {
-                var speed = _hookAbility.GetAbilityData("hook_speed");
-                var radius = _hookAbility.GetAbilityData("hook_width") * 2;
-
-
-                var time = target.Distance2D(MyHero) / speed * 1000.0f;
-                var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time, true);
-                if (predictedPos != Vector3.Zero)
+                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
                 {
-                    var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, predictedPos, radius);
-
-                    // test for enemies in range
-                    var isUnitBlocking = ObjectManager.GetEntitiesParallel<Unit>()
-                                                      .Any(
-                                                          x =>
-                                                              x.IsValid && x != target && x.IsAlive && x != MyHero &&
-                                                              x.IsSpawned && x.IsRealUnit() &&
-                                                              x.Distance2D(target) >= radius &&
-                                                              rec.IsInside(x.NetworkPosition));
-                    if (!isUnitBlocking)
+                    if (_ultAbility.CanHit(target))
                     {
-                        Log.Debug($"using hook");
-                        _hookAbility.UseAbility(predictedPos);
-                        await Await.Delay(GetAbilityDelay(predictedPos, _hookAbility), tk);
+                        _ultAbility.UseAbility(target);
+                        await Await.Delay(GetAbilityDelay(target, _ultAbility) + 250, tk);
                         return;
                     }
-                    if (ShouldCircleHook)
+                }
+
+                if (_hookAbility.CanBeCasted(target) && _hookAbility.CanHit(target))
+                {
+                    var speed = _hookAbility.GetAbilityData("hook_speed");
+                    var radius = _hookAbility.GetAbilityData("hook_width") * 2;
+
+
+                    var time = target.Distance2D(MyHero) / speed * 1000.0f;
+                    var predictedPos = Prediction.Prediction.PredictPosition(target, (int) time, true);
+                    if (predictedPos != Vector3.Zero)
                     {
-                        //MyHero.Hold();
-                        var dir = (Game.MousePosition - target.NetworkPosition).Normalized();
-                        var distance = (target.NetworkPosition - MyHero.NetworkPosition).Length();
-                        var targetPos = target.NetworkPosition + dir * distance;
-                        MyHero.Move(Prediction.Prediction.PredictMyRoute(MyHero, 500, targetPos).Last());
-                        return;
+                        var rec = new Geometry.Polygon.Rectangle(MyHero.NetworkPosition, predictedPos, radius);
+
+                        // test for enemies in range
+                        var isUnitBlocking = ObjectManager.GetEntitiesParallel<Unit>()
+                                                          .Any(
+                                                              x =>
+                                                                  x.IsValid && x != target && x.IsAlive && x != MyHero &&
+                                                                  x.IsSpawned && x.IsRealUnit() &&
+                                                                  x.Distance2D(target) >= radius &&
+                                                                  rec.IsInside(x.NetworkPosition));
+                        if (!isUnitBlocking)
+                        {
+                            Log.Debug($"using hook");
+                            _hookAbility.UseAbility(predictedPos);
+                            await Await.Delay(GetAbilityDelay(predictedPos, _hookAbility), tk);
+                            return;
+                        }
+                        if (ShouldCircleHook)
+                        {
+                            //MyHero.Hold();
+                            var dir = (Game.MousePosition - target.NetworkPosition).Normalized();
+                            var distance = (target.NetworkPosition - MyHero.NetworkPosition).Length();
+                            var targetPos = target.NetworkPosition + dir * distance;
+                            MyHero.Move(Prediction.Prediction.PredictMyRoute(MyHero, 500, targetPos).Last());
+                            return;
+                        }
                     }
                 }
             }
