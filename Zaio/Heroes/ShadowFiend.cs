@@ -93,7 +93,7 @@ namespace Zaio.Heroes
                 if (ability == null || effect == null)
                 {
                     Await.Block("zaio.updateRazes", AsyncHelpers.AsyncSleep);
-                    continue;
+                    return;
                 }
                 var range = ability.GetAbilityData("shadowraze_range");
                 effect.SetControlPoint(0, MyHero.InFront(range));

@@ -57,7 +57,7 @@ namespace Zaio
                     ObjectManager.GetEntitiesParallel<Unit>()
                                  .Where(
                                      x =>
-                                         x.IsValid && x.IsAlive && !(x is Hero) && !(x is Building) && x.IsControllable &&
+                                         x.IsValid && x.IsAlive && !(x is Hero) && !(x is Building) && !(x is Courier) && x.IsControllable &&
                                          x.MoveCapability != MoveCapability.None && !_controlledUnits.ContainsKey(x));
                 foreach (var unit in units)
                 {
