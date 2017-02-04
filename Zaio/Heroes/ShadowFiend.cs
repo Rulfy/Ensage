@@ -124,6 +124,8 @@ namespace Zaio.Heroes
             {
                 for (var index = 0; index < _razeEffects.Length; index++)
                 {
+                    if (_razeEffects[index] == null)
+                        continue;
                     _razeEffects[index].Dispose();
                     _razeEffects[index] = null;
                 }
