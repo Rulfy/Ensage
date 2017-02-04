@@ -119,7 +119,7 @@ namespace Zaio.Heroes
                 return;
             }
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 if (!MyHero.IsSilenced() && _chargeAbility.CanBeCasted())
                 {
@@ -131,10 +131,10 @@ namespace Zaio.Heroes
                 return;
             }
             await HasNoLinkens(target, tk);
-            await UseItems(tk);
+            await UseItems(target, tk);
 
             // make him disabled
-            if (await DisableEnemy(tk, _ultAbility.CanBeCasted(target) ? GetAbilityDelay(target, _ultAbility) : 0) ==
+            if (await DisableEnemy(target, tk, _ultAbility.CanBeCasted(target) ? GetAbilityDelay(target, _ultAbility) : 0) ==
                 DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled enemy");

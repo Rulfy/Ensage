@@ -133,7 +133,7 @@ namespace Zaio.Heroes
                             }
                             else
                             {
-                                await MoveOrBlinkToEnemy(tk, 0.1f, 0.1f, tossSource);
+                                await MoveOrBlinkToEnemy(tossSource, tk, 0.1f, 0.1f);
                                 Log.Debug($"return because of blink");
                                 return;
                             }
@@ -164,7 +164,7 @@ namespace Zaio.Heroes
                         }
                         else
                         {
-                            await MoveOrBlinkToEnemy(tk, 0.1f, 0.1f, tossSource);
+                            await MoveOrBlinkToEnemy(tossSource, tk, 0.1f, 0.1f);
                             Log.Debug($"return because of blink");
                         }
                     }
@@ -184,10 +184,10 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             await HasNoLinkens(target, tk);
-            await UseItems(tk);
+            await UseItems(target, tk);
 
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
@@ -233,7 +233,7 @@ namespace Zaio.Heroes
             }
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 Log.Debug($"return because of blink");
                 return;

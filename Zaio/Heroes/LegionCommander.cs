@@ -161,7 +161,7 @@ namespace Zaio.Heroes
                 }
             }
 
-            await UseItems(tk);
+            await UseItems(target, tk);
 
             // press the attack for teh damage
             if (IsInRange(_duelAbility.GetCastRange()))
@@ -183,12 +183,12 @@ namespace Zaio.Heroes
                 }
             }
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 return;
             }
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;

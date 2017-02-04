@@ -16,6 +16,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using SpacebarToFarm;
 using Zaio.Helpers;
+using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
 using Attribute = Ensage.Attribute;
 
 namespace Zaio.Interfaces
@@ -94,6 +95,9 @@ namespace Zaio.Interfaces
         {
             _repeatCombo = repeatCombo;
         }
+
+        public Hero Hero => MyHero;
+        public Unit ComboTarget => Target;
 
         protected static int ItemDelay => 50;
 
@@ -207,7 +211,7 @@ namespace Zaio.Interfaces
             }
             else
             {
-                Await.Block("zaio.killstealerSleep", Sleep);
+                Await.Block("zaio.killstealerSleep", AsyncHelpers.AsyncSleep);
             }
 
             if (TotalAttackRange != _lastAttackRange)
@@ -234,10 +238,6 @@ namespace Zaio.Interfaces
             }
         }
 
-        protected async Task Sleep()
-        {
-            await Task.Delay(500);
-        }
 
         public virtual void OnClose()
         {
@@ -354,14 +354,8 @@ namespace Zaio.Interfaces
             return false;
         }
 
-        protected async Task<bool> MoveOrBlinkToEnemy(CancellationToken tk = default(CancellationToken),
-            float minimumRange = 0.0f, float maximumRange = 0.0f, Unit target = null)
+        protected async Task<bool> MoveOrBlinkToEnemy(Unit target, CancellationToken tk = default(CancellationToken), float minimumRange = 0.0f, float maximumRange = 0.0f)
         {
-            if (target == null)
-            {
-                target = Target;
-            }
-
             var distance = MyHero.Distance2D(target) - target.HullRadius - MyHero.HullRadius;
 
             var testRange = maximumRange == 0.0f ? MyHero.GetAttackRange() : maximumRange;
@@ -442,12 +436,11 @@ namespace Zaio.Interfaces
             }
         }
 
-        protected async Task<DisabledState> DisableEnemy(CancellationToken tk = default(CancellationToken),
-            float minimumTime = 0)
+        protected async Task<DisabledState> DisableEnemy(Unit target, CancellationToken tk = default(CancellationToken), float minimumTime = 0)
         {
             // make him disabled
             float duration = 0;
-            if ((Target.IsHexed(out duration) || Target.IsStunned(out duration) || Target.IsSilenced() ||
+            if ((target.IsHexed(out duration) || target.IsStunned(out duration) || target.IsSilenced() ||
                  Target.IsDisarmed()) && duration >= minimumTime)
             {
                 return DisabledState.AlreadyDisabled;
@@ -458,10 +451,10 @@ namespace Zaio.Interfaces
                 foreach (var itemName in DisableItemList)
                 {
                     var item = MyHero.GetItemById(itemName);
-                    if (item != null && item.CanBeCasted(Target) && item.CanHit(Target))
+                    if (item != null && item.CanBeCasted(target) && item.CanHit(target))
                     {
                         Log.Debug($"using disable item {item.Name}");
-                        item.UseAbility(Target);
+                        item.UseAbility(target);
                         await Await.Delay(ItemDelay, tk);
                         return DisabledState.UsedAbilityToDisable;
                     }
@@ -492,7 +485,7 @@ namespace Zaio.Interfaces
             return spellAmp;
         }
 
-        protected virtual async Task UseItems(CancellationToken tk = default(CancellationToken))
+        protected virtual async Task UseItems(Unit target, CancellationToken tk = default(CancellationToken))
         {
             if (MyHero.IsMuted())
             {

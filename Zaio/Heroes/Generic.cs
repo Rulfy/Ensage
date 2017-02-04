@@ -16,10 +16,10 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            await UseItems(tk);
+            await UseItems(target, tk);
 
             // make him disabled
-            await DisableEnemy(tk);
+            await DisableEnemy(target, tk);
 
             if (ZaioMenu.ShouldUseOrbwalker)
             {

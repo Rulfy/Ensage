@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -10,7 +9,6 @@ using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
-using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
 
@@ -34,8 +32,8 @@ namespace Zaio.Heroes
         };
 
         private Ability _stormboltAbility;
-        private Ability _warcryAbility;
         private Ability _ultAbility;
+        private Ability _warcryAbility;
 
         public override void OnLoad()
         {
@@ -74,7 +72,6 @@ namespace Zaio.Heroes
 
             if (_stormboltAbility.CanBeCasted())
             {
-
                 var damage = (float) _stormboltAbility.GetDamage(_stormboltAbility.Level - 1);
                 damage *= GetSpellAmp();
 
@@ -88,67 +85,65 @@ namespace Zaio.Heroes
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
                 if (enemy != null)
-                    {
-                        Log.Debug(
-                            $"use killsteal stormbolt because enough damage {enemy.Health} <= {damage * (1 - enemy.MagicResistance())} ");
-                        _stormboltAbility.UseAbility(enemy);
-                        await Await.Delay(GetAbilityDelay(enemy, _stormboltAbility));
-                        return true;
-                    }
-                
+                {
+                    Log.Debug(
+                        $"use killsteal stormbolt because enough damage {enemy.Health} <= {damage * (1 - enemy.MagicResistance())} ");
+                    _stormboltAbility.UseAbility(enemy);
+                    await Await.Delay(GetAbilityDelay(enemy, _stormboltAbility));
+                    return true;
+                }
             }
 
             return false;
         }
 
 
-
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             await HasNoLinkens(target, tk);
-            await UseItems(tk);
+            await UseItems(target, tk);
 
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
             }
 
             if (!MyHero.IsSilenced())
             {
-               if (_stormboltAbility.CanBeCasted(target) && _stormboltAbility.CanHit(target))
+                if (_stormboltAbility.CanBeCasted(target) && _stormboltAbility.CanHit(target))
                 {
                     _stormboltAbility.UseAbility(target);
                     Log.Debug($"stormbolt used");
                     await Await.Delay((int) (_stormboltAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
-                 }
+                }
 
                 if (MyHero.Distance2D(target) <= 400)
                 {
-                if (_warcryAbility.CanBeCasted())
+                    if (_warcryAbility.CanBeCasted())
                     {
-                    _warcryAbility.UseAbility();
-                    Log.Debug($"warcry used");
-                    await Await.Delay(100, tk);
+                        _warcryAbility.UseAbility();
+                        Log.Debug($"warcry used");
+                        await Await.Delay(100, tk);
                     }
 
-                if (_ultAbility.CanBeCasted())
-                {
-                    Log.Debug($"use ult");
-                    _ultAbility.UseAbility();
-                    await Await.Delay(100, tk);
+                    if (_ultAbility.CanBeCasted())
+                    {
+                        Log.Debug($"use ult");
+                        _ultAbility.UseAbility();
+                        await Await.Delay(100, tk);
                     }
                 }
             }
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 Log.Debug($"return because of blink");
                 return;
             }
             //cast mom if all of our skills are on cooldown
             var mom = MyHero.GetItemById(ItemId.item_mask_of_madness);
-            if (mom != null && MyHero.CanAttack() && !_stormboltAbility.CanBeCasted() && 
+            if (mom != null && MyHero.CanAttack() && !_stormboltAbility.CanBeCasted() &&
                 !_warcryAbility.CanBeCasted() && !_ultAbility.CanBeCasted() && mom.CanBeCasted())
             {
                 Log.Debug($"Use mom");

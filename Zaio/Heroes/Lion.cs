@@ -139,7 +139,7 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            await UseItems(tk);
+            await UseItems(target, tk);
 
             if (!MyHero.IsSilenced() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
                 await HasNoLinkens(target, tk))
@@ -158,7 +158,7 @@ namespace Zaio.Heroes
             }
 
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
@@ -181,7 +181,7 @@ namespace Zaio.Heroes
                             await Await.Delay(GetAbilityDelay(target, hex), tk);
                             return;
                         }
-                        if (!await MoveOrBlinkToEnemy(tk, 250, hex.GetCastRange()))
+                        if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 250, maximumRange: hex.GetCastRange()))
                         {
                             Log.Debug($"return because of blink and hex ready");
                             return;
@@ -208,7 +208,7 @@ namespace Zaio.Heroes
                         }
                         else
                         {
-                            if (!await MoveOrBlinkToEnemy(tk, 250, _stunAbility.GetCastRange()))
+                            if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 250, maximumRange: _stunAbility.GetCastRange()))
                             {
                                 Log.Debug($"return because of blink and stun ready");
                                 return;
@@ -246,7 +246,7 @@ namespace Zaio.Heroes
             }
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk, 200, maxRange))
+            if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 200, maximumRange: maxRange))
             {
                 Log.Debug($"return because of blink");
                 return;

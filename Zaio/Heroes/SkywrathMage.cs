@@ -71,13 +71,13 @@ namespace Zaio.Heroes
             }
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk, 200, 700))
+            if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 200, maximumRange: 700))
             {
                 return;
             }
             await HasNoLinkens(target, tk);
-            await UseItems(tk);
-            await DisableEnemy(tk);
+            await UseItems(target, tk);
+            await DisableEnemy(target, tk);
 
             if (!MyHero.IsSilenced())
             {

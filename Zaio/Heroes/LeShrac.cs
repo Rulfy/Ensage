@@ -110,7 +110,7 @@ namespace Zaio.Heroes
                                 return;
                             }
                             // check if we are near the enemy
-                            if (!await MoveOrBlinkToEnemy(tk, 250, euls.GetCastRange()))
+                            if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 250, maximumRange: euls.GetCastRange()))
                             {
                                 Log.Debug($"return because of blink and euls ready");
                                 return;
@@ -135,10 +135,10 @@ namespace Zaio.Heroes
                 }
             }
 
-            await UseItems(tk);
+            await UseItems(target, tk);
 
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
@@ -169,7 +169,7 @@ namespace Zaio.Heroes
             }
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 Log.Debug($"return because of blink");
                 return;

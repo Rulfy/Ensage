@@ -13,6 +13,7 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
 
 namespace Zaio.Heroes
 {
@@ -111,7 +112,7 @@ namespace Zaio.Heroes
                         hero.MagicResistance());
                 }
             }
-            Await.Block("zaio.zuusVisibilityInfo", Sleep);
+            Await.Block("zaio.zuusVisibilityInfo", AsyncHelpers.AsyncSleep);
         }
 
 
@@ -259,8 +260,8 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             await HasNoLinkens(target, tk);
-            await UseItems(tk);
-            await DisableEnemy(tk);
+            await UseItems(target, tk);
+            await DisableEnemy(target, tk);
 
             if (!MyHero.IsSilenced())
             {
@@ -281,7 +282,7 @@ namespace Zaio.Heroes
 
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 Log.Debug($"return because of blink");
                 return;

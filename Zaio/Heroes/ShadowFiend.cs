@@ -13,6 +13,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
 
 namespace Zaio.Heroes
 {
@@ -34,11 +35,11 @@ namespace Zaio.Heroes
             "nevermore_shadowraze1"
         };
 
-        private MenuItem _drawRazesItem;
-
         private readonly Ability[] _razeAbilities = new Ability[3];
 
         private readonly ParticleEffect[] _razeEffects = new ParticleEffect[3];
+
+        private MenuItem _drawRazesItem;
         private Ability _ultAbility;
         private bool ShouldDrawRazes => _drawRazesItem.GetValue<bool>();
 
@@ -91,7 +92,7 @@ namespace Zaio.Heroes
                 var effect = _razeEffects[index];
                 if (ability == null || effect == null)
                 {
-                    Await.Block("zaio.updateRazes", Sleep);
+                    Await.Block("zaio.updateRazes", AsyncHelpers.AsyncSleep);
                     continue;
                 }
                 var range = ability.GetAbilityData("shadowraze_range");
@@ -275,7 +276,7 @@ namespace Zaio.Heroes
                     return;
                 }
                 // check if we are near the enemy
-                if (!await MoveOrBlinkToEnemy(tk, 0.1f, euls.GetCastRange()))
+                if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 0.1f, maximumRange: euls.GetCastRange()))
                 {
                     Log.Debug($"return because of blink and euls ready");
                     return;
@@ -284,7 +285,7 @@ namespace Zaio.Heroes
 
 
             await HasNoLinkens(target, tk);
-            await UseItems(tk);
+            await UseItems(target, tk);
 
             if (!MyHero.IsSilenced())
             {
@@ -295,14 +296,14 @@ namespace Zaio.Heroes
             }
 
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
             }
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 Log.Debug($"return because of blink");
                 return;

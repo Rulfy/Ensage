@@ -74,5 +74,16 @@ namespace Zaio.Helpers
         {
             return unit.UnitState.HasFlag(UnitState.Muted);
         }
+
+        public static bool IsAttacking(this Unit unit, Unit target)
+        {
+            return unit.FindRelativeAngle(target.NetworkPosition) < 0.22 &&
+                   unit.UnitDistance2D(target) <= unit.GetAttackRange();
+        }
+
+        public static float UnitDistance2D(this Unit unit, Unit other)
+        {
+            return unit.Distance2D(other) - unit.HullRadius - other.HullRadius;
+        }
     }
 }

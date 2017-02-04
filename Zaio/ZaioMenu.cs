@@ -25,13 +25,21 @@ namespace Zaio
         Attack
     }
 
+    public enum ActiveControlMode
+    {
+        None,
+        Auto,
+        Follow,
+        AttackComboTarget
+    }
+
     public class ZaioMenu
     {
         private static Menu _menu;
 
         private static Menu _heroSettings;
 
-        private static MenuItem _comboKey;
+        // general
         private static MenuItem _orbwalker;
         private static MenuItem _targetSelector;
         private static MenuItem _displayAttackRange;
@@ -42,6 +50,15 @@ namespace Zaio
         private static MenuItem _blockKillSteal;
         private static MenuItem _shouldUseBlinkDagger;
         private static MenuItem _shouldRespectEvader;
+
+        // creep
+        private static MenuItem _creepControlMode;
+        private static MenuItem _selectionOverrideControlMode;
+        private static MenuItem _autoUnaggroTowers;
+        private static MenuItem _autoUnaggroCreeps;
+
+        // hotkeys
+        private static MenuItem _comboKey;
 
         public static Key ComboKey => KeyInterop.KeyFromVirtualKey((int) _comboKey.GetValue<KeyBind>().Key);
         public static bool ShouldUseOrbwalker => _orbwalker.GetValue<bool>();
@@ -54,6 +71,11 @@ namespace Zaio
         public static NoTargetMode NoTargetMode { get; private set; }
 
         public static OrbwalkerMode OrbwalkerMode { get; private set; }
+
+        public static ActiveControlMode ActiveControlMode { get; private set; }
+        public static bool SelectionOverridesControlMode => _selectionOverrideControlMode.GetValue<bool>();
+        public static bool AutoUnaggroTowers => _autoUnaggroTowers.GetValue<bool>();
+        public static bool AutoUnaggroCreeps => _autoUnaggroCreeps.GetValue<bool>();
 
         public static event EventHandler<BoolEventArgs> DisplayAttackRangeChanged;
         public static event EventHandler<KeyEventArgs> ComboKeyChanged;
@@ -105,7 +127,7 @@ namespace Zaio
             general.AddItem(_targetSelector);
 
             _noTargetMode = new MenuItem("zaioNoTargetMode", "No Target Mode");
-            _noTargetMode.SetValue(new StringList(new[] {"None", "Move", "AttackMove"}));
+            _noTargetMode.SetValue(new StringList(new[] {"Move", "None", "AttackMove"}));
             _noTargetMode.ValueChanged += _noTargetMode_ValueChanged;
             _noTargetMode.Tooltip = "Controls what happens when no target is found.";
             general.AddItem(_noTargetMode);
@@ -121,6 +143,31 @@ namespace Zaio
             _menu.AddSubMenu(general);
 
             // ###########
+            var control = new Menu("Control", "zaioControl");
+
+            _selectionOverrideControlMode =
+                new MenuItem("zaioSelectionControlMode", "Selection Overrides Control Mode").SetValue(true);
+            _selectionOverrideControlMode.Tooltip = "Units currently selected won't be controlled by ZAIO.";
+            control.AddItem(_selectionOverrideControlMode);
+
+            _autoUnaggroTowers = new MenuItem("zaioAutoUnaggroTowers", "Auto Unaggro Towers").SetValue(true);
+            _autoUnaggroTowers.Tooltip = "If you get aggroed by a tower, it will automatically unaggro if possible.";
+            control.AddItem(_autoUnaggroTowers);
+
+            _autoUnaggroCreeps = new MenuItem("zaioAutoUnaggroCreeps", "Auto Unaggro Creeps").SetValue(false);
+            _autoUnaggroCreeps.Tooltip = "If you get aggroed by creeps, it will automatically unaggro if possible.";
+            control.AddItem(_autoUnaggroCreeps);
+
+            _creepControlMode = new MenuItem("zaioCreepControlMode", "Creep Control Mode");
+            _creepControlMode.SetValue(new StringList(new[] {"Auto", "None", "Combo Target", "Follow"}));
+            _creepControlMode.Tooltip = "Controls all units which are not your hero.";
+            _creepControlMode.ValueChanged += _creepControlMode_ValueChanged;
+            control.AddItem(_creepControlMode);
+            SetCreepControlMode(_creepControlMode.GetValue<StringList>().SelectedValue);
+
+            _menu.AddSubMenu(control);
+
+            // ###########
             var hotkeys = new Menu("Hotkeys", "zaioHotkeys");
 
             _comboKey = new MenuItem("zaioCombo", "Combo").SetValue(new KeyBind(0, KeyBindType.Press));
@@ -134,19 +181,43 @@ namespace Zaio
             _menu.AddToMainMenu();
         }
 
+        private static void _creepControlMode_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            SetCreepControlMode(e.GetNewValue<StringList>().SelectedValue);
+        }
+
         private static void SetOrbwalkerMode(string value)
         {
-            if (value == "Mouse Position")
+            switch (value)
             {
-                OrbwalkerMode = OrbwalkerMode.Mouse;
+                case "Mouse Position":
+                    OrbwalkerMode = OrbwalkerMode.Mouse;
+                    break;
+                case "Target Position":
+                    OrbwalkerMode = OrbwalkerMode.Target;
+                    break;
+                case "Simple Attack":
+                    OrbwalkerMode = OrbwalkerMode.Attack;
+                    break;
             }
-            else if (value == "Target Position")
+        }
+
+        private static void SetCreepControlMode(string value)
+        {
+            switch (value)
             {
-                OrbwalkerMode = OrbwalkerMode.Target;
-            }
-            else if (value == "Simple Attack")
-            {
-                OrbwalkerMode = OrbwalkerMode.Attack;
+                case "None":
+                    ActiveControlMode = ActiveControlMode.None;
+                    break;
+                case "Auto":
+                    ActiveControlMode = ActiveControlMode.Auto;
+                    break;
+                case "Follow":
+                    ActiveControlMode = ActiveControlMode.Follow;
+                    break;
+                case "Combo Target":
+                    ActiveControlMode = ActiveControlMode.AttackComboTarget;
+                    break;
             }
         }
 

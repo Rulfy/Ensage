@@ -140,10 +140,10 @@ namespace Zaio.Heroes
                 if (manaNeeded <= MyHero.Mana)
                 {
                     await HasNoLinkens(target, tk);
-                    await UseItems(tk);
+                    await UseItems(target, tk);
 
                     // make him disabled
-                    if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+                    if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
                     {
                         Log.Debug($"disabled!");
                         // return;
@@ -176,7 +176,7 @@ namespace Zaio.Heroes
 
             // check if we are near the enemy
 
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 if (!MyHero.IsSilenced() && _ultAbility.CanBeCasted() &&
                     !MyHero.HasModifier("modifier_nyx_assassin_vendetta"))

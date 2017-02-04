@@ -14,6 +14,7 @@ using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
 using Zaio.Prediction;
+using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
 
 namespace Zaio.Heroes
 {
@@ -114,7 +115,7 @@ namespace Zaio.Heroes
         {
             if (!ShouldAutoDeny || !MyHero.IsAlive || MyHero.IsSilenced())
             {
-                Await.Block("zaio.pudgeDenySleep", Sleep);
+                Await.Block("zaio.pudgeDenySleep", AsyncHelpers.AsyncSleep);
                 return;
             }
 
@@ -134,7 +135,7 @@ namespace Zaio.Heroes
                     Log.Debug($"Using rot to deny {MyHero.Health} < {damage * (1 - MyHero.MagicResistance())}!!");
 
                     _rotAbility.ToggleAbility();
-                    Await.Block("zaio.pudgeDenySleep", Sleep);
+                    Await.Block("zaio.pudgeDenySleep", AsyncHelpers.AsyncSleep);
                 }
             }
         }
@@ -302,17 +303,17 @@ namespace Zaio.Heroes
                 }
             }
 
-            await UseItems(tk);
+            await UseItems(target, tk);
 
             // make him disabled
-            if (await DisableEnemy(tk) == DisabledState.UsedAbilityToDisable)
+            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
             {
                 Log.Debug($"disabled!");
                 // return;
             }
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(tk))
+            if (!await MoveOrBlinkToEnemy(target, tk))
             {
                 Log.Debug($"return because of blink");
                 return;
