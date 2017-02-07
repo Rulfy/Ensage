@@ -8,6 +8,8 @@ namespace Zaio
     public enum TargetSelectorMode
     {
         NearestToMouse,
+        BestAutoAttackTarget,
+        HighestHealth,
         Auto
     }
 
@@ -71,6 +73,7 @@ namespace Zaio
         public static NoTargetMode NoTargetMode { get; private set; }
 
         public static OrbwalkerMode OrbwalkerMode { get; private set; }
+        public static TargetSelectorMode TargetSelectorMode { get; private set; }
 
         public static ActiveControlMode ActiveControlMode { get; private set; }
         public static bool SelectionOverridesControlMode => _selectionOverrideControlMode.GetValue<bool>();
@@ -123,8 +126,10 @@ namespace Zaio
 
             _targetSelector =
                 new MenuItem("zaioTargetSelector", "Target Selector").SetValue(
-                    new StringList(new[] {"Closest to mouse" /*, "Auto"*/}));
+                    new StringList(new[] {"Closest to mouse", "Best autoattack target", "Highest Health" /*, "Auto"*/}));
+            _targetSelector.ValueChanged += _targetSelector_ValueChanged;
             general.AddItem(_targetSelector);
+            SetTargetSelectorMode(_targetSelector.GetValue<StringList>().SelectedValue);
 
             _noTargetMode = new MenuItem("zaioNoTargetMode", "No Target Mode");
             _noTargetMode.SetValue(new StringList(new[] {"Move", "None", "AttackMove"}));
@@ -181,6 +186,11 @@ namespace Zaio
             _menu.AddToMainMenu();
         }
 
+        private static void _targetSelector_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            SetTargetSelectorMode(e.GetNewValue<StringList>().SelectedValue);
+        }
+
         private static void _creepControlMode_ValueChanged(object sender, OnValueChangeEventArgs e)
         {
             SetCreepControlMode(e.GetNewValue<StringList>().SelectedValue);
@@ -198,6 +208,22 @@ namespace Zaio
                     break;
                 case "Simple Attack":
                     OrbwalkerMode = OrbwalkerMode.Attack;
+                    break;
+            }
+        }
+
+        private static void SetTargetSelectorMode(string value)
+        {
+            switch (value) // "Closest to mouse", "Best autoattack target", "Highest Health"
+            {
+                case "Closest to mouse":
+                    TargetSelectorMode = TargetSelectorMode.NearestToMouse;
+                    break;
+                case "Best autoattack target":
+                    TargetSelectorMode = TargetSelectorMode.BestAutoAttackTarget;
+                    break;
+                case "Highest Health":
+                    TargetSelectorMode = TargetSelectorMode.HighestHealth;
                     break;
             }
         }

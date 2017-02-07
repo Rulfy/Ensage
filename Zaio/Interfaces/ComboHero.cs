@@ -264,7 +264,19 @@ namespace Zaio.Interfaces
             {
                 //Log.Debug($"Find new target");
                 // todo: more select0rs
-                Target = TargetSelector.ClosestToMouse(MyHero);
+                switch (ZaioMenu.TargetSelectorMode)
+                {
+                    case TargetSelectorMode.NearestToMouse:
+                        Target = TargetSelector.ClosestToMouse(MyHero);
+                        break;
+                    case TargetSelectorMode.BestAutoAttackTarget:
+                        Target = TargetSelector.BestAutoAttackTarget(MyHero);
+                        break;
+                    case TargetSelectorMode.HighestHealth:
+                        Target = TargetSelector.HighestHealthPointsTarget(MyHero, 1000);
+                        break;
+                }
+               
 
                 if (prioritizeEvade && !Utils.SleepCheck("Evader.Avoiding"))
                 {
@@ -388,6 +400,37 @@ namespace Zaio.Interfaces
                         }
                     }
                 }
+                var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
+                if (phaseBoots != null && phaseBoots.CanBeCasted())
+                {
+                    phaseBoots.UseAbility();
+                    await Await.Delay(ItemDelay, tk);
+                }
+            }
+            if (ZaioMenu.ShouldUseOrbwalker)
+            {
+                Orbwalk();
+            }
+            else
+            {
+                MyHero.Attack(target);
+                await Await.Delay(125, tk);
+            }
+            return false;
+        }
+
+        protected async Task<bool> MoveToEnemy(Unit target, CancellationToken tk = default(CancellationToken), float minimumRange = 0.0f, float maximumRange = 0.0f)
+        {
+            var distance = MyHero.Distance2D(target) - target.HullRadius - MyHero.HullRadius;
+
+            var testRange = maximumRange == 0.0f ? MyHero.GetAttackRange() : maximumRange;
+            if (distance <= testRange)
+            {
+                return true;
+            }
+
+            if (!MyHero.IsMuted())
+            {
                 var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
                 if (phaseBoots != null && phaseBoots.CanBeCasted())
                 {

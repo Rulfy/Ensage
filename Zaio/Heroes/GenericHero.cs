@@ -10,7 +10,7 @@ using Zaio.Interfaces;
 namespace Zaio.Heroes
 {
     // Pseudo class used for all heroes which are not officially supported
-    internal class Generic : ComboHero
+    internal class GenericHero : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 

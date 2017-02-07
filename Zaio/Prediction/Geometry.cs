@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ClipperLib;
 using Ensage;
+using Ensage.Common.Extensions.SharpDX;
 using SharpDX;
 
 namespace Zaio.Prediction
@@ -1175,11 +1176,11 @@ namespace Zaio.Prediction
         /// </summary>
         /// <param name="v">The vector.</param>
         /// <returns></returns>
-        public static Vector3 Normalized(this Vector3 v)
-        {
-            v.Normalize();
-            return v;
-        }
+        //public static Vector3 Normalized(this Vector3 v)
+        //{
+        //    v.Normalize();
+        //    return v;
+        //}
 
         /// <summary>
         ///     Returns the total distance of a path.

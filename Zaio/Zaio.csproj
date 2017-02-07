@@ -67,6 +67,7 @@
     <Compile Include="Helpers\KeyEventArgs.cs" />
     <Compile Include="Helpers\BoolEventArgs.cs" />
     <Compile Include="Helpers\MyAbilityExtension.cs" />
+    <Compile Include="Heroes\Windranger.cs" />
     <Compile Include="Heroes\Sven.cs" />
     <Compile Include="Heroes\Zeus.cs" />
     <Compile Include="Heroes\Slark.cs" />
@@ -80,7 +81,7 @@
     <Compile Include="Helpers\HeroAttribute.cs" />
     <Compile Include="Helpers\MyUnitExtension.cs" />
     <Compile Include="Heroes\Clockwork.cs" />
-    <Compile Include="Heroes\Generic.cs" />
+    <Compile Include="Heroes\GenericHero.cs" />
     <Compile Include="Heroes\LegionCommander.cs" />
     <Compile Include="Heroes\Jakiro.cs" />
     <Compile Include="Heroes\Lina.cs" />

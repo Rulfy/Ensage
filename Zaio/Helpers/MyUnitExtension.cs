@@ -85,5 +85,15 @@ namespace Zaio.Helpers
         {
             return unit.Distance2D(other) - unit.HullRadius - other.HullRadius;
         }
+
+        public static bool IsDisabled(this Unit unit)
+        {
+            return unit.IsStunned() || unit.IsHexed() || unit.IsRooted();
+        }
+
+        public static bool IsDisabled(this Unit unit, out float duration)
+        {
+            return unit.IsStunned(out duration) || unit.IsHexed(out duration) || unit.IsRooted(out duration);
+        }
     }
 }

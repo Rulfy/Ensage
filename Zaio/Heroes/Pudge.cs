@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
@@ -153,7 +154,7 @@ namespace Zaio.Heroes
             }
 
 
-            if (Target != null)
+            if (Target != null || MyHero.IsChanneling())
             {
                 return false;
             }
@@ -170,7 +171,7 @@ namespace Zaio.Heroes
                                  .Where(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && _hookAbility.CanBeCasted(x) &&
-                                         _hookAbility.CanHit(x) &&
+                                         _hookAbility.CanHit(x) && !x.IsIllusion &&
                                          x.Health < damage && !x.CantBeAttacked() &&
                                          !x.CantBeKilled());
 
@@ -193,7 +194,6 @@ namespace Zaio.Heroes
                                                       .Any(
                                                           x =>
                                                               x.IsValid && x != enemy && x.IsAlive && x != MyHero &&
-                                                              !x.IsIllusion &&
                                                               x.IsSpawned && x.IsRealUnit() &&
                                                               x.Distance2D(enemy) >= radius &&
                                                               rec.IsInside(x.NetworkPosition));
@@ -280,7 +280,7 @@ namespace Zaio.Heroes
                                                           .Any(
                                                               x =>
                                                                   x.IsValid && x != target && x.IsAlive && x != MyHero &&
-                                                                  x.IsSpawned && x.IsRealUnit() &&
+                                                                  x.IsSpawned && x.IsRealUnit() && !x.IsIllusion &&
                                                                   x.Distance2D(target) >= radius &&
                                                                   rec.IsInside(x.NetworkPosition));
                         if (!isUnitBlocking)

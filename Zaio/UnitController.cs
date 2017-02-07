@@ -19,12 +19,15 @@ namespace Zaio.Interfaces
         private readonly float _auraRadius;
         private readonly ComboHero _myHero;
         private float _lastAttackingTime;
+        private readonly bool _isNecroUnit;
 
         public UnitController(ComboHero myHero, Unit unit)
         {
             ControlledUnit = unit;
             _myHero = myHero;
 
+            // npc_dota_necronomicon_warrior_1 || npc_dota_necronomicon_archer_1
+            _isNecroUnit = ControlledUnit.Name.StartsWith("npc_dota_necronomicon_");
 
             var spells =
                 ControlledUnit.Spellbook.Spells.Where(
@@ -129,7 +132,7 @@ namespace Zaio.Interfaces
             var healthPerc = (float) ControlledUnit.Health / ControlledUnit.MaximumHealth;
             var time = Game.RawGameTime;
 
-            if (_aura != null && (healthPerc <= 0.25f || !HasActiveSkill))
+            if (_aura != null && !_isNecroUnit && (healthPerc <= 0.25f || !HasActiveSkill))
             {
                 await Follow();
                 return;

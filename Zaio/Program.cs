@@ -13,8 +13,8 @@ using SharpDX;
 using Zaio.Helpers;
 using Zaio.Heroes;
 using Zaio.Interfaces;
-using Zaio.Prediction;
 using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
+using Ensage.Common.Extensions.SharpDX;
 
 namespace Zaio
 {
@@ -31,7 +31,7 @@ namespace Zaio
             Events.OnClose += Events_OnClose;
             Drawing.OnDraw += Drawing_OnDraw;
 
-            //  Game.OnIngameUpdate += Game_OnIngameUpdate;
+           // Game.OnIngameUpdate += Game_OnIngameUpdate;
             // ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
         }
 
@@ -57,7 +57,8 @@ namespace Zaio
                     ObjectManager.GetEntitiesParallel<Unit>()
                                  .Where(
                                      x =>
-                                         x.IsValid && x.IsAlive && !(x is Hero) && !(x is Building) && !(x is Courier) && x.IsControllable &&
+                                         x.IsValid && x.IsAlive && !(x is Hero) && !(x is Building) && !(x is Courier) && 
+                                         x.ClassID != ClassID.CDOTA_Unit_Hero_Beastmaster_Hawk && x.IsControllable &&
                                          x.MoveCapability != MoveCapability.None && !_controlledUnits.ContainsKey(x));
                 foreach (var unit in units)
                 {
@@ -87,7 +88,7 @@ namespace Zaio
             }
             if ((ZaioMenu.ShouldRespectEvader && !Utils.SleepCheck("Evader.Avoiding")) || _currentHero.ComboTarget != null)
             {
-                Log.Debug($"abort unaggro because evade or in combo mode");
+                //Log.Debug($"abort unaggro because evade or in combo mode");
                 return;
             }
             var autoUnaggroTowers = ZaioMenu.AutoUnaggroTowers;
@@ -172,10 +173,10 @@ namespace Zaio
 
             //Console.WriteLine(hero.IsMagicImmune());
 
-            //foreach (var heroModifier in hero.Modifiers)
-            //{
-            //    Console.WriteLine(heroModifier.Name);
-            //}
+            foreach (var heroModifier in hero.Modifiers)
+            {
+                Console.WriteLine(heroModifier.Name);
+            }
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -216,19 +217,26 @@ namespace Zaio
                         {
                             Log.Debug($"Found hero.. activating!");
                             _currentHero = (ComboHero) Activator.CreateInstance(type);
-                            _currentHero.OnLoad();
-                            _currentHero.Activate();
-
-                            GameDispatcher.OnIngameUpdate += OnIngameUpdate;
-                            return;
+                            break;
                         }
                     }
                 }
-                Game.PrintMessage(
+                
+                if (_currentHero == null)
+                {
+                    _currentHero = new GenericHero();
+                    Game.PrintMessage(
                     $"Zaio: <font color='#FF1133'>The abilities of {Game.Localize(hero.Name)} are not supported!</font> But items and orbwalking will still work.");
-                _currentHero = new Generic();
+                }
+            
                 _currentHero.OnLoad();
                 _currentHero.Activate();
+
+                if (ZaioMenu.ActiveControlMode != ActiveControlMode.None)
+                {
+                    Game.PrintMessage(
+                   $"Zaio: Unit control mode <font color='#FF1133'>{ZaioMenu.ActiveControlMode}</font> is enabled!");
+                }
 
                 GameDispatcher.OnIngameUpdate += OnIngameUpdate;
             }

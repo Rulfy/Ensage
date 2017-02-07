@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
