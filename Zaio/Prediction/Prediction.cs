@@ -50,7 +50,7 @@ namespace Zaio.Prediction
 
             foreach (var f in lastValue.Value)
             {
-                Log.Debug($"diff {Math.Abs(target.Rotation - f)}");
+                //Log.Debug($"diff {Math.Abs(target.Rotation - f)}");
                 if (Math.Abs(target.Rotation - f) > 15.0f)
                 {
                     return true;

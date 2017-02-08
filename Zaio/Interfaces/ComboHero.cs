@@ -34,6 +34,7 @@ namespace Zaio.Interfaces
 
         private readonly bool _repeatCombo;
 
+        public EventHandler<EntityEventArgs> NewTargetAcquired;
 
         protected readonly ItemId[] DisableItemList =
         {
@@ -264,6 +265,7 @@ namespace Zaio.Interfaces
             {
                 //Log.Debug($"Find new target");
                 // todo: more select0rs
+                var oldTarget = Target;
                 switch (ZaioMenu.TargetSelectorMode)
                 {
                     case TargetSelectorMode.NearestToMouse:
@@ -282,6 +284,11 @@ namespace Zaio.Interfaces
                 {
                     Log.Debug($"abort because evade2");
                     return;
+                }
+
+                if (oldTarget != Target)
+                {
+                    NewTargetAcquired?.Invoke(this, new EntityEventArgs(Target));
                 }
 
                 if (Target == null)

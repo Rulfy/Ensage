@@ -41,6 +41,9 @@ namespace Zaio.Heroes
         private Ability _powerShotAbility;
         private Ability _ultAbility;
 
+        private Unit _ultTarget;
+        private float _attackSpeed;
+
         private MenuItem _branchShackle;
         private MenuItem _orbwalkWhileUlt;
         private bool ShouldUseBranchShackle => _branchShackle.GetValue<bool>();
@@ -75,6 +78,46 @@ namespace Zaio.Heroes
             _shackleAbility = MyHero.GetAbilityById(AbilityId.windrunner_shackleshot);
             _powerShotAbility = MyHero.GetAbilityById(AbilityId.windrunner_powershot);
             _ultAbility = MyHero.GetAbilityById(AbilityId.windrunner_focusfire);
+
+            NewTargetAcquired += OnNewTargetAcquired;
+            Player.OnExecuteOrder += Player_OnExecuteOrder;
+        }
+
+        private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
+        {
+            if (args.Order == Order.AbilityTarget && args.Ability.GetAbilityId() == AbilityId.windrunner_focusfire && args.Entities.Contains(MyHero))
+            {
+                _ultTarget = args.Target as Unit;
+                if(!MyHero.HasModifier("modifier_windrunner_focusfire"))
+                    _attackSpeed = UnitDatabase.GetAttackSpeed(MyHero);
+            }
+        }
+
+        public override void OnClose()
+        {
+            // ReSharper disable once DelegateSubtraction
+            NewTargetAcquired -= OnNewTargetAcquired;
+            Player.OnExecuteOrder -= Player_OnExecuteOrder;
+
+            base.OnClose();
+        }
+
+        private void OnNewTargetAcquired(object sender, EntityEventArgs args)
+        {
+            var unit = args.Entity as Unit;
+
+            if (MyHero.HasModifier("modifier_windrunner_focusfire"))
+            {
+                // Orbwalker.
+                Orbwalker.CustomAttackSpeedValue = unit == _ultTarget ? 0 : _attackSpeed;
+            }
+            else
+            {
+                Orbwalker.CustomAttackSpeedValue = 0;
+                _ultTarget = null;
+            }
+            Log.Debug($"new attack speed { Orbwalker.CustomAttackSpeedValue}");
+           // Game.PrintMessage($"Orbwalker.CustomAttackSpeedValue: { Orbwalker.CustomAttackSpeedValue}");
         }
 
         protected override async Task<bool> Killsteal()
@@ -404,8 +447,12 @@ namespace Zaio.Heroes
 
                 if ((!_shackleAbility.CanBeCasted() || target.IsDisabled()) && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
                 {
+                    if (!MyHero.HasModifier("modifier_windrunner_focusfire"))
+                        _attackSpeed = UnitDatabase.GetAttackSpeed(MyHero);
+
                     Log.Debug($"use ult");
                     _ultAbility.UseAbility(target);
+                    _ultTarget = target;
                     await Await.Delay(GetAbilityDelay(target, _ultAbility), tk);
                 }
             }
@@ -424,6 +471,7 @@ namespace Zaio.Heroes
                 Log.Debug($"return because of move");
                 return;
             }
+
             if (ZaioMenu.ShouldUseOrbwalker && (!MyHero.HasModifier("modifier_windrunner_focusfire" )|| ShouldUseOrbwalkWhileUlt))
             {
                 Orbwalk();
