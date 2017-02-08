@@ -40,10 +40,11 @@ namespace Zaio.Heroes
         private Ability _shackleAbility;
         private Ability _powerShotAbility;
         private Ability _ultAbility;
-        private Unit _lastUltTarget;
 
         private MenuItem _branchShackle;
+        private MenuItem _orbwalkWhileUlt;
         private bool ShouldUseBranchShackle => _branchShackle.GetValue<bool>();
+        private bool ShouldUseOrbwalkWhileUlt => _orbwalkWhileUlt.GetValue<bool>();
 
         public override void OnLoad()
         {
@@ -65,6 +66,10 @@ namespace Zaio.Heroes
             _branchShackle.Tooltip = "Will use the shackle -> blink -> branch trick if suitable.";
             heroMenu.AddItem(_branchShackle);
 
+            _orbwalkWhileUlt = new MenuItem("zaioOrbwalkWhileUlt", "Enable Ult-Orbwalking").SetValue(false);
+            _orbwalkWhileUlt.Tooltip = "Enables orbwalking while being under the effect of focus fire.";
+            heroMenu.AddItem(_orbwalkWhileUlt);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _shackleAbility = MyHero.GetAbilityById(AbilityId.windrunner_shackleshot);
@@ -79,7 +84,7 @@ namespace Zaio.Heroes
                 return true;
             }
 
-            if (MyHero.IsSilenced() || MyHero.IsChanneling())
+            if (MyHero.IsSilenced() || MyHero.IsChanneling() || Target != null)
             {
                 return false;
             }
@@ -129,15 +134,23 @@ namespace Zaio.Heroes
                         continue;
                     }
                     var powerShotProp = GetPowerShotProp(enemy);
-                    time += (1000.0f * powerShotProp);
-                    predictedPos = Prediction.Prediction.PredictPosition(enemy, (int)time, true);
-                    
-                    Log.Debug(
-                        $"use killsteal powershot because enough damage {enemy.Health} <= {damage * (1 - enemy.MagicResistance())} prop {powerShotProp}");
-                    _powerShotAbility.UseAbility(predictedPos);
-                    await Await.Delay(GetAbilityDelay(enemy, _powerShotAbility) + (int)time);
-                    MyHero.Stop();
-                    return true;
+                    if (powerShotProp > 1.0f)
+                    {
+
+                        Log.Debug($"powershot prop too high {powerShotProp}");
+                    }
+                    else
+                    {
+                        time += (1000.0f * powerShotProp);
+                        predictedPos = Prediction.Prediction.PredictPosition(enemy, (int)time, true);
+
+                        Log.Debug(
+                            $"use killsteal powershot because enough damage {enemy.Health} <= {damage * (1 - enemy.MagicResistance())} prop {powerShotProp}");
+                        _powerShotAbility.UseAbility(predictedPos);
+                        await Await.Delay(GetAbilityDelay(enemy, _powerShotAbility) + (int)time);
+                        MyHero.Stop();
+                        return true;
+                    }
                 }
             }
 
@@ -150,11 +163,13 @@ namespace Zaio.Heroes
             damage *= GetSpellAmp();
 
             var speed = _powerShotAbility.GetAbilityData("arrow_speed");
-            var time = 1.0f + MyHero.Distance2D(target) / speed;
+            var time = (float) (1.0f + MyHero.Distance2D(target) / speed + _powerShotAbility.FindCastPoint());
             var health = (target.Health + target.HealthRegeneration * time) * (1.0f + target.MagicResistance()) * 1.1f;
             // todo: calc from monkey ms/travel speed?
             Log.Debug($"health {health} | {target.HealthRegeneration * time}");
-            return Math.Min(1.0f, health / damage);
+            var result = (health / damage) * 10.0f;
+            result = (int) result / 10.0f;
+            return result; // Math.Min(1.0f, result);
         }
 
         public float RelativeAngleToPositions(Vector3 start, Entity middle, Entity end)
@@ -299,11 +314,6 @@ namespace Zaio.Heroes
             if (MyHero.IsChanneling())
                 return;
 
-            if (_lastUltTarget != null && !MyHero.HasModifier("modifier_windrunner_focusfire"))
-            {
-                _lastUltTarget = null;
-            }
-
             await HasNoLinkens(target, tk);
             await UseItems(target, tk);
 
@@ -336,7 +346,7 @@ namespace Zaio.Heroes
                         {
                             var damage = (float) _powerShotAbility.GetDamage(_powerShotAbility.Level - 1);
                             damage *= GetSpellAmp();
-                            if (target.Health <= damage * (1.0f - target.MagicResistance()) && (!MyHero.HasModifier("modifier_windrunner_focusfire") || _lastUltTarget != target))
+                            if (target.Health <= damage * (1.0f - target.MagicResistance()))
                             {
                                 var powerShotProp = GetPowerShotProp(target);
                                 time += (1000.0f * powerShotProp);
@@ -396,7 +406,6 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"use ult");
                     _ultAbility.UseAbility(target);
-                    _lastUltTarget = target;
                     await Await.Delay(GetAbilityDelay(target, _ultAbility), tk);
                 }
             }
@@ -415,7 +424,7 @@ namespace Zaio.Heroes
                 Log.Debug($"return because of move");
                 return;
             }
-            if (ZaioMenu.ShouldUseOrbwalker && (!MyHero.HasModifier("modifier_windrunner_focusfire") /*|| _lastUltTarget != target*/) ) // todo: fix in common when target is not target from modifier
+            if (ZaioMenu.ShouldUseOrbwalker && (!MyHero.HasModifier("modifier_windrunner_focusfire" )|| ShouldUseOrbwalkWhileUlt))
             {
                 Orbwalk();
             }
