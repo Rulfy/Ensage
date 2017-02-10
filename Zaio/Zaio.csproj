@@ -67,6 +67,7 @@
     <Compile Include="Helpers\KeyEventArgs.cs" />
     <Compile Include="Helpers\BoolEventArgs.cs" />
     <Compile Include="Helpers\MyAbilityExtension.cs" />
+    <Compile Include="Heroes\Luna.cs" />
     <Compile Include="Heroes\Windranger.cs" />
     <Compile Include="Heroes\Sven.cs" />
     <Compile Include="Heroes\Zeus.cs" />

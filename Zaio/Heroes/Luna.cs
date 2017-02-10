@@ -41,7 +41,7 @@ namespace Zaio.Heroes
         {
             base.OnLoad();
 
-            var heroMenu = new Menu("Luna", "zaioLunak", false, "npc_dota_hero_luna",
+            var heroMenu = new Menu("Luna", "zaioLuna", false, "npc_dota_hero_luna",
                 true);
 
             heroMenu.AddItem(new MenuItem("zaioLunaAbilitiesText", "Supported Abilities"));
@@ -77,7 +77,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_nuke.CanBeCasted())
+            if (_nukeAbility.CanBeCasted())
             {
                 var damage = _nukeAbility.GetAbilityData("damage");
                 damage *= GetSpellAmp();
