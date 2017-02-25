@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -408,7 +408,7 @@ namespace Zaio.Interfaces
                     }
                 }
                 var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
-                if (phaseBoots != null && phaseBoots.CanBeCasted())
+                if (phaseBoots != null && phaseBoots.CanBeCasted() && !MyHero.IsInvisible())
                 {
                     phaseBoots.UseAbility();
                     await Await.Delay(ItemDelay, tk);
@@ -436,7 +436,7 @@ namespace Zaio.Interfaces
                 return true;
             }
 
-            if (!MyHero.IsMuted())
+            if (!MyHero.IsMuted() && !MyHero.IsInvisible())
             {
                 var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
                 if (phaseBoots != null && phaseBoots.CanBeCasted())
