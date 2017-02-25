@@ -105,9 +105,9 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_manaAbility.CanBeCasted())
+            if (_stunAbility.CanBeCasted())
             {
-                var damage = (float) _manaAbility.GetDamage(_manaAbility.Level - 1);
+                var damage = (float)_stunAbility.GetDamage(_stunAbility.Level - 1);
                 damage *= GetSpellAmp();
 
                 var enemy =
@@ -115,21 +115,21 @@ namespace Zaio.Heroes
                                  .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && !x.IsIllusion &&
-                                         _manaAbility.CanBeCasted(x) &&
-                                         _manaAbility.CanHit(x) &&
+                                         _stunAbility.CanBeCasted(x) &&
+                                         _stunAbility.CanHit(x) &&
                                          x.Health < damage * (1 - x.MagicResistance()) && !x.IsLinkensProtected() &&
                                          !x.CantBeAttacked() && !x.CantBeKilled());
                 if (enemy != null)
                 {
-                    var castPoint = _manaAbility.FindCastPoint();
-                    var speed = _manaAbility.GetAbilityData("speed");
+                    var castPoint = _stunAbility.FindCastPoint();
+                    var speed = _stunAbility.GetAbilityData("speed");
                     var time = (castPoint + enemy.Distance2D(MyHero) / speed) * 1000.0f;
 
                     var predictedPos = Prediction.Prediction.PredictPosition(enemy, (int) time);
                     Log.Debug(
                         $"use killsteal stun because enough damage {enemy.Health} <= {damage * (1.0f - enemy.MagicResistance())} ");
-                    _manaAbility.UseAbility(predictedPos);
-                    await Await.Delay(GetAbilityDelay(predictedPos, _manaAbility));
+                    _stunAbility.UseAbility(predictedPos);
+                    await Await.Delay(GetAbilityDelay(predictedPos, _stunAbility));
                     return true;
                 }
             }
