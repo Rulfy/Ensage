@@ -170,7 +170,7 @@ namespace Zaio.Heroes
             {
                 if (MyHero.Distance2D(target) <= _pulseAbility.GetAbilityData("area_of_effect"))
                 {
-                if (_pulseAbility.CanBeCasted() && _pulseAbility.CanHit(target))
+                if (_pulseAbility.CanBeCasted() && _pulseAbility.CanHit(target) && MyHero.Mana - _pulseAbility.ManaCost >= _ultAbility.ManaCost)
                     {
                         Log.Debug($"using pulse to deal damage target");
                         _pulseAbility.UseAbility();
