@@ -137,12 +137,12 @@ namespace Zaio.Heroes
                                          x.IsAlive && x.Team != MyHero.Team && _ultAbility.CanBeCasted(x) &&
                                          _ultAbility.CanHit(x) && !x.IsIllusion &&
                                           (((x.MaximumHealth - x.Health) * damage) * (1 - x.MagicDamageResist)) >= x.Health && !x.CantBeAttacked() &&
-                                         !x.CantBeKilled());
+                                         !x.CantBeKilled() && !x.IsLinkensProtected());
 
 
                 foreach (var enemy in enemies)
                 {
-                    if (MyHero.CanCast() && !enemy.IsLinkensProtected())
+                    if (enemy != null)
                     {
                         Log.Debug($"use ulti for killsteal because {(((enemy.MaximumHealth - enemy.Health) * damage) * (1 - enemy.MagicDamageResist))} >= {enemy.Health}");
                         _ultAbility.UseAbility(enemy);
