@@ -117,7 +117,7 @@ namespace Zaio.Heroes
             await HasNoLinkens(target, tk);
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(target, tk, 0, 0, true))
+            if (!await MoveOrBlinkToEnemy(target, tk, 0.0f, 0.0f, true))
             {
                 Log.Debug($"return because of blink");
                 return;
