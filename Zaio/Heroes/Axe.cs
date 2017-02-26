@@ -59,64 +59,6 @@ namespace Zaio.Heroes
             _ultAbility = MyHero.GetAbilityById(AbilityId.axe_culling_blade);
         }
 
-        protected async Task<bool> MoveOrBlinkToEnemyAxe(Unit target, CancellationToken tk = default(CancellationToken), float minimumRange = 0.0f, float maximumRange = 0.0f)
-        {
-            var distance = MyHero.Distance2D(target) - target.HullRadius - MyHero.HullRadius;
-
-            var testRange = maximumRange == 0.0f ? MyHero.GetAttackRange() : maximumRange;
-            if (distance <= testRange)
-            {
-                return true;
-            }
-
-            if (!MyHero.IsMuted())
-            {
-                if (ZaioMenu.ShouldUseBlinkDagger)
-                {
-                    var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
-                    if (blink != null && blink.CanBeCasted())
-                    {
-                        var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
-                        if (distance <= blinkRange)
-                        {
-                            if (minimumRange == 0.0f)
-                            {
-                                minimumRange = MyHero.GetAttackRange() / 2;
-                            }
-
-                            var pos = (target.NetworkPosition - MyHero.NetworkPosition).Normalized();
-                            pos *= minimumRange;
-                            pos = target.NetworkPosition - pos;
-                            if (target.IsMoving)
-                            {
-                               var moves = Ensage.Common.Prediction.InFront(target, 75);
-                               blink.UseAbility(moves);
-                            }
-                            blink.UseAbility(pos);
-                            await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000) + ItemDelay, tk);
-                            return false;
-                        }
-                    }
-                }
-                var phaseBoots = MyHero.Inventory.Items.FirstOrDefault(x => x.Name == "item_phase_boots");
-                if (phaseBoots != null && phaseBoots.CanBeCasted() && !MyHero.IsInvisible())
-                {
-                    phaseBoots.UseAbility();
-                    await Await.Delay(ItemDelay, tk);
-                }
-            }
-            if (ZaioMenu.ShouldUseOrbwalker)
-            {
-                Orbwalk();
-            }
-            else
-            {
-                MyHero.Attack(target);
-                await Await.Delay(125, tk);
-            }
-            return false;
-        }
-
         protected override async Task<bool> Killsteal()
         {
             if (await base.Killsteal())
@@ -175,7 +117,7 @@ namespace Zaio.Heroes
             await HasNoLinkens(target, tk);
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemyAxe(target, tk))
+            if (!await MoveOrBlinkToEnemy(target, tk, 0, 0, true))
             {
                 Log.Debug($"return because of blink");
                 return;
