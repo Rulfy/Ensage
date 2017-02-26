@@ -404,8 +404,8 @@ namespace Zaio.Interfaces
                             if (target.IsMoving && usePrediction)
                             {
                                var moves = Ensage.Common.Prediction.InFront(target, 75);
-                               await Await.Delay((int) (MyHero.GetTurnTime(moves) * 1000) + ItemDelay, tk);
                                blink.UseAbility(moves);
+                               await Await.Delay((int) (MyHero.GetTurnTime(moves) * 1000) + ItemDelay, tk);
                                return false;
                             }
                             else
