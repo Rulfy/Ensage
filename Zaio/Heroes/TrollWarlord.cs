@@ -228,7 +228,7 @@ namespace Zaio.Heroes
                     return;
                 }
 
-                if (_ultAbility.CanBeCasted())
+                if (_ultAbility.CanBeCasted() && target.Distance2D(MyHero) <= 300)
                     {
                         Log.Debug($"use ult");
                         _ultAbility.UseAbility();

@@ -1,10 +1,11 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
+using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
@@ -114,17 +115,9 @@ namespace Zaio.Heroes
             }
 
             await HasNoLinkens(target, tk);
-            await UseItems(target, tk);
-
-            // make him disabled
-            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
-            {
-                Log.Debug($"disabled!");
-                // return;
-            }
 
             // check if we are near the enemy
-            if (!await MoveOrBlinkToEnemy(target, tk))
+            if (!await MoveOrBlinkToEnemy(target, tk, 0.0f, 0.0f, true))
             {
                 Log.Debug($"return because of blink");
                 return;
@@ -137,29 +130,7 @@ namespace Zaio.Heroes
                 var radius = _callAbility.GetAbilityData("radius");
                 if (Prediction.Prediction.PredictPosition(target, (int) delay).Distance2D(MyHero) <= radius)
                 {
-                    var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
-                    if (bladeMail != null && bladeMail.CanBeCasted())
-                    {
-                        Log.Debug($"using blademail before call");
-                        bladeMail.UseAbility();
-                        await Await.Delay(ItemDelay, tk);
-                    }
-
-                    var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
-                    if (lotus != null && lotus.CanBeCasted())
-                    {
-                        Log.Debug($"using lotus orb before call");
-                        lotus.UseAbility(MyHero);
-                        await Await.Delay(ItemDelay, tk);
-                    }
-
-                    var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
-                    if (mjollnir != null && mjollnir.CanBeCasted())
-                    {
-                        Log.Debug($"using mjollnir before call");
-                        mjollnir.UseAbility(MyHero);
-                        await Await.Delay(ItemDelay, tk);
-                    }
+                    
                     var useCall = true;
                     if (target.HasModifier("modifier_legion_commander_duel") || target.PhysicalResistance() == 1.0f)
                     {
@@ -176,7 +147,40 @@ namespace Zaio.Heroes
                         _callAbility.UseAbility();
                         await Await.Delay((int) (_callAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
                     }
+
+                    var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
+                    if (bladeMail != null && bladeMail.CanBeCasted())
+                    {
+                        Log.Debug($"using blademail after call");
+                        bladeMail.UseAbility();
+                        await Await.Delay(ItemDelay, tk);
+                    }
+
+                    var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
+                    if (lotus != null && lotus.CanBeCasted())
+                    {
+                        Log.Debug($"using lotus orb after call");
+                        lotus.UseAbility(MyHero);
+                        await Await.Delay(ItemDelay, tk);
+                    }
+
+                    var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
+                    if (mjollnir != null && mjollnir.CanBeCasted())
+                    {
+                        Log.Debug($"using mjollnir after call");
+                        mjollnir.UseAbility(MyHero);
+                        await Await.Delay(ItemDelay, tk);
+                    }
                 }
+            }
+
+            await UseItems(target, tk);
+
+            // make him disabled
+            if (await DisableEnemy(target, tk) == DisabledState.UsedAbilityToDisable)
+            {
+                Log.Debug($"disabled!");
+                // return;
             }
 
             if (ZaioMenu.ShouldUseOrbwalker)
