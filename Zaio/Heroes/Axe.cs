@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -123,6 +124,7 @@ namespace Zaio.Heroes
                 return;
             }
 
+                    
             _callAbility = MyHero.Spellbook.SpellQ;
             if (!MyHero.IsSilenced() && _callAbility.CanBeCasted(target))
             {
@@ -145,7 +147,7 @@ namespace Zaio.Heroes
                     {
                         Log.Debug($"using call");
                         _callAbility.UseAbility();
-                        await Await.Delay((int) (_callAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
+                        await Await.Delay((int) (_callAbility.FindCastPoint() * 1000.0 + Game.Ping + 20), tk);
                     }
 
                     var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
@@ -171,6 +173,7 @@ namespace Zaio.Heroes
                         mjollnir.UseAbility(MyHero);
                         await Await.Delay(ItemDelay, tk);
                     }
+
                 }
             }
 
