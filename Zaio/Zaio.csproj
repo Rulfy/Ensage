@@ -63,12 +63,15 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helpers\AsyncHelpers.cs" />
+    <Compile Include="Helpers\AbilityMenu.cs" />
+    <Compile Include="Helpers\MyAsyncHelpers.cs" />
     <Compile Include="Helpers\KeyEventArgs.cs" />
     <Compile Include="Helpers\BoolEventArgs.cs" />
     <Compile Include="Helpers\MyAbilityExtension.cs" />
+    <Compile Include="Helpers\MyHeroExtension.cs" />
     <Compile Include="Heroes\Luna.cs" />
     <Compile Include="Heroes\TrollWarlord.cs" />
+    <Compile Include="Heroes\Naga.cs" />
     <Compile Include="Heroes\Necrolyte.cs" />
     <Compile Include="Heroes\Windranger.cs" />
     <Compile Include="Heroes\Sven.cs" />
@@ -79,6 +82,8 @@
     <Compile Include="Heroes\ShadowFiend.cs" />
     <Compile Include="Heroes\MonkeyKing.cs" />
     <Compile Include="Heroes\Pudge.cs" />
+    <Compile Include="LanePusher.cs" />
+    <Compile Include="JungleFarmer.cs" />
     <Compile Include="UnitController.cs" />
     <Compile Include="Prediction\Geometry.cs" />
     <Compile Include="Helpers\HeroAttribute.cs" />

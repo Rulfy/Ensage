@@ -63,6 +63,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             _minimumEnemyUltCount =
                 new MenuItem("zaioMonkeyKingMinEnemyCount", "Minimum Enemies for Ult").SetValue(new Slider(1, 0, 4));
             _minimumEnemyUltCount.Tooltip = "Minimum enemies besides your target to use ult.";
@@ -114,7 +116,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (
+            if ( _springAbility.IsKillstealAbilityEnabled() && 
                 MyHero.HasModifiers(
                     new[] {"modifier_monkey_king_tree_dance_hidden", "modifier_monkey_king_tree_dance_activity"}, false))
             {
@@ -152,7 +154,7 @@ namespace Zaio.Heroes
                 }
             }
 
-            if (_stunAbility.CanBeCasted())
+            if (_stunAbility.IsKillstealAbilityEnabled() && _stunAbility.CanBeCasted())
             {
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()
@@ -179,7 +181,7 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            if (
+            if ( _springAbility.IsAbilityEnabled() &&
                 MyHero.HasModifiers(
                     new[] {"modifier_monkey_king_tree_dance_hidden", "modifier_monkey_king_tree_dance_activity"}, false))
             {
@@ -240,7 +242,7 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target))
+                if (_stunAbility.IsAbilityEnabled() && _stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target))
                 {
                     if (IsBuffed || GetQDamage(_stunAbility, target) > target.Health)
                     {
@@ -251,7 +253,7 @@ namespace Zaio.Heroes
                     }
                 }
 
-                if (_ultAbility.CanBeCasted() && _ultAbility.CanHit(target))
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted() && _ultAbility.CanHit(target))
                 {
                     var radius = _ultAbility.GetAbilityData("leadership_radius");
                     var enemiesNearCount =

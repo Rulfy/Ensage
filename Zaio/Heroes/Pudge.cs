@@ -15,7 +15,7 @@ using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
 using Zaio.Prediction;
-using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
+using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 
 namespace Zaio.Heroes
 {
@@ -64,6 +64,8 @@ namespace Zaio.Heroes
             var supportedKillsteal = new MenuItem("zaioPudgeKillstealAbilities", string.Empty);
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
+
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
 
             _autoDeny = new MenuItem("zaioPudgeAutoDeny", "Auto Deny").SetValue(true);
             _autoDeny.Tooltip = "Will automatically try to use your rot to deny your hero.";
@@ -116,7 +118,7 @@ namespace Zaio.Heroes
         {
             if (!ShouldAutoDeny || !MyHero.IsAlive || MyHero.IsSilenced())
             {
-                Await.Block("zaio.pudgeDenySleep", AsyncHelpers.AsyncSleep);
+                Await.Block("zaio.pudgeDenySleep", MyAsyncHelpers.AsyncSleep);
                 return;
             }
 
@@ -136,7 +138,7 @@ namespace Zaio.Heroes
                     Log.Debug($"Using rot to deny {MyHero.Health} < {damage * (1 - MyHero.MagicResistance())}!!");
 
                     _rotAbility.ToggleAbility();
-                    Await.Block("zaio.pudgeDenySleep", AsyncHelpers.AsyncSleep);
+                    Await.Block("zaio.pudgeDenySleep", MyAsyncHelpers.AsyncSleep);
                 }
             }
         }
@@ -159,7 +161,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_hookAbility.CanBeCasted())
+            if (_hookAbility.IsKillstealAbilityEnabled() && _hookAbility.CanBeCasted())
             {
                 var damage = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
                     ? _hookAbility.GetAbilityData("damage_scepter")
@@ -214,7 +216,7 @@ namespace Zaio.Heroes
         {
             if (MyHero.IsChanneling() || MyHero.HasModifier("modifier_pudge_dismember"))
             {
-                if (!MyHero.IsSilenced() && _rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled &&
+                if (_rotAbility.IsAbilityEnabled() && !MyHero.IsSilenced() && _rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled &&
                     _rotAbility.CanHit(target))
                 {
                     _rotAbility.ToggleAbility();
@@ -225,12 +227,12 @@ namespace Zaio.Heroes
 
             if (_hasHookModifier || target.HasModifier("modifier_pudge_meat_hook"))
             {
-                if (!MyHero.IsSilenced() && _rotAbility.CanBeCasted() && !_rotAbility.IsToggled)
+                if (!MyHero.IsSilenced() && _rotAbility.IsAbilityEnabled() && _rotAbility.CanBeCasted() && !_rotAbility.IsToggled)
                 {
                     _rotAbility.ToggleAbility();
                     await Await.Delay(ItemDelay, tk);
                 }
-                if (await HasNoLinkens(target, tk) && _ultAbility.CanBeCasted(target))
+                if (_ultAbility.IsAbilityEnabled() && await HasNoLinkens(target, tk) && _ultAbility.CanBeCasted(target))
                 {
                     if (!MyHero.IsSilenced() && _ultAbility.CanHit(target))
                     {
@@ -247,13 +249,13 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled && _rotAbility.CanHit(target))
+                if (_rotAbility.IsAbilityEnabled() && _rotAbility.CanBeCasted(target) && !_rotAbility.IsToggled && _rotAbility.CanHit(target))
                 {
                     _rotAbility.ToggleAbility();
                     await Await.Delay(100, tk);
                 }
 
-                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
                 {
                     if (_ultAbility.CanHit(target))
                     {
@@ -263,7 +265,7 @@ namespace Zaio.Heroes
                     }
                 }
 
-                if (_hookAbility.CanBeCasted(target) && _hookAbility.CanHit(target))
+                if (_hookAbility.IsAbilityEnabled() && _hookAbility.CanBeCasted(target) && _hookAbility.CanHit(target))
                 {
                     var speed = _hookAbility.GetAbilityData("hook_speed");
                     var radius = _hookAbility.GetAbilityData("hook_width") * 2;

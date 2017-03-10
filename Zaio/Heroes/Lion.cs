@@ -36,6 +36,7 @@ namespace Zaio.Heroes
 
         private Ability _manaAbility;
         private Ability _stunAbility;
+        private Ability _hexAbility;
 
         private Ability _ultAbility;
 
@@ -55,11 +56,14 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _ultAbility = MyHero.GetAbilityById(AbilityId.lion_finger_of_death);
             _manaAbility = MyHero.GetAbilityById(AbilityId.lion_mana_drain);
             _stunAbility = MyHero.GetAbilityById(AbilityId.lion_impale);
+            _hexAbility = MyHero.GetAbilityById(AbilityId.lion_voodoo);
         }
 
         protected override async Task<bool> Killsteal()
@@ -74,7 +78,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_ultAbility.CanBeCasted())
+            if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted())
             {
                 var damage =
                     _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
@@ -105,7 +109,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_stunAbility.CanBeCasted())
+            if (_stunAbility.IsKillstealAbilityEnabled() && _stunAbility.CanBeCasted())
             {
                 var damage = (float)_stunAbility.GetDamage(_stunAbility.Level - 1);
                 damage *= GetSpellAmp();
@@ -141,7 +145,7 @@ namespace Zaio.Heroes
         {
             await UseItems(target, tk);
 
-            if (!MyHero.IsSilenced() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
+            if (_ultAbility.IsAbilityEnabled() && !MyHero.IsSilenced() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
                 await HasNoLinkens(target, tk))
             {
                 var damage =
@@ -170,18 +174,17 @@ namespace Zaio.Heroes
                 float duration;
                 if (!(target.IsHexed(out duration) || target.IsStunned(out duration)) || duration < 1.2)
                 {
-                    var hex = MyHero.Spellbook.SpellW;
-                    maxRange = Math.Max(maxRange, hex.CastRange);
-                    if (hex.CanBeCasted(target))
+                    maxRange = Math.Max(maxRange, _hexAbility.CastRange);
+                    if (_hexAbility.IsAbilityEnabled() && _hexAbility.CanBeCasted(target))
                     {
-                        if (hex.CanHit(target))
+                        if (_hexAbility.CanHit(target))
                         {
                             Log.Debug($"use hex {duration}");
-                            hex.UseAbility(target);
-                            await Await.Delay(GetAbilityDelay(target, hex), tk);
+                            _hexAbility.UseAbility(target);
+                            await Await.Delay(GetAbilityDelay(target, _hexAbility), tk);
                             return;
                         }
-                        if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 250, maximumRange: hex.GetCastRange()))
+                        if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 250, maximumRange: _hexAbility.GetCastRange()))
                         {
                             Log.Debug($"return because of blink and hex ready");
                             return;
@@ -189,7 +192,7 @@ namespace Zaio.Heroes
                     }
 
                     maxRange = Math.Max(maxRange, _stunAbility.CastRange);
-                    if (_stunAbility.CanBeCasted(target))
+                    if (_stunAbility.IsAbilityEnabled() && _stunAbility.CanBeCasted(target))
                     {
                         if (_stunAbility.CanHit(target))
                         {
@@ -217,7 +220,7 @@ namespace Zaio.Heroes
                     }
                 }
 
-                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
                 {
                     if (target.IsHexed() || target.IsStunned() ||
                         (float) target.Health / target.MaximumHealth * (1.0f + target.MagicResistance()) < 0.5f)
@@ -228,7 +231,7 @@ namespace Zaio.Heroes
                     }
                 }
 
-                if (_manaAbility.CanBeCasted())
+                if (_manaAbility.IsAbilityEnabled() && _manaAbility.CanBeCasted())
                 {
                     var illusion =
                         ObjectManager.GetEntitiesFast<Unit>()

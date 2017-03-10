@@ -65,6 +65,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             _branchShackle = new MenuItem("zaioBranchShackle", "Use Shackle -> Blink -> Branch").SetValue(true);
             _branchShackle.Tooltip = "Will use the shackle -> blink -> branch trick if suitable.";
             heroMenu.AddItem(_branchShackle);
@@ -132,7 +134,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_powerShotAbility.CanBeCasted())
+            if (_powerShotAbility.IsKillstealAbilityEnabled() && _powerShotAbility.CanBeCasted())
             {
                 var damage = (float) _powerShotAbility.GetDamage(_powerShotAbility.Level - 1);
                 damage *= GetSpellAmp();
@@ -367,7 +369,7 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_powerShotAbility.CanBeCasted(target) && _powerShotAbility.CanHit(target))
+                if (_powerShotAbility.IsAbilityEnabled() && _powerShotAbility.CanBeCasted(target) && _powerShotAbility.CanHit(target))
                 {
                     var speed = _powerShotAbility.GetAbilityData("arrow_speed");
                     var time = target.Distance2D(MyHero) / speed * 1000.0f;
@@ -412,7 +414,7 @@ namespace Zaio.Heroes
                 }
 
 
-                if (_shackleAbility.CanBeCasted(target))
+                if (_shackleAbility.IsAbilityEnabled() && _shackleAbility.CanBeCasted(target))
                 {
                     var shackleTarget = FindShackleTarget(target);
                     if (shackleTarget != null)
@@ -445,7 +447,7 @@ namespace Zaio.Heroes
                    
                 }
 
-                if ((!_shackleAbility.CanBeCasted() || target.IsDisabled()) && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
+                if (_ultAbility.IsAbilityEnabled() && (!_shackleAbility.CanBeCasted() || target.IsDisabled()) && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
                 {
                     if (!MyHero.HasModifier("modifier_windrunner_focusfire"))
                         _attackSpeed = UnitDatabase.GetAttackSpeed(MyHero);
@@ -458,7 +460,7 @@ namespace Zaio.Heroes
             }
 
             // check if we are near the enemy
-            if (!_shackleAbility.CanBeCasted(target))
+            if (!_shackleAbility.CanBeCasted(target) || !_shackleAbility.IsAbilityEnabled())
             {
                 if (!await MoveOrBlinkToEnemy(target, tk))
                 {

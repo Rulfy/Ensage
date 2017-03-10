@@ -9,6 +9,7 @@ using Ensage.Common.Combo;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
+using Ensage.Common.Menu;
 using Ensage.Common.Objects.UtilityObjects;
 using Ensage.Common.Threading;
 using log4net;
@@ -16,7 +17,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using SpacebarToFarm;
 using Zaio.Helpers;
-using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
+using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 using Attribute = Ensage.Attribute;
 
 namespace Zaio.Interfaces
@@ -97,6 +98,7 @@ namespace Zaio.Interfaces
             _repeatCombo = repeatCombo;
         }
 
+
         public Hero Hero => MyHero;
         public Unit ComboTarget => Target;
 
@@ -122,7 +124,6 @@ namespace Zaio.Interfaces
                     _comboTargetEffect.SetControlPoint(2, MyHero.NetworkPosition); //start point XYZ
                     _comboTargetEffect.SetControlPoint(6, new Vector3(1, 0, 0)); // 1 means the particle is visible
                     _comboTargetEffect.SetControlPoint(7, _target.NetworkPosition); //end point XYZ  
-                    _comboTargetEffect.SetControlPointEntity(7, _target);
                 }
             }
         }
@@ -134,6 +135,11 @@ namespace Zaio.Interfaces
         protected int GetAbilityDelay(Unit target, Ability ability)
         {
             return (int) ((ability.FindCastPoint() + MyHero.GetTurnTime(target)) * 1000.0 + Game.Ping);
+        }
+
+        protected int GetAbilityDelay(Ability ability)
+        {
+            return (int)(ability.FindCastPoint() * 1000.0 + Game.Ping);
         }
 
         protected int GetAbilityDelay(Vector3 targetPosition, Ability ability)
@@ -154,6 +160,30 @@ namespace Zaio.Interfaces
             GameDispatcher.OnIngameUpdate += GameDispatcher_OnIngameUpdate;
             ZaioMenu.DisplayAttackRangeChanged += ZaioMenu_DisplayAttackRangeChanged;
             ZaioMenu.ComboKeyChanged += ZaioMenu_ComboKeyChanged;
+        }
+
+        protected virtual void OnLoadMenuItems(MenuItem supportedStuff = null, MenuItem killstealStuff = null)
+        {
+            if (supportedStuff != null)
+            {
+                MyAbilityExtension.AbilityStatus = supportedStuff.GetValue<AbilityToggler>().Dictionary;
+                supportedStuff.ValueChanged += SupportedStuff_ValueChanged;
+            }
+            if (killstealStuff != null)
+            {
+                MyAbilityExtension.AbilityKillStealStatus = killstealStuff.GetValue<AbilityToggler>().Dictionary;
+                killstealStuff.ValueChanged += KillstealSupportedStuff_ValueChanged;
+            }
+        }
+
+        private void SupportedStuff_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            MyAbilityExtension.AbilityStatus = e.GetNewValue<AbilityToggler>().Dictionary;
+        }
+
+        private void KillstealSupportedStuff_ValueChanged(object sender, OnValueChangeEventArgs e)
+        {
+            MyAbilityExtension.AbilityKillStealStatus = e.GetNewValue<AbilityToggler>().Dictionary;
         }
 
         private void ZaioMenu_ComboKeyChanged(object sender, KeyEventArgs e)
@@ -212,7 +242,7 @@ namespace Zaio.Interfaces
             }
             else
             {
-                Await.Block("zaio.killstealerSleep", AsyncHelpers.AsyncSleep);
+                Await.Block("zaio.killstealerSleep", MyAsyncHelpers.AsyncSleep);
             }
 
             if (TotalAttackRange != _lastAttackRange)
@@ -415,7 +445,7 @@ namespace Zaio.Interfaces
                 }
             }
             if (ZaioMenu.ShouldUseOrbwalker)
-            {
+            { 
                 Orbwalk();
             }
             else

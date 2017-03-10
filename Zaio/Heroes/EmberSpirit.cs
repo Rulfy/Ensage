@@ -65,6 +65,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             _minimumRemnantItem =
                 new MenuItem("zaioEmberSpiritMinimumRemnant", "Save Remnants").SetValue(new Slider(1, 0, 3));
             _minimumRemnantItem.Tooltip = "Minimum Remnants to keep.";
@@ -76,6 +78,7 @@ namespace Zaio.Heroes
             _ultAbility = MyHero.GetAbilityById(AbilityId.ember_spirit_fire_remnant);
             _shieldAbility = MyHero.GetAbilityById(AbilityId.ember_spirit_flame_guard);
             _stunAbility = MyHero.GetAbilityById(AbilityId.ember_spirit_searing_chains);
+            _sleightAbility = MyHero.GetAbilityById(AbilityId.ember_spirit_sleight_of_fist);
         }
 
         /*
@@ -97,7 +100,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_sleightAbility.CanBeCasted())
+            if (_sleightAbility.IsKillstealAbilityEnabled() && _sleightAbility.CanBeCasted())
             {
                 var damage = MyHero.MinimumDamage + MyHero.BonusDamage +
                              _sleightAbility.GetAbilityData("bonus_hero_damage");
@@ -128,7 +131,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_ultAbility.CanBeCasted() && _ultActivateAbility.CanBeCasted() &&
+            if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted() && _ultActivateAbility.CanBeCasted() &&
                 (MinimumRemnants == 0 || MinimumRemnants < CurrentRemnants))
             {
                 var damage = _ultAbility.GetAbilityData("damage");
@@ -187,7 +190,7 @@ namespace Zaio.Heroes
                 }, false))
             {
                 Log.Debug($"in sleight mode");
-                if (!MyHero.IsSilenced() && _stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target) &&
+                if (!MyHero.IsSilenced() && _stunAbility.IsAbilityEnabled() && _stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target) &&
                     !target.IsMagicImmune())
                 {
                     Log.Debug($"use our Q because we are using W or ult and are near the target!");
@@ -207,8 +210,7 @@ namespace Zaio.Heroes
             }
             if (!MyHero.IsSilenced())
             {
-                _sleightAbility = MyHero.GetAbilityById(AbilityId.ember_spirit_sleight_of_fist);
-                if (_sleightAbility.CanBeCasted(target) && _sleightAbility.CanHit(target))
+                if (_sleightAbility.IsAbilityEnabled() && _sleightAbility.CanBeCasted(target) && _sleightAbility.CanHit(target))
                 {
                     Log.Debug($"using sleigth");
                     _sleightAbility.UseAbility(target.NetworkPosition);
@@ -216,7 +218,7 @@ namespace Zaio.Heroes
                     return;
                 }
 
-                if (_stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target))
+                if (_stunAbility.IsAbilityEnabled() && _stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target))
                 {
                     Log.Debug($"use our Q");
                     _stunAbility.UseAbility();
@@ -224,7 +226,7 @@ namespace Zaio.Heroes
                 }
 
                 var distance = _ultAbility.CastRange;
-                if (_shieldAbility.CanBeCasted())
+                if (_shieldAbility.IsAbilityEnabled() && _shieldAbility.CanBeCasted())
                 {
                     var hasEnemies = ObjectManager.GetEntitiesParallel<Hero>()
                                                   .Any(
@@ -241,7 +243,7 @@ namespace Zaio.Heroes
 
                 if (!IsInRange(MyHero.AttackRange * 2.0f) && !target.IsMagicImmune())
                 {
-                    if (_ultAbility.CanBeCasted() && _ultActivateAbility.CanBeCasted() &&
+                    if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted() && _ultActivateAbility.CanBeCasted() &&
                         (MinimumRemnants == 0 || MinimumRemnants < CurrentRemnants))
                     {
                         var castPoint = _ultAbility.FindCastPoint();
@@ -278,13 +280,13 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_shieldAbility.CanBeCasted())
+                if (_shieldAbility.IsAbilityEnabled() && _shieldAbility.CanBeCasted())
                 {
                     _shieldAbility.UseAbility();
                     await Await.Delay(125, tk);
                 }
 
-                if (_ultAbility.CanBeCasted(target) && _ultActivateAbility.CanBeCasted() && _ultAbility.CanHit(target) &&
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultActivateAbility.CanBeCasted() && _ultAbility.CanHit(target) &&
                     !target.IsMagicImmune() &&
                     (MinimumRemnants == 0 || MinimumRemnants < CurrentRemnants))
                 {

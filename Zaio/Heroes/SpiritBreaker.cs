@@ -26,7 +26,9 @@ namespace Zaio.Heroes
             "spirit_breaker_charge_of_darkness",
             "spirit_breaker_nether_strike",
             "item_invis_sword",
-            "item_silver_edge"
+            "item_silver_edge",
+            "item_armlet",
+            "item_mask_of_madness"
         };
 
         private Ability _chargeAbility;
@@ -47,12 +49,15 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            OnLoadMenuItems(supportedStuff);
+
             _chargeAwayKey =
                 new MenuItem("zaioSpiritBreakerChargeAway", "Charge Away").SetValue(new KeyBind(0, KeyBindType.Press));
             _chargeAwayKey.Tooltip = "Hotkey for charging away.";
             _chargeAwayKey.ValueChanged += _chargeAwayKey_ValueChanged;
-            ;
             heroMenu.AddItem(_chargeAwayKey);
+
+
 
             ZaioMenu.LoadHeroSettings(heroMenu);
 
@@ -107,7 +112,7 @@ namespace Zaio.Heroes
                     var shadowBlade = MyHero.GetItemById(ItemId.item_invis_sword) ??
                                       MyHero.GetItemById(ItemId.item_silver_edge);
                     var distance = MyHero.Distance2D(target);
-                    if (shadowBlade != null && shadowBlade.CanBeCasted() && !MyHero.IsVisibleToEnemies &&
+                    if (shadowBlade != null && shadowBlade.IsAbilityEnabled() && shadowBlade.CanBeCasted() && !MyHero.IsVisibleToEnemies &&
                         distance > 1200 && distance < 6000)
                     {
                         Log.Debug($"using invis");
@@ -121,7 +126,7 @@ namespace Zaio.Heroes
             // check if we are near the enemy
             if (!await MoveOrBlinkToEnemy(target, tk))
             {
-                if (!MyHero.IsSilenced() && _chargeAbility.CanBeCasted())
+                if (!MyHero.IsSilenced() && _chargeAbility.IsAbilityEnabled() && _chargeAbility.CanBeCasted())
                 {
                     Log.Debug($"charging enemy since too far");
                     _chargeAbility.UseAbility(target);
@@ -142,13 +147,13 @@ namespace Zaio.Heroes
             }
 
             var armlet = MyHero.GetItemById(ItemId.item_armlet);
-            if (armlet != null && !armlet.IsToggled)
+            if (armlet != null && armlet.IsAbilityEnabled() && !armlet.IsToggled)
             {
                 Log.Debug($"toggling armlet");
                 armlet.ToggleAbility();
             }
 
-            if (!MyHero.IsSilenced() && _ultAbility.CanBeCasted() && _ultAbility.CanHit(target))
+            if (!MyHero.IsSilenced() && _ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted() && _ultAbility.CanHit(target))
             {
                 Log.Debug($"using ult on target");
                 _ultAbility.UseAbility(target);
@@ -156,7 +161,7 @@ namespace Zaio.Heroes
             }
 
             var mask = MyHero.GetItemById(ItemId.item_mask_of_madness);
-            if (mask != null && mask.CanBeCasted() && _ultAbility.Cooldown > 0)
+            if (mask != null && mask.IsAbilityEnabled() && mask.CanBeCasted() && _ultAbility.Cooldown > 0)
             {
                 Log.Debug($"using mask");
                 mask.UseAbility();

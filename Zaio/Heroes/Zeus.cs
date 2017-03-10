@@ -13,7 +13,7 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
+using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 
 namespace Zaio.Heroes
 {
@@ -78,6 +78,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             _smartUltKillsteal = new MenuItem("zaioSmartUltKillsteal", "Smart Killsteal").SetValue(true);
             _smartUltKillsteal.Tooltip =
                 "Only use ult to killsteal when enemy is regenerating, not visible, or more than one enemy can be killed.";
@@ -112,7 +114,7 @@ namespace Zaio.Heroes
                         hero.MagicResistance());
                 }
             }
-            Await.Block("zaio.zuusVisibilityInfo", AsyncHelpers.AsyncSleep);
+            Await.Block("zaio.zuusVisibilityInfo", MyAsyncHelpers.AsyncSleep);
         }
 
 
@@ -136,7 +138,7 @@ namespace Zaio.Heroes
 
             var spellAmp = GetSpellAmp();
 
-            if (_qAbility.CanBeCasted())
+            if (_qAbility.IsKillstealAbilityEnabled() && _qAbility.CanBeCasted())
             {
                 var damage = spellAmp * _qAbility.GetDamage(_qAbility.Level - 1);
 
@@ -156,7 +158,7 @@ namespace Zaio.Heroes
                 }
             }
 
-            if (_wAbility.CanBeCasted())
+            if (_wAbility.IsKillstealAbilityEnabled() && _wAbility.CanBeCasted())
             {
                 var damage = spellAmp * _wAbility.GetDamage(_wAbility.Level - 1);
 
@@ -176,7 +178,7 @@ namespace Zaio.Heroes
                 }
             }
 
-            if (_ultAbility.CanBeCasted())
+            if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted())
             {
                 var damage = _ultAbility.GetAbilityData("damage") * spellAmp;
 
@@ -265,14 +267,14 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_wAbility.CanBeCasted(target) && _wAbility.CanHit(target))
+                if (_wAbility.IsAbilityEnabled() && _wAbility.CanBeCasted(target) && _wAbility.CanHit(target))
                 {
-                    Log.Debug($"use Q");
+                    Log.Debug($"use W");
                     _wAbility.UseAbility(target);
-                    await Await.Delay(GetAbilityDelay(target, _qAbility), tk);
+                    await Await.Delay(GetAbilityDelay(target, _wAbility), tk);
                 }
 
-                if (_qAbility.CanBeCasted(target) && _qAbility.CanHit(target))
+                if (_qAbility.IsAbilityEnabled() && _qAbility.CanBeCasted(target) && _qAbility.CanHit(target))
                 {
                     Log.Debug($"use Q");
                     _qAbility.UseAbility(target);

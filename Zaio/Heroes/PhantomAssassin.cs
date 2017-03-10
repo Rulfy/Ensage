@@ -51,6 +51,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _daggerAbility = MyHero.GetAbilityById(AbilityId.phantom_assassin_stifling_dagger);
@@ -69,7 +71,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_daggerAbility.CanBeCasted())
+            if (_daggerAbility.IsKillstealAbilityEnabled() && _daggerAbility.CanBeCasted())
             {
                 var damage = _daggerAbility.GetAbilityData("base_damage");
                 var factor = _daggerAbility.GetAbilityData("attack_factor");
@@ -101,14 +103,14 @@ namespace Zaio.Heroes
         {
             if (!MyHero.IsSilenced())
             {
-                if (_daggerAbility.CanBeCasted(target) && _daggerAbility.CanHit(target))
+                if (_daggerAbility.IsAbilityEnabled() && _daggerAbility.CanBeCasted(target) && _daggerAbility.CanHit(target))
                 {
                     _daggerAbility.UseAbility(target);
                     Log.Debug($"using dagger!");
                     await Await.Delay(GetAbilityDelay(target, _daggerAbility), tk);
                 }
 
-                if (_blinkAbility.CanBeCasted(target) && _blinkAbility.CanHit(target))
+                if (_blinkAbility.IsAbilityEnabled() && _blinkAbility.CanBeCasted(target) && _blinkAbility.CanHit(target))
                 {
                     _blinkAbility.UseAbility(target);
                     Log.Debug($"using blink!");

@@ -13,7 +13,7 @@ using SharpDX;
 using Zaio.Helpers;
 using Zaio.Heroes;
 using Zaio.Interfaces;
-using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
+using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 using Ensage.Common.Extensions.SharpDX;
 
 namespace Zaio
@@ -32,7 +32,7 @@ namespace Zaio
             Drawing.OnDraw += Drawing_OnDraw;
 
            // Game.OnIngameUpdate += Game_OnIngameUpdate;
-            // ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
+           // ObjectManager.OnAddEntity += ObjectManager_OnAddEntity;
         }
 
         private static async Task ExecuteTick(UnitController controller)
@@ -132,7 +132,7 @@ namespace Zaio
                         {
                             Log.Debug($"attack ally to unaggro");
                             hero.Attack(ally);
-                            Await.Block("zaioUnaggroBlock", AsyncHelpers.AsyncSleep);
+                            Await.Block("zaioUnaggroBlock", MyAsyncHelpers.AsyncSleep);
                         }
                         else
                         {
@@ -148,7 +148,7 @@ namespace Zaio
                             var pos = attacker.NetworkPosition + dir * (allyDistance + 300);
                             hero.Move(pos);
                             Log.Debug($"move behind ally to unaggro {allyDistance} vs {distance}");
-                            Await.Block("zaioUnaggroBlock", AsyncHelpers.AsyncSleep);
+                            Await.Block("zaioUnaggroBlock", MyAsyncHelpers.AsyncSleep);
                         }
                         return;
                     }
@@ -168,15 +168,25 @@ namespace Zaio
             {
                 return;
             }
+            Console.WriteLine(hero.NetworkPosition);
 
-            var enemy = ObjectManager.GetEntities<Entity>().First(x => x.Team != hero.Team);
+            //var enemy = ObjectManager.GetEntities<Entity>().First(x => x.Team != hero.Team);
 
-            //Console.WriteLine(hero.IsMagicImmune());
+            ////Console.WriteLine(hero.IsMagicImmune());
 
-            foreach (var heroModifier in hero.Modifiers)
-            {
-                Console.WriteLine(heroModifier.Name);
-            }
+            //foreach (var heroModifier in hero.Modifiers)
+            ////{
+            ////    Console.WriteLine(heroModifier.Name);
+            ////}
+
+            //var illus = ObjectManager.GetEntities<Hero>().First(x => x.IsIllusion);
+
+            ////Console.WriteLine(hero.IsMagicImmune());
+
+            //foreach (var heroModifier in illus.Modifiers)
+            //{
+            //    Console.WriteLine($"{heroModifier.Name}: {heroModifier.RemainingTime}");
+            //}
         }
 
         private static void Drawing_OnDraw(EventArgs args)

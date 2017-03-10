@@ -53,6 +53,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _shrapnelAbility = MyHero.GetAbilityById(AbilityId.sniper_shrapnel);
@@ -71,7 +73,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_ultAbility.CanBeCasted() && !IsEnemyNear())
+            if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted() && !IsEnemyNear())
             {
                 var hasAgha = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
                 if (hasAgha)
@@ -148,7 +150,7 @@ namespace Zaio.Heroes
         {
             if (!MyHero.IsSilenced())
             {
-                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && !IsEnemyNear() &&
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && !IsEnemyNear() &&
                     !MyHero.IsInvisible())
                 {
                     var hasAgha = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
@@ -184,7 +186,7 @@ namespace Zaio.Heroes
                     }
                 }
 
-                if (_shrapnelAbility.CanBeCasted(target) && _shrapnelAbility.CanHit(target))
+                if (_shrapnelAbility.IsAbilityEnabled() && _shrapnelAbility.CanBeCasted(target) && _shrapnelAbility.CanHit(target))
                 {
                     var castPoint = _shrapnelAbility.FindCastPoint() * 1000.0f;
                     var delay = _shrapnelAbility.GetAbilityData("damage_delay") * 1000.0f;

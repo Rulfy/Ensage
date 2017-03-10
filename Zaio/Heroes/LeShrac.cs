@@ -46,6 +46,8 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            OnLoadMenuItems(supportedStuff);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _stunAbility = MyHero.GetAbilityById(AbilityId.leshrac_split_earth);
@@ -60,7 +62,7 @@ namespace Zaio.Heroes
 
 
             var eulsModifier = target.FindModifier("modifier_eul_cyclone");
-            if ((_stunAbility.CanBeCasted(target) || eulsModifier != null && _stunAbility.CanBeCasted()) &&
+            if (_stunAbility.IsAbilityEnabled() && (_stunAbility.CanBeCasted(target) || eulsModifier != null && _stunAbility.CanBeCasted()) &&
                 _stunAbility.CanHit(target))
             {
                 var stunCastpoint = _stunAbility.FindCastPoint();
@@ -100,7 +102,7 @@ namespace Zaio.Heroes
                     else
                     {
                         var euls = MyHero.GetItemById(ItemId.item_cyclone);
-                        if (euls != null && euls.CanBeCasted(target))
+                        if (euls != null && euls.IsAbilityEnabled() && euls.CanBeCasted(target))
                         {
                             if (euls.CanHit(target))
                             {
@@ -146,21 +148,21 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (!_ultAbility.IsToggled && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
+                if (_ultAbility.IsAbilityEnabled() && !_ultAbility.IsToggled && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
                 {
                     Log.Debug($"using ult");
                     _ultAbility.ToggleAbility();
                     await Await.Delay((int) (_ultAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
 
-                if (_edictAbility.CanBeCasted(target) && _edictAbility.CanHit(target))
+                if (_edictAbility.IsAbilityEnabled() && _edictAbility.CanBeCasted(target) && _edictAbility.CanHit(target))
                 {
                     Log.Debug($"using edict");
                     _edictAbility.UseAbility();
                     await Await.Delay((int) (_edictAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
                 }
 
-                if (_lightningAbility.CanBeCasted(target) && _lightningAbility.CanHit(target))
+                if (_lightningAbility.IsAbilityEnabled() && _lightningAbility.CanBeCasted(target) && _lightningAbility.CanHit(target))
                 {
                     Log.Debug($"using lightning");
                     _lightningAbility.UseAbility(target);

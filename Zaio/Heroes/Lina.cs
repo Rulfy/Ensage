@@ -55,6 +55,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _stunAbility = MyHero.GetAbilityById(AbilityId.lina_light_strike_array);
@@ -74,7 +76,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_ultAbility.CanBeCasted())
+            if (_ultAbility.IsKillstealAbilityEnabled() &&_ultAbility.CanBeCasted())
             {
                 var damage = _ultAbility.GetAbilityData("damage");
                 var hasScepter = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
@@ -98,7 +100,7 @@ namespace Zaio.Heroes
                 }
             }
 
-            if (_slaveAbility.CanBeCasted())
+            if (_slaveAbility.IsKillstealAbilityEnabled() &&_slaveAbility.CanBeCasted())
             {
                 var damage = (float) _slaveAbility.GetDamage(_slaveAbility.Level - 1);
                 damage *= GetSpellAmp();
@@ -134,7 +136,7 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             var eulsModifier = target.FindModifier("modifier_eul_cyclone");
-            if ((_stunAbility.CanBeCasted(target) || eulsModifier != null && _stunAbility.CanBeCasted()) &&
+            if (_stunAbility.IsAbilityEnabled() && (_stunAbility.CanBeCasted(target) || eulsModifier != null && _stunAbility.CanBeCasted()) &&
                 _stunAbility.CanHit(target))
             {
                 var stunCastpoint = _stunAbility.FindCastPoint();
@@ -174,7 +176,7 @@ namespace Zaio.Heroes
                     else
                     {
                         var euls = MyHero.GetItemById(ItemId.item_cyclone);
-                        if (euls != null && euls.CanBeCasted(target))
+                        if (euls != null && euls.IsAbilityEnabled() && euls.CanBeCasted(target))
                         {
                             if (euls.CanHit(target))
                             {
@@ -218,7 +220,7 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_slaveAbility.CanBeCasted(target) && _slaveAbility.CanHit(target) && !_stunAbility.CanBeCasted() &&
+                if (_slaveAbility.IsAbilityEnabled() && _slaveAbility.CanBeCasted(target) && _slaveAbility.CanHit(target) && !_stunAbility.CanBeCasted() &&
                     _stunAbility.CanHit(target))
                 {
                     var castPoint = _slaveAbility.FindCastPoint();
@@ -232,7 +234,7 @@ namespace Zaio.Heroes
                     await Await.Delay(GetAbilityDelay(target, _slaveAbility), tk);
                 }
 
-                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
                 {
                     if (target.IsHexed() || target.IsStunned() ||
                         (float) target.Health / target.MaximumHealth * (1.0f + target.MagicResistance()) < 0.5f)

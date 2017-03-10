@@ -44,6 +44,8 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            OnLoadMenuItems(supportedStuff);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _slowAbility = MyHero.GetAbilityById(AbilityId.skywrath_mage_concussive_shot);
@@ -56,13 +58,13 @@ namespace Zaio.Heroes
         {
             if (!MyHero.IsSilenced())
             {
-                if (_silenceAbility.CanBeCasted(target) && _silenceAbility.CanHit(target))
+                if (_silenceAbility.IsAbilityEnabled() && _silenceAbility.CanBeCasted(target) && _silenceAbility.CanHit(target))
                 {
                     Log.Debug($"use e");
                     _silenceAbility.UseAbility(target);
                     await Await.Delay(GetAbilityDelay(target, _silenceAbility), tk);
                 }
-                if (_slowAbility.CanBeCasted(target) && _slowAbility.CanHit(target))
+                if (_slowAbility.IsAbilityEnabled() && _slowAbility.CanBeCasted(target) && _slowAbility.CanHit(target))
                 {
                     Log.Debug($"use W");
                     _slowAbility.UseAbility();
@@ -81,20 +83,20 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_qAbility.CanBeCasted(target) && _qAbility.CanHit(target))
+                if (_qAbility.IsAbilityEnabled() && _qAbility.CanBeCasted(target) && _qAbility.CanHit(target))
                 {
                     Log.Debug($"use Q");
                     _qAbility.UseAbility(target);
                     await Await.Delay(GetAbilityDelay(target, _qAbility), tk);
                 }
-                if (_silenceAbility.CanBeCasted(target) && _silenceAbility.CanHit(target))
+                if (_silenceAbility.IsAbilityEnabled() && _silenceAbility.CanBeCasted(target) && _silenceAbility.CanHit(target))
                 {
                     Log.Debug($"use e");
                     _silenceAbility.UseAbility(target);
                     await Await.Delay(GetAbilityDelay(target, _silenceAbility), tk);
                 }
 
-                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
                     (target.IsRooted() || target.MovementSpeed < 200 || !target.IsMoving))
                 {
                     Log.Debug($"use ult {target.IsRooted()} | {target.IsMoving} | {target.MovementSpeed}");

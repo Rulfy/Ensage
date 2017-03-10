@@ -23,7 +23,8 @@ namespace Zaio.Heroes
         {
             "sven_storm_bolt",
             "sven_warcry",
-            "sven_gods_strength"
+            "sven_gods_strength",
+            "item_mask_of_madness"
         };
 
         private static readonly string[] KillstealAbilities =
@@ -51,6 +52,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _stormboltAbility = MyHero.GetAbilityById(AbilityId.sven_storm_bolt);
@@ -70,7 +73,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_stormboltAbility.CanBeCasted())
+            if (_stormboltAbility.IsKillstealAbilityEnabled() && _stormboltAbility.CanBeCasted())
             {
                 var damage = (float) _stormboltAbility.GetDamage(_stormboltAbility.Level - 1);
                 damage *= GetSpellAmp();
@@ -110,7 +113,7 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_stormboltAbility.CanBeCasted(target) && _stormboltAbility.CanHit(target))
+                if (_stormboltAbility.IsAbilityEnabled() && _stormboltAbility.CanBeCasted(target) && _stormboltAbility.CanHit(target))
                 {
                     _stormboltAbility.UseAbility(target);
                     Log.Debug($"stormbolt used");
@@ -119,14 +122,14 @@ namespace Zaio.Heroes
 
                 if (MyHero.Distance2D(target) <= 400)
                 {
-                    if (_warcryAbility.CanBeCasted())
+                    if (_warcryAbility.IsAbilityEnabled() && _warcryAbility.CanBeCasted())
                     {
                         _warcryAbility.UseAbility();
                         Log.Debug($"warcry used");
                         await Await.Delay(100, tk);
                     }
 
-                    if (_ultAbility.CanBeCasted())
+                    if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted())
                     {
                         Log.Debug($"use ult");
                         _ultAbility.UseAbility();
@@ -143,7 +146,7 @@ namespace Zaio.Heroes
             }
             //cast mom if all of our skills are on cooldown
             var mom = MyHero.GetItemById(ItemId.item_mask_of_madness);
-            if (mom != null && MyHero.CanAttack() && !_stormboltAbility.CanBeCasted() &&
+            if (mom != null && mom.IsAbilityEnabled() && MyHero.CanAttack() && !_stormboltAbility.CanBeCasted() &&
                 !_warcryAbility.CanBeCasted() && !_ultAbility.CanBeCasted() && mom.CanBeCasted())
             {
                 Log.Debug($"Use mom");

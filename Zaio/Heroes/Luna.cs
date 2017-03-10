@@ -54,6 +54,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             _minimumEnemyUltCount =
     new MenuItem("zaioLunaMinEnemyCount", "Minimum Enemies for Ult").SetValue(new Slider(1, 0, 4));
             _minimumEnemyUltCount.Tooltip = "Minimum enemies besides your target to use ult.";
@@ -77,7 +79,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_nukeAbility.CanBeCasted())
+            if (_nukeAbility.IsKillstealAbilityEnabled()&&_nukeAbility.CanBeCasted())
             {
                 var damage = _nukeAbility.GetAbilityData("damage");
                 damage *= GetSpellAmp();
@@ -108,14 +110,14 @@ namespace Zaio.Heroes
         {
             if (!MyHero.IsSilenced())
             {
-                if (_nukeAbility.CanBeCasted(target) && _nukeAbility.CanHit(target))
+                if (_nukeAbility.IsAbilityEnabled() && _nukeAbility.CanBeCasted(target) && _nukeAbility.CanHit(target))
                 {
                     _nukeAbility.UseAbility(target);
                     Log.Debug($"using lucent beam!");
                     await Await.Delay(GetAbilityDelay(target, _nukeAbility), tk);
                 }
 
-                if (_aoeAbility.CanBeCasted() && _aoeAbility.CanHit(target))
+                if (_aoeAbility.IsAbilityEnabled() && _aoeAbility.CanBeCasted() && _aoeAbility.CanHit(target))
                 {
                     var hasScepter = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
                     var radius = _aoeAbility.GetAbilityData("search_radius");

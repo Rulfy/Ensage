@@ -57,6 +57,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             _circleTillHook = new MenuItem("zaioClockworkStopTillHook", "Circle on blocked Hook").SetValue(true);
             _circleTillHook.Tooltip = "Moves on a circle when your hook is blocked.";
             heroMenu.AddItem(_circleTillHook);
@@ -78,7 +80,7 @@ namespace Zaio.Heroes
             }
 
             var flare = MyHero.Spellbook.SpellE;
-            if (flare.CanBeCasted())
+            if (flare.IsKillstealAbilityEnabled() && flare.CanBeCasted())
             {
                 var damage = (float) flare.GetDamage(flare.Level - 1);
                 damage *= GetSpellAmp();
@@ -110,7 +112,7 @@ namespace Zaio.Heroes
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if (MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) && ult.CanBeCasted())
+            if (ult.IsKillstealAbilityEnabled() && MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) && ult.CanBeCasted())
             {
                 var damage = ult.GetAbilityData("damage");
                 damage *= GetSpellAmp();
@@ -163,7 +165,7 @@ namespace Zaio.Heroes
         {
             var ult = MyHero.Spellbook.SpellR;
 
-            if (!MyHero.IsSilenced() && ult.CanBeCasted(target) && ult.CanHit(target))
+            if (!MyHero.IsSilenced() && ult.IsAbilityEnabled() && ult.CanBeCasted(target) && ult.CanHit(target))
             {
                 var speed = ult.GetAbilityData("speed");
                 var radius = ult.GetAbilityData("latch_radius") * 2;
@@ -220,7 +222,7 @@ namespace Zaio.Heroes
             if (!MyHero.IsSilenced())
             {
                 var cogs = MyHero.Spellbook.SpellW;
-                if (cogs.CanBeCasted())
+                if (cogs.IsAbilityEnabled() && cogs.CanBeCasted())
                 {
                     var radius = cogs.GetAbilityData("cogs_radius");
                     if (target.Distance2D(MyHero) <= radius)
@@ -240,7 +242,7 @@ namespace Zaio.Heroes
                 }
 
                 var q = MyHero.Spellbook.SpellQ;
-                if (q.CanBeCasted(target))
+                if (q.IsAbilityEnabled() && q.CanBeCasted(target))
                 {
                     Log.Debug($"use Q");
                     q.UseAbility();
@@ -248,7 +250,7 @@ namespace Zaio.Heroes
                 }
 
                 var flare = MyHero.Spellbook.SpellQ;
-                if (flare.CanBeCasted(target))
+                if (flare.IsAbilityEnabled() && flare.CanBeCasted(target))
                 {
                     var speed = flare.GetAbilityData("speed");
                     var time = target.Distance2D(MyHero) / speed * 1000.0f;

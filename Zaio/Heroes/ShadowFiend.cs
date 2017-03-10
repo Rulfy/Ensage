@@ -13,7 +13,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
+using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 
 namespace Zaio.Heroes
 {
@@ -59,6 +59,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             _razeAbilities[0] = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze1);
             _razeAbilities[1] = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze2);
             _razeAbilities[2] = MyHero.GetAbilityById(AbilityId.nevermore_shadowraze3);
@@ -92,7 +94,7 @@ namespace Zaio.Heroes
                 var effect = _razeEffects[index];
                 if (ability == null || effect == null)
                 {
-                    Await.Block("zaio.updateRazes", AsyncHelpers.AsyncSleep);
+                    Await.Block("zaio.updateRazes", MyAsyncHelpers.AsyncSleep);
                     return;
                 }
                 var range = ability.GetAbilityData("shadowraze_range");
@@ -198,6 +200,9 @@ namespace Zaio.Heroes
                 return false;
             }
 
+            if (!_razeAbilities[0].IsKillstealAbilityEnabled())
+                return false;
+
             var spellAmp = GetSpellAmp();
             foreach (var razeAbility in _razeAbilities)
             {
@@ -214,7 +219,7 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             var eulsModifier = target.FindModifier("modifier_eul_cyclone");
-            if (eulsModifier == null && _ultAbility.CanBeCasted(target) && !MyHero.IsVisibleToEnemies ||
+            if (_ultAbility.IsAbilityEnabled() && eulsModifier == null && _ultAbility.CanBeCasted(target) && !MyHero.IsVisibleToEnemies ||
                 eulsModifier != null && _ultAbility.CanBeCasted())
             {
                 if (MyHero.IsInvisible() || eulsModifier != null)
@@ -257,7 +262,7 @@ namespace Zaio.Heroes
                     var shadowBlade = MyHero.GetItemById(ItemId.item_invis_sword) ??
                                       MyHero.GetItemById(ItemId.item_silver_edge);
                     var distance = MyHero.Distance2D(target);
-                    if (shadowBlade != null && shadowBlade.CanBeCasted() && distance < 6000)
+                    if (shadowBlade != null && shadowBlade.IsAbilityEnabled() && shadowBlade.CanBeCasted() && distance < 6000)
                     {
                         Log.Debug($"using invis");
                         shadowBlade.UseAbility();
@@ -268,7 +273,7 @@ namespace Zaio.Heroes
             }
 
             var euls = MyHero.GetItemById(ItemId.item_cyclone);
-            if (euls != null && euls.CanBeCasted(target) && _ultAbility.CanBeCasted(target))
+            if (euls != null && euls.IsAbilityEnabled() && euls.CanBeCasted(target) && _ultAbility.CanBeCasted(target))
             {
                 if (euls.CanHit(target))
                 {
@@ -289,7 +294,7 @@ namespace Zaio.Heroes
             await HasNoLinkens(target, tk);
             await UseItems(target, tk);
 
-            if (!MyHero.IsSilenced())
+            if (!MyHero.IsSilenced() && _razeAbilities[0].IsAbilityEnabled())
             {
                 foreach (var razeAbility in _razeAbilities)
                 {

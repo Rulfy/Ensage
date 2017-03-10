@@ -55,6 +55,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _oddsAbility = MyHero.GetAbilityById(AbilityId.legion_commander_overwhelming_odds);
@@ -74,7 +76,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_oddsAbility.CanBeCasted())
+            if (_oddsAbility.IsKillstealAbilityEnabled() && _oddsAbility.CanBeCasted())
             {
                 var damage = _oddsAbility.GetAbilityData("damage");
                 var damagePerUnit = _oddsAbility.GetAbilityData("damage_per_unit");
@@ -134,7 +136,7 @@ namespace Zaio.Heroes
                 return;
             }
             // maybe got some pre damage
-            if (!MyHero.IsSilenced() && _oddsAbility.CanBeCasted(target) && MyHero.Mana > 300 &&
+            if (!MyHero.IsSilenced() && _oddsAbility.IsAbilityEnabled() && _oddsAbility.CanBeCasted(target) && MyHero.Mana > 300 &&
                 _oddsAbility.CanHit(target))
             {
                 var radius = _oddsAbility.GetAbilityData("radius");
@@ -164,19 +166,19 @@ namespace Zaio.Heroes
             await UseItems(target, tk);
 
             // press the attack for teh damage
-            if (IsInRange(_duelAbility.GetCastRange()))
+            if (_duelAbility.IsAbilityEnabled() && IsInRange(_duelAbility.GetCastRange()))
             {
                 var enemyHealth = (float) target.Health / target.MaximumHealth;
                 if (!MyHero.IsSilenced() && !MyHero.HasModifier("modifier_press_the_attack") && enemyHealth > 0.33f)
                 {
-                    if (_pressTheAttackAbility.CanBeCasted())
+                    if (_pressTheAttackAbility.IsAbilityEnabled() && _pressTheAttackAbility.CanBeCasted())
                     {
                         _pressTheAttackAbility.UseAbility(MyHero);
                         await Await.Delay((int) (_pressTheAttackAbility.FindCastPoint() * 1000.0 + Game.Ping), tk);
                     }
                 }
                 var armlet = MyHero.GetItemById(ItemId.item_armlet);
-                if (armlet != null && !armlet.IsToggled)
+                if (armlet != null && armlet.IsAbilityEnabled() && !armlet.IsToggled)
                 {
                     Log.Debug($"toggling armlet");
                     armlet.ToggleAbility();
@@ -195,10 +197,10 @@ namespace Zaio.Heroes
             }
 
             // test if ulti is good
-            if (!MyHero.IsSilenced() && _duelAbility.CanBeCasted(target) && await HasNoLinkens(target, tk))
+            if (!MyHero.IsSilenced() && _duelAbility.IsAbilityEnabled() && _duelAbility.CanBeCasted(target) && await HasNoLinkens(target, tk))
             {
                 var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
-                if (bladeMail != null && bladeMail.CanBeCasted())
+                if (bladeMail != null && bladeMail.IsAbilityEnabled() && bladeMail.CanBeCasted())
                 {
                     Log.Debug($"using blademail");
                     bladeMail.UseAbility();
@@ -206,7 +208,7 @@ namespace Zaio.Heroes
                 }
 
                 var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
-                if (lotus != null && lotus.CanBeCasted())
+                if (lotus != null && lotus.IsAbilityEnabled() && lotus.CanBeCasted())
                 {
                     Log.Debug($"using lotus orb before call");
                     lotus.UseAbility(MyHero);
@@ -214,7 +216,7 @@ namespace Zaio.Heroes
                 }
 
                 var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
-                if (mjollnir != null && mjollnir.CanBeCasted())
+                if (mjollnir != null &&mjollnir.IsAbilityEnabled() && mjollnir.CanBeCasted())
                 {
                     Log.Debug($"using mjollnir before call");
                     mjollnir.UseAbility(MyHero);

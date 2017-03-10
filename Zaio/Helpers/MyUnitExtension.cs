@@ -1,5 +1,6 @@
 ﻿using Ensage;
 using Ensage.Common.Extensions;
+using SharpDX;
 
 namespace Zaio.Helpers
 {
@@ -94,6 +95,31 @@ namespace Zaio.Helpers
         public static bool IsDisabled(this Unit unit, out float duration)
         {
             return unit.IsStunned(out duration) || unit.IsHexed(out duration) || unit.IsRooted(out duration);
+        }
+
+        public static float GetIllusionRemainingTime(this Unit illusion)
+        {
+            if (!illusion.IsIllusion)
+                return 0.0f;
+
+            var mod = illusion.FindModifier("modifier_illusion");
+            if (mod != null)
+                return mod.RemainingTime;
+
+            mod = illusion.FindModifier("modifier_manta");
+            if (mod != null)
+                return mod.RemainingTime;
+
+            return 0; // TODO: check for more modifiers
+        }
+
+        public static float GetShortestDistance(this Unit unit, Vector3 start, Vector3 end)
+        {
+            var dir = end - start;
+            var pos = unit.NetworkPosition;
+            var closestPoint = (Vector3.Dot(pos - start, dir) / dir.LengthSquared()) * dir;
+            var targetVec = (pos - start) - closestPoint;
+            return targetVec.Length();
         }
     }
 }

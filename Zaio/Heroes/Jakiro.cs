@@ -45,6 +45,8 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            OnLoadMenuItems(supportedStuff);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _ultAbility = MyHero.GetAbilityById(AbilityId.jakiro_macropyre);
@@ -60,7 +62,7 @@ namespace Zaio.Heroes
             if (!MyHero.IsSilenced())
             {
                 var eulsModifier = target.FindModifier("modifier_eul_cyclone");
-                if ((_stunAbility.CanBeCasted(target) || eulsModifier != null && _stunAbility.CanBeCasted()) &&
+                if (_stunAbility.IsAbilityEnabled() &&(_stunAbility.CanBeCasted(target) || eulsModifier != null && _stunAbility.CanBeCasted()) &&
                     _stunAbility.CanHit(target))
                 {
                     var stunCastpoint = _stunAbility.FindCastPoint();
@@ -140,7 +142,7 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
                 {
                     if (target.IsStunned() || target.IsRooted())
                     {
@@ -178,14 +180,14 @@ namespace Zaio.Heroes
                     }
                 }
 
-                if (_dualAbility.CanBeCasted(target) && _dualAbility.CanHit(target))
+                if (_dualAbility.IsAbilityEnabled() && _dualAbility.CanBeCasted(target) && _dualAbility.CanHit(target))
                 {
                     Log.Debug($"using Q");
                     _dualAbility.UseAbility(target.NetworkPosition);
                     await Await.Delay(GetAbilityDelay(target, _dualAbility), tk);
                 }
 
-                if (_orbAbility.CanBeCasted(target) && _orbAbility.CanHit(target))
+                if (_orbAbility.IsAbilityEnabled() && _orbAbility.CanBeCasted(target) && _orbAbility.CanHit(target))
                 {
                     Log.Debug($"using orb");
                     _orbAbility.UseAbility(target);

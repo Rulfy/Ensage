@@ -42,6 +42,8 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            OnLoadMenuItems(supportedStuff);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _ultAbility = MyHero.GetAbilityById(AbilityId.ursa_enrage);
@@ -52,7 +54,7 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             // overpower for teh damage
-            if (IsInRange(MyHero.AttackRange) && !MyHero.HasModifier("modifier_ursa_overpower"))
+            if (_overpowerAbility.IsAbilityEnabled() && IsInRange(MyHero.AttackRange) && !MyHero.HasModifier("modifier_ursa_overpower"))
             {
                 if (!MyHero.IsSilenced() && _overpowerAbility.CanBeCasted())
                 {
@@ -69,7 +71,7 @@ namespace Zaio.Heroes
                 Log.Debug($"disabled!");
                 // return;
             }
-            if (!(target.IsHexed() || target.IsStunned()) && !target.IsMagicImmune())
+            if (_earthshockAbility.IsAbilityEnabled() && !(target.IsHexed() || target.IsStunned()) && !target.IsMagicImmune())
             {
                 var healthPercentage = (float) target.Health / target.MaximumHealth;
                 if (healthPercentage > 0.5)
@@ -88,7 +90,7 @@ namespace Zaio.Heroes
                 return;
             }
             // test if ulti is good
-            if (_ultAbility.CanBeCasted())
+            if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted())
             {
                 var enemies =
                     ObjectManager.GetEntitiesFast<Hero>()

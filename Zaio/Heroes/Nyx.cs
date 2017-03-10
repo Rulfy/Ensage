@@ -55,6 +55,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _ultAbility = MyHero.GetAbilityById(AbilityId.nyx_assassin_vendetta);
@@ -74,7 +76,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (Target == null && _stunAbility.CanBeCasted())
+            if (Target == null && _stunAbility.IsKillstealAbilityEnabled() && _stunAbility.CanBeCasted())
             {
                 var damage = (float) _stunAbility.GetDamage(_stunAbility.Level - 1);
                 damage *= GetSpellAmp();
@@ -105,7 +107,7 @@ namespace Zaio.Heroes
                 }
             }
 
-            if (_manaBurnAbility.CanBeCasted())
+            if (_manaBurnAbility.IsKillstealAbilityEnabled() &&_manaBurnAbility.CanBeCasted())
             {
                 var intMultiplier = _manaBurnAbility.GetAbilityData("float_multiplier");
                 var enemy =
@@ -136,7 +138,7 @@ namespace Zaio.Heroes
         {
             if (!MyHero.HasModifier("modifier_nyx_assassin_vendetta") && !MyHero.IsSilenced())
             {
-                var manaNeeded = _stunAbility.CanBeCasted(target) ? _stunAbility.ManaCost + 100 : 0;
+                var manaNeeded = _stunAbility.CanBeCasted(target) || !_stunAbility.IsAbilityEnabled() ? _stunAbility.ManaCost + 100 : 0;
                 if (manaNeeded <= MyHero.Mana)
                 {
                     await HasNoLinkens(target, tk);
@@ -149,7 +151,7 @@ namespace Zaio.Heroes
                         // return;
                     }
                 }
-                if (_stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target))
+                if (_stunAbility.IsAbilityEnabled() && _stunAbility.CanBeCasted(target) && _stunAbility.CanHit(target))
                 {
                     var castPoint = _stunAbility.FindCastPoint();
                     var speed = _stunAbility.GetAbilityData("speed");
@@ -166,7 +168,7 @@ namespace Zaio.Heroes
                 }
 
                 Log.Debug($"Use manaburn {_manaBurnAbility.CanBeCasted(target)} | {_manaBurnAbility.CanHit(target)}");
-                if (_manaBurnAbility.CanBeCasted(target) && target.Mana > 100 && _manaBurnAbility.CanHit(target))
+                if (_manaBurnAbility.IsAbilityEnabled() && _manaBurnAbility.CanBeCasted(target) && target.Mana > 100 && _manaBurnAbility.CanHit(target))
                 {
                     _manaBurnAbility.UseAbility(target);
                     Log.Debug($"Use manaburn");
@@ -178,7 +180,7 @@ namespace Zaio.Heroes
 
             if (!await MoveOrBlinkToEnemy(target, tk))
             {
-                if (!MyHero.IsSilenced() && _ultAbility.CanBeCasted() &&
+                if (_ultAbility.IsAbilityEnabled() && !MyHero.IsSilenced() && _ultAbility.CanBeCasted() &&
                     !MyHero.HasModifier("modifier_nyx_assassin_vendetta"))
                 {
                     Log.Debug($"going invis boys since too far");

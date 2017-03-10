@@ -50,6 +50,8 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            OnLoadMenuItems(supportedStuff);
+
             _throwBackComboKey =
                 new MenuItem("zaioTinyThrowBack", "Throw Back").SetValue(new KeyBind(0, KeyBindType.Press));
             _throwBackComboKey.Tooltip = "Throws an enemy back to your allies or under your tower.";
@@ -194,7 +196,7 @@ namespace Zaio.Heroes
             }
 
             var manta = MyHero.GetItemById(ItemId.item_manta);
-            if (manta != null && manta.CanBeCasted() && MyHero.IsSilenced())
+            if (manta != null && manta.IsAbilityEnabled() && manta.CanBeCasted() && MyHero.IsSilenced())
             {
                 Log.Debug($"use manta 1 because silenced");
                 manta.UseAbility();
@@ -205,7 +207,7 @@ namespace Zaio.Heroes
             if (!MyHero.IsSilenced())
             {
                 // test if toss/av combo is working
-                if (_tossAbility.CanBeCasted(target) && _tossAbility.CanHit(target))
+                if (_tossAbility.IsAbilityEnabled() && _tossAbility.CanBeCasted(target) && _tossAbility.CanHit(target))
                 {
                     Log.Debug($"use toss");
                     var grab = _tossAbility.GetAbilityData("grab_radius");
@@ -224,7 +226,7 @@ namespace Zaio.Heroes
                         await Await.Delay(100, tk);
                     }
                 }
-                if (_avalancheAbility.CanBeCasted(target) && _avalancheAbility.CanHit(target))
+                if (_avalancheAbility.IsAbilityEnabled() && _avalancheAbility.CanBeCasted(target) && _avalancheAbility.CanHit(target))
                 {
                     Log.Debug($"use avalanche");
                     _avalancheAbility.UseAbility(target.NetworkPosition);
@@ -239,7 +241,7 @@ namespace Zaio.Heroes
                 return;
             }
 
-            if (manta != null && manta.CanBeCasted())
+            if (manta != null && manta.IsAbilityEnabled() && manta.CanBeCasted())
             {
                 Log.Debug($"Use manta");
                 manta.UseAbility();

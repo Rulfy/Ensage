@@ -52,6 +52,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _callAbility = MyHero.GetAbilityById(AbilityId.axe_berserkers_call);
@@ -70,7 +72,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_ultAbility.CanBeCasted())
+            if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted())
             {
                 var threshold =
                     _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
@@ -98,7 +100,7 @@ namespace Zaio.Heroes
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             _ultAbility = MyHero.Spellbook.SpellR;
-            if (!MyHero.IsSilenced() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
+            if (!MyHero.IsSilenced() && _ultAbility.IsAbilityEnabled() &&_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
                 await HasNoLinkens(target, tk))
             {
                 var threshold =
@@ -131,14 +133,14 @@ namespace Zaio.Heroes
             }
 
             _callAbility = MyHero.Spellbook.SpellQ;
-            if (!MyHero.IsSilenced() && _callAbility.CanBeCasted(target))
+            if (!MyHero.IsSilenced() && _callAbility.IsAbilityEnabled() && _callAbility.CanBeCasted(target))
             {
                 var delay = _callAbility.FindCastPoint() * 1000 + Game.Ping;
                 var radius = _callAbility.GetAbilityData("radius");
                 if (Prediction.Prediction.PredictPosition(target, (int) delay).Distance2D(MyHero) <= radius)
                 {
                     var bladeMail = MyHero.GetItemById(ItemId.item_blade_mail);
-                    if (bladeMail != null && bladeMail.CanBeCasted())
+                    if (bladeMail != null && bladeMail.IsAbilityEnabled() && bladeMail.CanBeCasted())
                     {
                         Log.Debug($"using blademail before call");
                         bladeMail.UseAbility();
@@ -146,7 +148,7 @@ namespace Zaio.Heroes
                     }
 
                     var lotus = MyHero.GetItemById(ItemId.item_lotus_orb);
-                    if (lotus != null && lotus.CanBeCasted())
+                    if (lotus != null && lotus.IsAbilityEnabled() && lotus.CanBeCasted())
                     {
                         Log.Debug($"using lotus orb before call");
                         lotus.UseAbility(MyHero);
@@ -154,7 +156,7 @@ namespace Zaio.Heroes
                     }
 
                     var mjollnir = MyHero.GetItemById(ItemId.item_mjollnir);
-                    if (mjollnir != null && mjollnir.CanBeCasted())
+                    if (mjollnir != null && mjollnir.IsAbilityEnabled() && mjollnir.CanBeCasted())
                     {
                         Log.Debug($"using mjollnir before call");
                         mjollnir.UseAbility(MyHero);

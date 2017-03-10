@@ -42,6 +42,8 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
+            OnLoadMenuItems(supportedStuff);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _purgeAbility = MyHero.GetAbilityById(AbilityId.slark_dark_pact);
@@ -51,7 +53,7 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-            if (!MyHero.IsSilenced() && _jumpAbility.CanBeCasted(target))
+            if (!MyHero.IsSilenced() && _jumpAbility.IsAbilityEnabled() && _jumpAbility.CanBeCasted(target))
             {
                 var radius = _jumpAbility.GetAbilityData("pounce_radius");
                 var range = _jumpAbility.GetAbilityData("pounce_distance");
@@ -65,7 +67,7 @@ namespace Zaio.Heroes
                     await Await.Delay((int) (_jumpAbility.FindCastPoint() * 1000.0f + Game.Ping), tk);
                 }
             }
-            if (!MyHero.IsSilenced() && _purgeAbility.CanBeCasted(target) && _purgeAbility.CanHit(target) ||
+            if (!MyHero.IsSilenced() && _purgeAbility.IsAbilityEnabled() && _purgeAbility.CanBeCasted(target) && _purgeAbility.CanHit(target) ||
                 MyHero.IsRooted())
             {
                 Log.Debug($"using Q");

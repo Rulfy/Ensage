@@ -6,16 +6,12 @@ using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
-using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
-using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using Zaio.Prediction;
-using AsyncHelpers = Zaio.Helpers.AsyncHelpers;
 
 namespace Zaio.Heroes
 {
@@ -38,9 +34,9 @@ namespace Zaio.Heroes
 
 
         private MenuItem _autoGhost;
+        private Ability _ghostAbility;
 
         private Ability _pulseAbility;
-        private Ability _ghostAbility;
         private Ability _ultAbility;
 
         private bool ShouldAutoGhost => _autoGhost.GetValue<bool>();
@@ -61,6 +57,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             _autoGhost = new MenuItem("zaioNecrophosAutoGhost", "Auto Ghost").SetValue(true);
             _autoGhost.Tooltip = "Will use Ghost Shroud when in danger.";
             heroMenu.AddItem(_autoGhost);
@@ -76,22 +74,22 @@ namespace Zaio.Heroes
         }
 
 
-        private void GameDispatcher_OnIngameUpdate(EventArgs args)
+        private async void GameDispatcher_OnIngameUpdate(EventArgs args)
         {
             if (!ShouldAutoGhost || !MyHero.IsAlive || MyHero.IsSilenced())
             {
-                Await.Block("zaioNecrophosGhostSleep", AsyncHelpers.AsyncSleep);
+                Await.Block("zaioNecrophosGhostSleep", MyAsyncHelpers.AsyncSleep);
                 return;
             }
 
 
-            if (_ghostAbility.CanBeCasted() && !MyHero.IsMagicImmune())
+            if ( _ghostAbility.CanBeCasted() && !MyHero.IsMagicImmune())
             {
                 var enemies =
                     ObjectManager.GetEntitiesParallel<Hero>()
                                  .Where(
                                      x =>
-                                         x.IsAlive && x.Team != MyHero.Team && 
+                                         x.IsAlive && x.Team != MyHero.Team &&
                                          x.CanAttack() && !x.CantBeKilled() &&
                                          x.Distance2D(MyHero) <= x.GetAttackRange() + 100 &&
                                          x.IsAttacking(MyHero));
@@ -101,7 +99,7 @@ namespace Zaio.Heroes
                     Log.Debug(
                         $"Using ghost to avoid damage/death by right click {enemies.Count()} >= 2 and {MyHero.Health} != {MyHero.MaximumHealth}");
                     _ghostAbility.UseAbility();
-                    Await.Block("zaioNecrophosGhostSleep", AsyncHelpers.AsyncSleep);
+                    Await.Block("zaioNecrophosGhostSleep", MyAsyncHelpers.AsyncSleep);
                 }
             }
         }
@@ -124,31 +122,28 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_ultAbility.CanBeCasted())
+            if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted())
             {
-                
                 var damage = _ultAbility.GetAbilityData("damage_per_health");
                 damage *= GetSpellAmp();
 
-                var enemies =
+                var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()
-                                 .Where(
+                                 .FirstOrDefault(
                                      x =>
                                          x.IsAlive && x.Team != MyHero.Team && _ultAbility.CanBeCasted(x) &&
                                          _ultAbility.CanHit(x) && !x.IsIllusion &&
-                                          (((x.MaximumHealth - x.Health) * damage) * (1 - x.MagicDamageResist)) >= x.Health && !x.CantBeAttacked() &&
+                                         (x.MaximumHealth - x.Health) * damage * (1 - x.MagicDamageResist) >= x.Health &&
+                                         !x.CantBeAttacked() &&
                                          !x.CantBeKilled() && !x.IsLinkensProtected());
 
-
-                foreach (var enemy in enemies)
+                if (enemy != null)
                 {
-                    if (enemy != null)
-                    {
-                        Log.Debug($"use ulti for killsteal because {(((enemy.MaximumHealth - enemy.Health) * damage) * (1 - enemy.MagicDamageResist))} >= {enemy.Health}");
-                        _ultAbility.UseAbility(enemy);
-                        await Await.Delay(GetAbilityDelay(enemy, _ultAbility));
-                        return true;
-                    }
+                    Log.Debug(
+                        $"use ulti for killsteal because {(enemy.MaximumHealth - enemy.Health) * damage * (1 - enemy.MagicDamageResist)} >= {enemy.Health}");
+                    _ultAbility.UseAbility(enemy);
+                    await Await.Delay(GetAbilityDelay(enemy, _ultAbility));
+                    return true;
                 }
             }
 
@@ -157,39 +152,39 @@ namespace Zaio.Heroes
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
-
             if (!await MoveOrBlinkToEnemy(target, tk)) //We want to initiate with blink first
             {
                 return;
             }
             await HasNoLinkens(target, tk);
             await UseItems(target, tk); //then use items to maximize ulti damage
-            await DisableEnemy(target, tk); 
+            await DisableEnemy(target, tk);
 
             if (!MyHero.IsSilenced())
             {
-                if (MyHero.Distance2D(target) <= _pulseAbility.GetAbilityData("area_of_effect"))
+                if (_pulseAbility.CanBeCasted() && _pulseAbility.CanHit(target) &&
+                    MyHero.Distance2D(target) <= _pulseAbility.GetAbilityData("area_of_effect") &&
+                    (!_ultAbility.IsAbilityEnabled() || MyHero.Mana - _pulseAbility.ManaCost >= _ultAbility.ManaCost))
                 {
-                if (_pulseAbility.CanBeCasted() && _pulseAbility.CanHit(target) && MyHero.Mana - _pulseAbility.ManaCost >= _ultAbility.ManaCost)
-                    {
-                        Log.Debug($"using pulse to deal damage target");
-                        _pulseAbility.UseAbility();
-                        await Await.Delay(100, tk);
-                    }
+                    Log.Debug($"using pulse to deal damage target");
+                    _pulseAbility.UseAbility();
+                    await Await.Delay(100, tk);
                 }
 
-                if (_ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && await HasNoLinkens(target, tk))
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) &&
+                    await HasNoLinkens(target, tk))
                 {
                     var damage = _ultAbility.GetAbilityData("damage_per_health");
                     damage *= GetSpellAmp();
-                    if (_ultAbility.CanHit(target) && (((target.MaximumHealth - target.Health) * damage) * (1 - target.MagicDamageResist)) >= target.Health) //Don't waste ulti if target is can't be killed by ulti
+                    if (_ultAbility.CanHit(target) &&
+                        (target.MaximumHealth - target.Health) * damage * (1 - target.MagicDamageResist) >=
+                        target.Health) //Don't waste ulti if target is can't be killed by ulti
                     {
                         Log.Debug($"using ulti to kill enemy. {damage} > {target.Health}");
                         _ultAbility.UseAbility(target);
                         await Await.Delay(GetAbilityDelay(target, _ultAbility) + 250, tk);
                     }
                 }
-
             }
 
 

@@ -59,6 +59,8 @@ namespace Zaio.Heroes
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            OnLoadMenuItems(supportedStuff, supportedKillsteal);
+
             ZaioMenu.LoadHeroSettings(heroMenu);
 
             _toggleAbility = MyHero.GetAbilityById(AbilityId.troll_warlord_berserkers_rage);
@@ -80,7 +82,7 @@ namespace Zaio.Heroes
             }
 
 
-            if (!_toggleAbility.IsToggled && _rangedAbility.CanBeCasted())
+            if (_rangedAbility.IsKillstealAbilityEnabled() && !_toggleAbility.IsToggled && _rangedAbility.CanBeCasted())
             {
                 var damage = _rangedAbility.GetAbilityData("axe_damage");
                 damage *= GetSpellAmp();
@@ -129,7 +131,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            if (_toggleAbility.IsToggled && _meleeAbility.CanBeCasted())
+            if (_meleeAbility.IsKillstealAbilityEnabled() && _toggleAbility.IsToggled && _meleeAbility.CanBeCasted())
             {
                 var maxMeleeRange = _meleeAbility.GetAbilityData("max_range");
                 var damage = _meleeAbility.GetAbilityData("damage");
@@ -164,7 +166,7 @@ namespace Zaio.Heroes
                                       MyHero.GetItemById(ItemId.item_silver_edge);
                     var distance = MyHero.Distance2D(target);
                     var rangeMode = !_toggleAbility.IsToggled;
-                    if (shadowBlade != null && shadowBlade.CanBeCasted() && !MyHero.IsVisibleToEnemies &&
+                    if (shadowBlade != null && shadowBlade.IsAbilityEnabled() && shadowBlade.CanBeCasted() && !MyHero.IsVisibleToEnemies &&
                         distance < MyHero.MovementSpeed * 7)
                     {
                         if (rangeMode && !MyHero.IsSilenced())
@@ -183,7 +185,7 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced() && !MyHero.IsInvisible())
             {
-                if (!_toggleAbility.IsToggled && _rangedAbility.CanBeCasted(target) && _rangedAbility.CanHit(target) &&
+                if (!_toggleAbility.IsToggled && _rangedAbility.IsAbilityEnabled() && _rangedAbility.CanBeCasted(target) && _rangedAbility.CanHit(target) &&
                     !MyHero.IsInvisible())
                 {
                        Log.Debug(
@@ -193,7 +195,7 @@ namespace Zaio.Heroes
                        //return;
                 }
 
-                else if (_toggleAbility.IsToggled && _rangedAbility.CanBeCasted(target) && _rangedAbility.CanHit(target))
+                else if (_toggleAbility.IsToggled && _toggleAbility.IsAbilityEnabled() && _rangedAbility.CanBeCasted(target) && _rangedAbility.CanHit(target))
                 {
                     Log.Debug($"toggling so we can use slow");
                     _toggleAbility.ToggleAbility();
@@ -201,7 +203,7 @@ namespace Zaio.Heroes
                     return;
                 }
 
-                if (_toggleAbility.IsToggled && _meleeAbility.CanBeCasted(target) && _meleeAbility.CanHit(target) &&
+                if (_meleeAbility.IsAbilityEnabled() && _toggleAbility.IsToggled && _meleeAbility.CanBeCasted(target) && _meleeAbility.CanHit(target) &&
                     !MyHero.IsInvisible())
                 {
                        Log.Debug(
@@ -211,7 +213,7 @@ namespace Zaio.Heroes
                        //return;
                 }
 
-                else if (!_toggleAbility.IsToggled && _meleeAbility.CanBeCasted(target) && _meleeAbility.CanHit(target))
+                else if (_toggleAbility.IsAbilityEnabled() && !_toggleAbility.IsToggled && _meleeAbility.CanBeCasted(target) && _meleeAbility.CanHit(target))
                 {
                     Log.Debug($"toggling so we can use melee axe");
                     _toggleAbility.ToggleAbility();
@@ -219,7 +221,7 @@ namespace Zaio.Heroes
                     return;
                 }
 
-                if (target.HasModifier("modifier_troll_warlord_whirling_axes_slow") && !_toggleAbility.IsToggled &&
+                if (_toggleAbility.IsAbilityEnabled() && target.HasModifier("modifier_troll_warlord_whirling_axes_slow") && !_toggleAbility.IsToggled &&
                     _toggleAbility.CanBeCasted())
                 {
                     Log.Debug($"toggling so we can hit bashes");
@@ -228,7 +230,7 @@ namespace Zaio.Heroes
                     return;
                 }
 
-                if (_ultAbility.CanBeCasted())
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted())
                     {
                         Log.Debug($"use ult");
                         _ultAbility.UseAbility();

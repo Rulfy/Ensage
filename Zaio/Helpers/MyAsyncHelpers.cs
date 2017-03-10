@@ -2,7 +2,7 @@
 
 namespace Zaio.Helpers
 {
-    public static class AsyncHelpers
+    public static class MyAsyncHelpers
     {
         public static async Task AsyncSleep()
         {
