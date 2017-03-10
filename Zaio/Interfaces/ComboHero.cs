@@ -403,7 +403,7 @@ namespace Zaio.Interfaces
             return false;
         }
 
-        protected async Task<bool> MoveOrBlinkToEnemy(Unit target, CancellationToken tk = default(CancellationToken), float minimumRange = 0.0f, float maximumRange = 0.0f)
+        protected async Task<bool> MoveOrBlinkToEnemy(Unit target, CancellationToken tk = default(CancellationToken), float minimumRange = 0.0f, float maximumRange = 0.0f, bool usePrediction = false)
         {
             var distance = MyHero.Distance2D(target) - target.HullRadius - MyHero.HullRadius;
 
@@ -431,9 +431,20 @@ namespace Zaio.Interfaces
                             var pos = (target.NetworkPosition - MyHero.NetworkPosition).Normalized();
                             pos *= minimumRange;
                             pos = target.NetworkPosition - pos;
+                            if (target.IsMoving && usePrediction)
+                            {
+                               var moves = Ensage.Common.Prediction.InFront(target, 75);
+                               blink.UseAbility(moves);
+                               await Await.Delay((int) (MyHero.GetTurnTime(moves) * 1000) + ItemDelay, tk);
+                               return false;
+                            }
+                            else
+                            {
                             blink.UseAbility(pos);
                             await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000) + ItemDelay, tk);
                             return false;
+                            }
+                            
                         }
                     }
                 }

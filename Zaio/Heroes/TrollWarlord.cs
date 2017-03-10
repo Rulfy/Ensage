@@ -28,7 +28,7 @@ namespace Zaio.Heroes
             "troll_warlord_whirling_axes_ranged",
             "troll_warlord_whirling_axes_melee",
             "troll_warlord_battle_trance",
-            "invis_sword",
+            "item_invis_sword",
             "item_silver_edge"
         };
 
@@ -230,7 +230,7 @@ namespace Zaio.Heroes
                     return;
                 }
 
-                if (_ultAbility.IsAbilityEnabled() && _ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted())
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted() && target.Distance2D(MyHero) <= 300)
                     {
                         Log.Debug($"use ult");
                         _ultAbility.UseAbility();
