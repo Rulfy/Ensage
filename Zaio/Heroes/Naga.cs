@@ -399,6 +399,8 @@ namespace Zaio.Heroes
                 time = Math.Max(time, _illuAbility.GetAbilityData("illusion_duration"));
             }
 
+            time = Math.Max(time, MyIllusions.Max(x => x.GetIllusionRemainingTime()));
+
             return time;
         }
 
