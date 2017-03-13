@@ -209,6 +209,7 @@ namespace Zaio.Heroes
                 // test function wheel items
                 var gameTime = (int) Game.GameTime;
                 var minute = gameTime / 60;
+                var seconds = gameTime % 60;
                 if (minute % 2 == 1)
                 {
                     // refresh available jungle camps
@@ -221,24 +222,27 @@ namespace Zaio.Heroes
 
                     //Log.Debug($"{minute % 2} == 1 => FALSE");
                     _stackJungleEntry.IsEnabled = false;
+                    _stackJungleEntry.DisplayName = $"Stack Jungle ({91 - seconds:00}s)";
+
                 }
                 else
                 {
-                    var seconds = gameTime % 60;
-                    var estimatedTime = GetEstimatedIllusitionTime();
+                    var estimatedTime = GetEstimatedIllusionTime();
                     if (estimatedTime <= 60 - seconds)
                     {
                         //Log.Debug($"{60 - seconds} <= {estimatedTime} => FALSE");
                         _stackJungleEntry.IsEnabled = false;
+                        _stackJungleEntry.DisplayName = $"Stack Jungle ({31 - seconds:00}s)";
                     }
                     else
                     {
                         //Log.Debug($"{60 - seconds} > {estimatedTime} => TRUE");
                         _stackJungleEntry.IsEnabled = true;
+                        _stackJungleEntry.DisplayName = "Stack Jungle";
                     }
                 }
                 _farmJungleEntry.IsEnabled = _availableCamps.Any();
-                _pushLaneEntry.IsEnabled = GetEstimatedIllusitionTime() > 0;
+                _pushLaneEntry.IsEnabled = GetEstimatedIllusionTime() > 0;
                 _mixedModeEntry.IsEnabled =  _farmJungleEntry.IsEnabled || _pushLaneEntry.IsEnabled ;
             }
 
@@ -256,8 +260,9 @@ namespace Zaio.Heroes
                     lanePusher.UpdateParticleEffect();
 
                     var illusion = lanePusher.Unit;
-                    if (!(illusion.Distance2D(lanePusher.CurrentTargetPosition) < 150))
+                    if (!(illusion.Distance2D(lanePusher.TargetPosition) < 250))
                     {
+                        await lanePusher.RefreshCommand();
                         continue;
                     }
 
@@ -276,8 +281,16 @@ namespace Zaio.Heroes
                                             x.IsRealUnit() && x.Distance2D(illusion) < 300);
                         if (nextUnit != null)
                         {
+                            lanePusher.CurrentTargetPosition = new UnitOrPosition(nextUnit);
                             illusion.Attack(nextUnit.NetworkPosition);
                             Log.Debug($"illusion pusher attacking next unit");
+                            await Await.Delay(50);
+                        }
+                        else
+                        {
+                            var nextPos = lanePusher.NextLanePosition;
+                            lanePusher.CurrentTargetPosition = new UnitOrPosition(nextPos);
+                            illusion.Attack(nextPos);
                             await Await.Delay(50);
                         }
                         
@@ -286,7 +299,7 @@ namespace Zaio.Heroes
                     {
                         var towerAttacker =
                             ObjectManager.GetEntitiesParallel<Tower>()
-                                         .FirstOrDefault(x => x.IsValid && x.IsAlive && x.AttackTarget == illusion);
+                                         .FirstOrDefault(x => x.IsValid && x.IsAlive && x.Team != illusion.Team && x.AttackTarget == illusion);
                         if (towerAttacker != null)
                         {
                             // move away from tower
@@ -317,7 +330,6 @@ namespace Zaio.Heroes
                 {
                     return;
                 }
-
                 foreach (var farmJungleIllusion in _farmJungleIllusions)
                 {
                     farmJungleIllusion.UpdateParticleEffect();
@@ -383,7 +395,7 @@ namespace Zaio.Heroes
             }
         }
 
-        private float GetEstimatedIllusitionTime(bool respectMenuSettings = false)
+        private float GetEstimatedIllusionTime(bool respectMenuSettings = false)
         {
             var time = 0.0f;
 
@@ -399,8 +411,12 @@ namespace Zaio.Heroes
                 time = Math.Max(time, _illuAbility.GetAbilityData("illusion_duration"));
             }
 
-            time = Math.Max(time, MyIllusions.Max(x => x.GetIllusionRemainingTime()));
-
+            var illusions = MyIllusions.ToList();
+            if (illusions.Any())
+            {
+                time = Math.Max(time, illusions.Max(x => x.GetIllusionRemainingTime()));
+            }
+           
             return time;
         }
 
@@ -504,7 +520,7 @@ namespace Zaio.Heroes
                 return;
             }
 
-            var estimatedTime = GetEstimatedIllusitionTime();
+            var estimatedTime = GetEstimatedIllusionTime();
             var seconds = gameTime % 60;
             if (estimatedTime <= 60 - seconds)
             {
@@ -620,21 +636,21 @@ namespace Zaio.Heroes
             // we assume the illusions are at our position Kappa
             var wavePositions = GetCreepWavePositions(MyHero);
 
-            var positions = new List<Vector3>(wavePositions);
+            var positions = new List<UnitOrPositionWithRoute>(wavePositions);
             foreach (var illusion in illusions.OrderBy(x => x.GetIllusionRemainingTime()))
             {
                 var timeRemaining = illusion.GetIllusionRemainingTime();
 
                 if (positions.Count == 0)
                 {
-                    positions = new List<Vector3>(wavePositions);
+                    positions = new List<UnitOrPositionWithRoute>(wavePositions);
                 }
 
-                foreach (var position in positions.OrderBy(x => x.Distance2D(illusion)))
+                foreach (var position in positions.OrderBy(x => x.UPos.Position.Distance2D(illusion)))
                 {
-                    illusion.Move(position);
-                    illusion.Attack(position, true);
-                    _lanePusherIllusions.Add(new LanePusher(illusion, position));
+                    illusion.Move(position.UPos.Position);
+                    illusion.Attack(position.UPos.Position, true);
+                    _lanePusherIllusions.Add(new LanePusher(illusion, position.UPos, position.Route));
                     positions.Remove(position);
                     await Await.Delay(50);
                     break;
@@ -692,7 +708,7 @@ namespace Zaio.Heroes
             }
         }
 
-        private Vector3 GetCreepWavePosition(Hero illusion, List<Vector3> creepWalkingPositions, List<Creep> myCreeps, List<Creep> enemyCreeps  )
+        private UnitOrPosition GetCreepWavePosition(Hero illusion, List<Vector3> creepWalkingPositions, List<Creep> myCreeps, List<Creep> enemyCreeps  )
         {
             // newest wave
             var seconds = (int) Math.Ceiling(Game.GameTime) % 60;
@@ -741,25 +757,23 @@ namespace Zaio.Heroes
                     $"new intersection = {creepWalkingPositions[0]} => {start} + {dir} * {intersectionTime} * {creepSpeed} = {intersection}");
                 }
 
+                var reversed = new List<Vector3>(creepWalkingPositions);
+                reversed.Reverse();
+                
                 var nearestCreep =
-                   enemyCreeps.FirstOrDefault(
-                       x =>
-                           x.GetShortestDistance(creepWalkingPositions[0], creepWalkingPositions[1]) <= intersection.Distance2D(creepWalkingPositions[0]));
+                  enemyCreeps.FirstOrDefault(
+                      x => x.GetShortestDistance(reversed)  <= intersection.Distance2D(creepWalkingPositions[0]));
+
+                //var nearestCreep =
+                //   enemyCreeps.FirstOrDefault(
+                //       x => 
+                //           x.GetShortestDistance(creepWalkingPositions[0], creepWalkingPositions[1]) <= intersection.Distance2D(creepWalkingPositions[0]));
                 if (nearestCreep != null)
                 {
-                    if (nearestCreep.IsMoving)
-                    {
-                        var distance = illusion.Distance2D(nearestCreep);
-                        intersection = Ensage.Common.Prediction.InFront(nearestCreep, 500);
-                        Log.Debug($"nearest creep closer than calc position using inFront {intersection}");
-                    }
-                    else
-                    {
-                        intersection = nearestCreep.NetworkPosition;
-                        Log.Debug($"nearest creep closer than calc position {intersection}");
-                    }
+                    Log.Debug($"nearest creep closer than calc position {intersection}");
+                    return new UnitOrPosition(nearestCreep);
                 }
-                return intersection;
+                return new UnitOrPosition(intersection);
             }
             catch (Exception e)
             {
@@ -769,7 +783,7 @@ namespace Zaio.Heroes
             }
         }
 
-        private List<Vector3> GetCreepWavePositions(Hero illusion)
+        private List<UnitOrPositionWithRoute> GetCreepWavePositions(Hero illusion)
         {
             var enemyCreeps =
                 ObjectManager.GetEntitiesParallel<Creep>()
@@ -778,10 +792,11 @@ namespace Zaio.Heroes
                 ObjectManager.GetEntitiesParallel<Creep>()
                              .Where(x => x.IsValid && x.IsAlive && x.Team != MyHero.Team && x.IsSpawned).ToList();
 
-            var result = new List<Vector3>();
+            var result = new List<UnitOrPositionWithRoute>();
             try
             {
-                result.Add(GetCreepWavePosition(illusion, _enemyCreepRouteTop, myCreeps, enemyCreeps));
+                var pos = GetCreepWavePosition(illusion, _enemyCreepRouteTop, myCreeps, enemyCreeps);
+                result.Add(new UnitOrPositionWithRoute(pos, _enemyCreepRouteTop));
             }
             catch (Exception)
             {
@@ -789,7 +804,8 @@ namespace Zaio.Heroes
             }
             try
             {
-                result.Add(GetCreepWavePosition(illusion, _enemyCreepRouteMid, myCreeps, enemyCreeps));
+                var pos = GetCreepWavePosition(illusion, _enemyCreepRouteMid, myCreeps, enemyCreeps);
+                result.Add(new UnitOrPositionWithRoute(pos, _enemyCreepRouteMid));
             }
             catch (Exception)
             {
@@ -797,7 +813,8 @@ namespace Zaio.Heroes
             }
             try
             {
-                result.Add(GetCreepWavePosition(illusion, _enemyCreepRouteBottom, myCreeps, enemyCreeps));
+                var pos = GetCreepWavePosition(illusion, _enemyCreepRouteBottom, myCreeps, enemyCreeps);
+                result.Add(new UnitOrPositionWithRoute(pos, _enemyCreepRouteBottom));
             }
             catch (Exception)
             {

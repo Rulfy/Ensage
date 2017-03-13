@@ -64,11 +64,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers\AbilityMenu.cs" />
+    <Compile Include="Helpers\UnitOrPosition.cs" />
     <Compile Include="Helpers\MyAsyncHelpers.cs" />
     <Compile Include="Helpers\KeyEventArgs.cs" />
     <Compile Include="Helpers\BoolEventArgs.cs" />
     <Compile Include="Helpers\MyAbilityExtension.cs" />
     <Compile Include="Helpers\MyHeroExtension.cs" />
+    <Compile Include="Helpers\UnitOrPositionWithRoute.cs" />
     <Compile Include="Heroes\Luna.cs" />
     <Compile Include="Heroes\TrollWarlord.cs" />
     <Compile Include="Heroes\Naga.cs" />

@@ -1,4 +1,6 @@
-﻿using Ensage;
+﻿using System;
+using System.Collections.Generic;
+using Ensage;
 using Ensage.Common.Extensions;
 using SharpDX;
 
@@ -120,6 +122,16 @@ namespace Zaio.Helpers
             var closestPoint = (Vector3.Dot(pos - start, dir) / dir.LengthSquared()) * dir;
             var targetVec = (pos - start) - closestPoint;
             return targetVec.Length();
+        }
+
+        public static float GetShortestDistance(this Unit unit, List<Vector3> positions )
+        {
+            var result = float.MaxValue;
+            for (var i = 0; i < positions.Count - 1; ++i )
+            {
+                result = Math.Min(result, unit.GetShortestDistance(positions[i], positions[i + 1]));
+            }
+            return result;
         }
     }
 }
