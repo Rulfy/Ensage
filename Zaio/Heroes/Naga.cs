@@ -232,7 +232,8 @@ namespace Zaio.Heroes
                     {
                         //Log.Debug($"{60 - seconds} <= {estimatedTime} => FALSE");
                         _stackJungleEntry.IsEnabled = false;
-                        _stackJungleEntry.DisplayName = $"Stack Jungle ({31 - seconds:00}s)";
+                        var diff = 31 - seconds;
+                        _stackJungleEntry.DisplayName = diff >= 0 ? $"Stack Jungle ({diff:00}s)" : "Stack Jungle";
                     }
                     else
                     {
