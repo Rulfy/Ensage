@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -6,13 +5,13 @@ using System.Threading.Tasks;
 using Ensage;
 using Ensage.Common.Enums;
 using Ensage.Common.Extensions;
-using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
 using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Zaio.Heroes
 {

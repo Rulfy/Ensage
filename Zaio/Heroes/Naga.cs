@@ -19,6 +19,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 /*
 Radiant Bot: 

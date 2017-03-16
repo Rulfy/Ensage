@@ -16,6 +16,7 @@ using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
 using Zaio.Prediction;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Zaio.Heroes
 {
