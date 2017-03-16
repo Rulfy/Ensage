@@ -24,7 +24,6 @@ namespace VisibleByEnemy
         private static void Main()
         {
             Events.OnLoad += Events_OnLoad;
-            Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
         }
 
         private static void Events_OnLoad(object sender, EventArgs e)
@@ -54,6 +53,8 @@ namespace VisibleByEnemy
                 Menu.AddItem(item);
 
                 Menu.AddToMainMenu();
+
+                Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
             }
             LoopEntities();
         }
