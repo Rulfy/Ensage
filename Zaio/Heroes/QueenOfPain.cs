@@ -10,6 +10,7 @@ using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
+using Ensage.Common.Extensions.SharpDX;
 using Zaio.Interfaces;
 using AbilityId = Ensage.Common.Enums.AbilityId;
 
@@ -162,15 +163,34 @@ namespace Zaio.Heroes
             // check if we are near the enemy
             if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 200, maximumRange: 475))
             {
-              if (!MyHero.IsSilenced())
+              if (!MyHero.IsSilenced() && MyHero.Distance2D(target) >= 500)
               {
-                  if (_wAbility.IsAbilityEnabled() && _wAbility.CanBeCasted(target))
-                  {
-                      Log.Debug($"use w");
-                      var castPoint = (float) _wAbility.FindCastPoint();
-                      var prpos = Prediction.Prediction.PredictPosition(target, (int) (castPoint * target.MovementSpeed));
-                      _wAbility.UseAbility(prpos);
-                      await Await.Delay(GetAbilityDelay(target, _wAbility), tk);
+
+                    bool usePrediction = false;
+                if(target.IsMoving)
+                    {
+                        usePrediction = true;
+                    }
+                var pos = (target.NetworkPosition - MyHero.NetworkPosition).Normalized();
+                pos *= 475;
+                pos = target.NetworkPosition - pos;
+
+                if (_wAbility.IsAbilityEnabled())
+                {
+                      if (target.IsMoving && usePrediction)
+                      {
+                        Log.Debug($"Jumping the gun");
+                         var moves = Ensage.Common.Prediction.InFront(target, 700);
+                         _wAbility.UseAbility(moves);
+                         await Await.Delay((int) (MyHero.GetTurnTime(moves) * 1000) + ItemDelay, tk);
+                      }
+
+                      else
+                      {
+                          Log.Debug($"Jumping close but far");
+                          _wAbility.UseAbility(pos);
+                          await Await.Delay((int) (MyHero.GetTurnTime(pos) * 1000) + ItemDelay, tk);
+                      }
                   }
               }
                 return;
@@ -214,7 +234,7 @@ namespace Zaio.Heroes
                               _ultAbility.CanBeCasted(x) &&
                               _ultAbility.CanHit(x) &&
                               !x.CantBeKilled());
-                            
+
                     if (numenemies >= 2)
                     {
                         Log.Debug($"use ult (two or more targets can be hit)");
@@ -232,7 +252,7 @@ namespace Zaio.Heroes
             else
             {
                 MyHero.Attack(target);
-                await Await.Delay(115, tk);
+                await Await.Delay(125, tk);
             }
         }
     }
