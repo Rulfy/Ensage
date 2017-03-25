@@ -163,7 +163,7 @@ namespace Zaio.Heroes
             // check if we are near the enemy
             if (!await MoveOrBlinkToEnemy(target, tk, minimumRange: 200, maximumRange: 475))
             {
-              if (!MyHero.IsSilenced() && MyHero.Distance2D(target) >= 500)
+              if (!MyHero.IsSilenced() && MyHero.Distance2D(target) >= 700)
               {
 
                     bool usePrediction = false;
