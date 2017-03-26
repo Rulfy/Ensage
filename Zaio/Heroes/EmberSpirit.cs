@@ -12,11 +12,12 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
+
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassID.CDOTA_Unit_Hero_EmberSpirit)]
+    [Hero(ClassId.CDOTA_Unit_Hero_EmberSpirit)]
     internal class EmberSpirit : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -11,12 +11,13 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using AbilityId = Ensage.AbilityId;
 using Zaio.Prediction;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassID.CDOTA_Unit_Hero_Jakiro)]
+    [Hero(ClassId.CDOTA_Unit_Hero_Jakiro)]
     internal class Jakiro : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -160,7 +161,7 @@ namespace Zaio.Heroes
                         var dir = predictedPos - MyHero.NetworkPosition;
                         dir.Normalize();
                         dir *=
-                            _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
+                            _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
                                 ? "cast_range_scepter"
                                 : "cast_range");
 
