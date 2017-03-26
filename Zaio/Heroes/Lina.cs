@@ -12,12 +12,12 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Lina)]
+    [Hero(ClassID.CDOTA_Unit_Hero_Lina)]
     internal class Lina : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -81,7 +81,7 @@ namespace Zaio.Heroes
             if (_ultAbility.IsKillstealAbilityEnabled() &&_ultAbility.CanBeCasted())
             {
                 var damage = _ultAbility.GetAbilityData("damage");
-                var hasScepter = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                var hasScepter = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
                 damage *= GetSpellAmp();
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()

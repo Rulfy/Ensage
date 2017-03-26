@@ -13,13 +13,13 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Nevermore)]
+    [Hero(ClassID.CDOTA_Unit_Hero_Nevermore)]
     internal class ShadowFiend : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

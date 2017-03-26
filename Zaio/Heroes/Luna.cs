@@ -11,12 +11,12 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Luna)]
+    [Hero(ClassID.CDOTA_Unit_Hero_Luna)]
     internal class Luna : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -121,7 +121,7 @@ namespace Zaio.Heroes
 
                 if (_aoeAbility.IsAbilityEnabled() && _aoeAbility.CanBeCasted() && _aoeAbility.CanHit(target))
                 {
-                    var hasScepter = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                    var hasScepter = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter);
                     var radius = _aoeAbility.GetAbilityData("search_radius");
 
                     var enemiesNearCount =

@@ -19,7 +19,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 
 /*
@@ -45,7 +45,7 @@ X:3365,406 Y:5799,75 Z:384
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Naga_Siren)]
+    [Hero(ClassID.CDOTA_Unit_Hero_Naga_Siren)]
     internal class Naga : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -6,7 +6,7 @@ using Ensage.Common.Threading;
 using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Zaio.Heroes
 {

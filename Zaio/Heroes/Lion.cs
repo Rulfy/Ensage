@@ -12,12 +12,12 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Lion)]
+    [Hero(ClassID.CDOTA_Unit_Hero_Lion)]
     internal class Lion : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -83,7 +83,7 @@ namespace Zaio.Heroes
             if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted())
             {
                 var damage =
-                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
                         ? "damage_scepter"
                         : "damage");
                 damage *= GetSpellAmp();
@@ -151,7 +151,7 @@ namespace Zaio.Heroes
                 await HasNoLinkens(target, tk))
             {
                 var damage =
-                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
                         ? "damage_scepter"
                         : "damage");
                 if (target.Health <= damage * (1.0f - target.MagicResistance()))

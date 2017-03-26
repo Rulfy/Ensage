@@ -13,7 +13,7 @@ using SharpDX;
 using Zaio.Helpers;
 using Zaio.Heroes;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 using Ensage.Common.Extensions.SharpDX;
 
@@ -59,7 +59,7 @@ namespace Zaio
                                  .Where(
                                      x =>
                                          x.IsValid && x.IsAlive && !(x is Hero) && !(x is Building) && !(x is Courier) && 
-                                         x.ClassId != ClassId.CDOTA_Unit_Hero_Beastmaster_Hawk && x.IsControllable &&
+                                         x.ClassID != ClassID.CDOTA_Unit_Hero_Beastmaster_Hawk && x.IsControllable &&
                                          x.MoveCapability != MoveCapability.None && !_controlledUnits.ContainsKey(x));
                 foreach (var unit in units)
                 {
@@ -118,7 +118,7 @@ namespace Zaio
                                                 .Where(
                                                     x =>
                                                         x.IsValid && x.IsAlive && x.Team == hero.Team &&
-                                                        x.ClassId != ClassId.CDOTA_BaseNPC_Creep_Siege &&
+                                                        x.ClassID != ClassID.CDOTA_BaseNPC_Creep_Siege &&
                                                         !(x is Courier) && !(x is Building) &&
                                                         x != hero && x.IsRealUnit() && !x.CantBeAttacked() &&
                                                         x.UnitDistance2D(attacker) <= range)
@@ -224,7 +224,7 @@ namespace Zaio
                     if (property != null)
                     {
                         Log.Debug($"OnLoad ID: {property.Id}");
-                        if (hero.ClassId == property.Id)
+                        if (hero.ClassID == property.Id)
                         {
                             Log.Debug($"Found hero.. activating!");
                             _currentHero = (ComboHero) Activator.CreateInstance(type);

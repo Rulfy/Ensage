@@ -11,11 +11,11 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Axe)]
+    [Hero(ClassID.CDOTA_Unit_Hero_Axe)]
     internal class Axe : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -76,7 +76,7 @@ namespace Zaio.Heroes
             if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted())
             {
                 var threshold =
-                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
                         ? "kill_threshold_scepter"
                         : "kill_threshold");
 
@@ -105,7 +105,7 @@ namespace Zaio.Heroes
                 await HasNoLinkens(target, tk))
             {
                 var threshold =
-                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
                         ? "kill_threshold_scepter"
                         : "kill_threshold");
                 if (target.Health < threshold)

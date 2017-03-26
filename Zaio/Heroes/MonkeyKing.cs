@@ -13,12 +13,12 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.AbilityId;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_MonkeyKing)]
+    [Hero(ClassID.CDOTA_Unit_Hero_MonkeyKing)]
     internal class MonkeyKing : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -88,7 +88,7 @@ namespace Zaio.Heroes
 
         private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
-            if (args.Order == Order.AbilityLocation && args.Ability.Id == AbilityId.monkey_king_primal_spring)
+            if (args.Order == Order.AbilityLocation && args.Ability.Id == (uint)AbilityId.monkey_king_primal_spring)
             {
                 if (Target != null)
                 {
