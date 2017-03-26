@@ -22,6 +22,8 @@ using Attribute = Ensage.Attribute;
 
 namespace Zaio.Interfaces
 {
+    using AbilityId = Ensage.AbilityId;
+
     internal enum DisabledState
     {
         NotDisabled,
@@ -390,7 +392,7 @@ namespace Zaio.Interfaces
 
             if (ZaioMenu.ShouldUseBlinkDagger && !MyHero.IsMuted())
             {
-                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Item_BlinkDagger);
                 if (blink != null && blink.CanBeCasted())
                 {
                     var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
@@ -417,7 +419,7 @@ namespace Zaio.Interfaces
             {
                 if (ZaioMenu.ShouldUseBlinkDagger)
                 {
-                    var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+                    var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Item_BlinkDagger);
                     if (blink != null && blink.CanBeCasted())
                     {
                         var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
@@ -594,7 +596,7 @@ namespace Zaio.Interfaces
                         item.UseAbility(Target);
 
                         // wait for eth hit to get bonus damage with following spells
-                        if (item.ID == (uint) ItemId.item_ethereal_blade)
+                        if (item.Id == AbilityId.item_ethereal_blade)
                         {
                             var speed = item.GetAbilityData("projectile_speed");
                             var time = Target.Distance2D(MyHero) / speed;

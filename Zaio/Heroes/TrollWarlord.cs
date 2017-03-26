@@ -14,11 +14,12 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
+
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassID.CDOTA_Unit_Hero_TrollWarlord)]
+    [Hero(ClassId.CDOTA_Unit_Hero_TrollWarlord)]
     internal class TrollWarlord : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -122,7 +123,7 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"toggling first skill because can't killsteal with ranged");
                     _toggleAbility.ToggleAbility();
-                    await Await.Delay(GetAbilityDelay(null ,_toggleAbility));
+                    await Await.Delay(GetAbilityDelay(_toggleAbility));
                     return false;
                 }
             }

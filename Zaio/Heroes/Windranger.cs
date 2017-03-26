@@ -15,12 +15,13 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using AbilityId = Ensage.AbilityId;
 using Zaio.Prediction;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassID.CDOTA_Unit_Hero_Windrunner)]
+    [Hero(ClassId.CDOTA_Unit_Hero_Windrunner)]
     internal class Windranger : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -88,7 +89,7 @@ namespace Zaio.Heroes
 
         private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
-            if (args.Order == Order.AbilityTarget && args.Ability.GetAbilityId() == AbilityId.windrunner_focusfire && args.Entities.Contains(MyHero))
+            if (args.Order == Order.AbilityTarget && args.Ability.Id == AbilityId.windrunner_focusfire && args.Entities.Contains(MyHero))
             {
                 _ultTarget = args.Target as Unit;
                 if(!MyHero.HasModifier("modifier_windrunner_focusfire"))
@@ -404,7 +405,7 @@ namespace Zaio.Heroes
                                 await Await.Delay(GetAbilityDelay(target, _powerShotAbility) + (int)time, tk);
                                 MyHero.Stop();
                             }
-                            else if (!_shackleAbility.CanBeCasted(target) && !MyHero.HasItem(ClassID.CDOTA_Item_BlinkDagger) && distance > MyHero.GetAttackRange() * 1.25f)
+                            else if (!_shackleAbility.CanBeCasted(target) && !MyHero.HasItem(ClassId.CDOTA_Item_BlinkDagger) && distance > MyHero.GetAttackRange() * 1.25f)
                             {
                                 _powerShotAbility.UseAbility(predictedPos);
                                 Log.Debug($"using powershot since no blink or shackle");
