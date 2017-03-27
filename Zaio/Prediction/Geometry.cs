@@ -359,6 +359,121 @@ namespace Zaio.Prediction
             }
 
             /// <summary>
+            ///     Represents a Trapezoid polygon.
+            /// </summary>
+            public class Trapezoid : Polygon
+            {
+                #region Public Methods and Operators
+
+                /// <summary>
+                ///     Updates the polygon.
+                /// </summary>
+                /// <param name="offset">The offset.</param>
+                /// <param name="overrideWidth">Width of the override.</param>
+                public void UpdatePolygon(int offset = 0, float overrideWidth = -1)
+                {
+                    Points.Clear();
+                    Points.Add(
+                        Start + (overrideWidth > 0 ? overrideWidth : startWidth + offset) * Perpendicular
+                        - offset * Direction);
+                    Points.Add(
+                        Start - (overrideWidth > 0 ? overrideWidth : startWidth + offset) * Perpendicular
+                        - offset * Direction);
+                    Points.Add(
+                        End - (overrideWidth > 0 ? overrideWidth : endWidth + offset) * Perpendicular
+                        + offset * Direction);
+                    Points.Add(
+                        End + (overrideWidth > 0 ? overrideWidth : endWidth + offset) * Perpendicular
+                        + offset * Direction);
+                }
+
+                #endregion
+
+                #region Fields
+
+                /// <summary>
+                ///     The end
+                /// </summary>
+                public Vector2 End;
+
+                /// <summary>
+                ///     The start
+                /// </summary>
+                public Vector2 Start;
+
+                /// <summary>
+                ///     The end width
+                /// </summary>
+                public float endWidth;
+
+                /// <summary>
+                ///    The start width
+                /// <summary>
+                public float startWidth;
+
+                #endregion
+
+                #region Constructors and Destructors
+
+                /// <summary>
+                ///     Initializes a new instance of the <see cref="Trapezoid" /> class.
+                /// </summary>
+                /// <param name="start">The start.</param>
+                /// <param name="end">The end.</param>
+                /// <param name="t_width">The width of the end.</param>
+                /// <param name="b_width">The width of the start.</param>
+                public Trapezoid(Vector3 start, Vector3 end, float startWidth, float endWidth)
+                    : this(start.To2D(), end.To2D(), startWidth, endWidth)
+                {
+                }
+
+                /// <summary>
+                ///     Initializes a new instance of the <see cref="Trapezoid" /> class.
+                /// </summary>
+                /// <param name="start">The start.</param>
+                /// <param name="end">The end.</param>
+                /// <param name="t_width">The width of the end.</param>
+                /// <param name="b_width">The width of the start.</param>
+                public Trapezoid(Vector2 start, Vector2 end, float startWidth, float endWidth)
+                {
+                    Start = start;
+                    End = end;
+                    this.endWidth = endWidth;
+                    this.startWidth = startWidth;
+                    UpdatePolygon();
+                }
+
+                #endregion
+
+                #region Public Properties
+
+                /// <summary>
+                ///     Gets the direction.
+                /// </summary>
+                /// <value>
+                ///     The direction.
+                /// </value>
+                public Vector2 Direction
+                {
+                    get { return (End - Start).Normalized(); }
+                }
+
+                /// <summary>
+                ///     Gets the perpendicular.
+                /// </summary>
+                /// <value>
+                ///     The perpendicular.
+                /// </value>
+                public Vector2 Perpendicular
+                {
+                    get { return Direction.Perpendicular(); }
+                }
+
+                #endregion
+            }
+
+
+            /// <summary>
             ///     Represents a rectangle polygon.
             /// </summary>
             public class Rectangle : Polygon
