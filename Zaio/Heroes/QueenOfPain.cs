@@ -1,5 +1,6 @@
 namespace Zaio.Heroes
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
@@ -48,6 +49,10 @@ namespace Zaio.Heroes
         private Ability _ultAbility;
 
         private Ability _wAbility;
+
+        private MenuItem _minimumEnemyUltCount;
+
+        private int EnemyCountForUlt => _minimumEnemyUltCount.GetValue<Slider>().Value;
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
@@ -106,18 +111,31 @@ namespace Zaio.Heroes
                 if (this._ultAbility.IsAbilityEnabled() && this._ultAbility.CanBeCasted(target)
                     && this._ultAbility.CanHit(target))
                 {
-                    var enemies =
+                    var radius = this._ultAbility.GetAbilityData("final_aoe");
+                    var enemyClose =
                         ObjectManager.GetEntitiesParallel<Hero>()
-                                     .Where(
+                                     .Any(
                                          x =>
-                                             x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
+                                             x.IsAlive && x != target && x.Team != this.MyHero.Team && !x.IsIllusion
                                              && this._ultAbility.CanBeCasted(x) && this._ultAbility.CanHit(x)
-                                             && !x.CantBeKilled());
-                    if (enemies.Count() >= 2)
+                                             && x.Distance2D(this.MyHero) > 1200);
+                    List<Hero> enemies = null;
+                    if (enemyClose)
                     {
-                        Log.Debug($"use ult (two or more targets can be hit)");
-                        this._ultAbility.UseAbility(enemies.First().NetworkPosition);
-                        await Await.Delay(this.GetAbilityDelay(enemies.First().NetworkPosition, this._ultAbility), tk);
+                        enemies =
+                       ObjectManager.GetEntitiesParallel<Hero>()
+                                    .Where(
+                                        x =>
+                                            x.IsAlive && x != target && x.Team != this.MyHero.Team && !x.IsIllusion
+                                            && this._ultAbility.CanBeCasted(x) && this._ultAbility.CanHit(x) && x.Distance2D(target) < (radius / 2)
+                                            && !x.CantBeKilled()).ToList();
+                    }
+                   
+                    if (!enemyClose || (enemies.Count() >= this.EnemyCountForUlt))
+                    {
+                        Log.Debug($"use ult since no enemy {!enemyClose} or {enemies?.Count()} >= {this.EnemyCountForUlt}");
+                        this._ultAbility.UseAbility(target.NetworkPosition);
+                        await Await.Delay(this.GetAbilityDelay(target.NetworkPosition, this._ultAbility), tk);
                     }
                 }
             }
@@ -148,6 +166,11 @@ namespace Zaio.Heroes
             var supportedKillsteal = new MenuItem("zaioQueenOfPainKillstealAbilities", string.Empty);
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
+
+            _minimumEnemyUltCount =
+               new MenuItem("zaioQueenOfPainMinEnemyCount", "Minimum Enemies for Ult").SetValue(new Slider(1, 0, 4));
+            _minimumEnemyUltCount.Tooltip = "Minimum enemies besides your target to use ult.";
+            heroMenu.AddItem(_minimumEnemyUltCount);
 
             this.OnLoadMenuItems(supportedStuff, supportedKillsteal);
 

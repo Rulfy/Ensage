@@ -87,16 +87,20 @@ namespace Zaio.Interfaces
         private float _lastAttackRange;
         private Unit _target;
         protected Hero MyHero;
+
+        protected Player MyPlayer;
         protected Orbwalker Orbwalker;
 
         protected ComboHero() : base(ZaioMenu.ComboKey)
         {
             _repeatCombo = true;
+            MyPlayer = ObjectManager.LocalPlayer;
         }
 
         protected ComboHero(bool repeatCombo) : base(ZaioMenu.ComboKey)
         {
             _repeatCombo = repeatCombo;
+            MyPlayer = ObjectManager.LocalPlayer;
         }
 
 
