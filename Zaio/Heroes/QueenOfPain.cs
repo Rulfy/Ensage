@@ -119,7 +119,7 @@ namespace Zaio.Heroes
                                          x =>
                                              x.IsAlive && x != target && x.Team != this.MyHero.Team && !x.IsIllusion
                                              && this._ultAbility.CanBeCasted(x) && this._ultAbility.CanHit(x)
-                                             && x.Distance2D(this.MyHero) > 1200);
+                                             && x.Distance2D(this.MyHero) <= 1500);
                     List<Hero> enemies = null;
                     if (enemyClose)
                     {
