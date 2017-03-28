@@ -85,17 +85,19 @@ namespace Zaio.Heroes
                              x =>
                                  x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
                                  && this._ultAbility.CanBeCasted() && this._ultAbility.CanHit(x)
-                                 && !x.IsMagicImmune() && x.Health < ((damage + damage * (x.MaximumMana - x.Mana)) * (1 - x.MagicResistance()))
+                                 && !x.IsMagicImmune() 
                                  && !x.CantBeAttacked() && !x.CantBeKilled())
                                  .ToList();
 
                 var current_damage = 0.0;
-
+                var previous_target = default(Ensage.Hero);
                 var best_target = default(Ensage.Hero);
 
                 foreach (var enemy in enemies)
                 {
-                    var possible_damage = damage + (damage * enemy.MaximumMana - enemy.Mana) * (1 - enemy.MagicResistance());
+
+                    var possible_damage = damage;
+                    possible_damage *= (enemy.MaximumMana - enemy.Mana);
 
                     if (possible_damage >= current_damage)
                     {
@@ -103,12 +105,42 @@ namespace Zaio.Heroes
                     }
 
                     current_damage = possible_damage;
+
+                    var radius = _ultAbility.GetAbilityData("mana_void_aoe_radius");
+                    var polygon = new Geometry.Polygon.Circle(best_target.NetworkPosition, radius);
+
+                    if(previous_target != default(Ensage.Hero) && polygon.IsInside(previous_target.NetworkPosition) 
+                      && (current_damage * (1 - previous_target.MagicResistance()) >= previous_target.Health))
+                    {
+                        this._ultAbility.UseAbility(enemy);
+                        await Await.Delay(this.GetAbilityDelay(this._ultAbility));
+
+                    }
+
+                    if (best_target != default(Ensage.Hero) && ((current_damage * (1 - best_target.MagicResistance())) >= best_target.Health))
+                    {
+                        Log.Debug($"Ult enemy for ks {current_damage}");
+                        this._ultAbility.UseAbility(best_target);
+                        await Await.Delay(this.GetAbilityDelay(this._ultAbility));
+                    }
+
+                    previous_target = enemy;
+
                 }
 
-                if (best_target != default(Ensage.Hero))
+                //Regular KS
+                var enemy_r =
+                    ObjectManager.GetEntitiesParallel<Hero>()
+                        .FirstOrDefault(
+                            x =>
+                                x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
+                                && this._ultAbility.CanBeCasted() && this._ultAbility.CanHit(x)
+                                && !x.IsMagicImmune() && x.Health < (damage * (x.MaximumMana - x.Mana) * (1 - x.MagicResistance()))
+                                && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
+
+                if (enemy_r != null)
                 {
-                    Log.Debug($"Ult enemy for ks");
-                    this._ultAbility.UseAbility(best_target);
+                    this._ultAbility.UseAbility(enemy_r);
                     await Await.Delay(this.GetAbilityDelay(this._ultAbility));
                 }
 
