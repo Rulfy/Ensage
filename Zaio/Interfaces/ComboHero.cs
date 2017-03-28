@@ -49,6 +49,8 @@ namespace Zaio.Interfaces
 
         protected readonly ItemId[] ItemList =
         {
+            ItemId.item_medallion_of_courage,
+            ItemId.item_solar_crest
             ItemId.item_veil_of_discord,
             ItemId.item_ethereal_blade,
             ItemId.item_urn_of_shadows,
