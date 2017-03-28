@@ -45,12 +45,21 @@
     <Reference Include="PlaySharp.Toolkit">
       <HintPath>C:\EnsageSharp\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="SharpDX">
       <HintPath>C:\EnsageSharp\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9">
+      <HintPath>C:\EnsageSharp\References\SharpDX.Direct3D9.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -63,8 +72,6 @@
     <Compile Include="Helpers\MyHeroExtension.cs" />
     <Compile Include="Helpers\UnitOrPositionWithRoute.cs" />
     <Compile Include="Heroes\Luna.cs" />
-    <Compile Include="Heroes\Meepo.cs" />
-    <Compile Include="Heroes\QueenOfPain.cs" />
     <Compile Include="Heroes\TrollWarlord.cs" />
     <Compile Include="Heroes\Naga.cs" />
     <Compile Include="Heroes\Necrolyte.cs" />
@@ -97,6 +104,8 @@
     <Compile Include="Heroes\EmberSpirit.cs" />
     <Compile Include="Heroes\Tiny.cs" />
     <Compile Include="Heroes\Ursa.cs" />
+    <Compile Include="Heroes\AntiMage.cs" />
+    <Compile Include="Heroes\QueenOfPain.cs" />
     <Compile Include="Interfaces\ComboExecutor.cs" />
     <Compile Include="Interfaces\ComboHero.cs" />
     <Compile Include="Prediction\Prediction.cs" />
@@ -109,7 +118,7 @@
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>
