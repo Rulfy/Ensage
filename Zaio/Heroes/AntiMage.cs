@@ -130,7 +130,7 @@ namespace Zaio.Heroes
                         //Add enemy to amount that can be killed
                         killable_enemies += 1;
 
-                        //Ult once we reach the amount of enemies we want to kill
+                        //Ult a low target mana if it can kill one of their teammates
                         if (EnemyCountForUlt == 0 && killable_enemies >= EnemyCountForUlt)
                         {
                             this._ultAbility.UseAbility(enemy);
@@ -140,7 +140,7 @@ namespace Zaio.Heroes
 
                     }
 
-                    //Regular KS
+                    //Regular KS based on amount of targets that can be killed
                     var enemy_r =
                         ObjectManager.GetEntitiesParallel<Hero>()
                             .FirstOrDefault(
