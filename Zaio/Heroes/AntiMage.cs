@@ -218,7 +218,7 @@ namespace Zaio.Heroes
 
             if(!MyHero.IsSilenced())
             {
-                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target))
+                if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && EnemyCountForUlt == 0)
                 {
                     var damage = _ultAbility.GetAbilityData("mana_void_damage_per_mana");
                     var target_mana = target.Mana;
