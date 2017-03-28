@@ -133,7 +133,7 @@ namespace Zaio.Heroes
                         //Ult a low target mana if it can kill one of their teammates
                         if (EnemyCountForUlt == 0 && killable_enemies >= EnemyCountForUlt)
                         {
-                            this._ultAbility.UseAbility(enemy);
+                            this._ultAbility.UseAbility(best_target);
                             await Await.Delay(this.GetAbilityDelay(this._ultAbility));
                         }
 
@@ -150,10 +150,11 @@ namespace Zaio.Heroes
                                     && x.Health < (damage * (x.MaximumMana - x.Mana) * (1 - x.MagicResistance()))
                                     && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
 
-                    if (enemy_r != null && killable_enemies >= EnemyCountForUlt)
+                    if (enemy_r != null && killable_enemies >= EnemyCountForUlt 
+                        && (best_target.Health < ((damage * (best_target.MaximumMana - best_target.Mana)) * (1 - best_target.MagicResistance()))))
                     {
                         Log.Debug($"{killable_enemies} {EnemyCountForUlt}");
-                        this._ultAbility.UseAbility(enemy_r);
+                        this._ultAbility.UseAbility(best_target);
                         await Await.Delay(this.GetAbilityDelay(this._ultAbility));
                     }
 
