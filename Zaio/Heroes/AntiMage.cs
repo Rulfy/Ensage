@@ -78,6 +78,7 @@ namespace Zaio.Heroes
             if (!this.MyHero.IsSilenced() && this._ultAbility.IsKillstealAbilityEnabled() && this._ultAbility.CanBeCasted())
             {
                 var damage = _ultAbility.GetAbilityData("mana_void_damage_per_mana");
+                //Create a list of all enemies which can be ulted by AM
                 List<Hero> enemies = null;
                 enemies =
                     ObjectManager.GetEntitiesParallel<Hero>()
@@ -85,7 +86,7 @@ namespace Zaio.Heroes
                              x =>
                                  x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
                                  && this._ultAbility.CanBeCasted() && this._ultAbility.CanHit(x)
-                                 && !x.IsMagicImmune() 
+                                 && !x.IsLinkensProtected()
                                  && !x.CantBeAttacked() && !x.CantBeKilled())
                                  .ToList();
 
@@ -93,25 +94,30 @@ namespace Zaio.Heroes
                 var previous_target = default(Ensage.Hero);
                 var best_target = default(Ensage.Hero);
 
+                //Radius KS
                 foreach (var enemy in enemies)
                 {
 
                     var possible_damage = damage;
                     possible_damage *= (enemy.MaximumMana - enemy.Mana);
 
+                    //Check if the possible damage exceeds what the damage would be to our previous enemy
                     if (possible_damage >= current_damage)
                     {
                         best_target = enemy;
                     }
 
+                    //Set the current damage to this enemy
                     current_damage = possible_damage;
 
+                    //Check if an enemy is killable in the radius of AM's ult
                     var radius = _ultAbility.GetAbilityData("mana_void_aoe_radius");
                     var polygon = new Geometry.Polygon.Circle(best_target.NetworkPosition, radius);
 
                     if(previous_target != default(Ensage.Hero) && polygon.IsInside(previous_target.NetworkPosition) 
                       && (current_damage * (1 - previous_target.MagicResistance()) >= previous_target.Health))
                     {
+                        //Ult
                         this._ultAbility.UseAbility(enemy);
                         await Await.Delay(this.GetAbilityDelay(this._ultAbility));
 
@@ -128,7 +134,7 @@ namespace Zaio.Heroes
                             x =>
                                 x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
                                 && this._ultAbility.CanBeCasted() && this._ultAbility.CanHit(x)
-                                && !x.IsMagicImmune() && x.Health < (damage * (x.MaximumMana - x.Mana) * (1 - x.MagicResistance()))
+                                && x.Health < (damage * (x.MaximumMana - x.Mana) * (1 - x.MagicResistance()))
                                 && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
 
                 if (enemy_r != null)
