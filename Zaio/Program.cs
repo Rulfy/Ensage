@@ -13,6 +13,7 @@ using SharpDX;
 using Zaio.Helpers;
 using Zaio.Heroes;
 using Zaio.Interfaces;
+using AbilityId = Ensage.Common.Enums.AbilityId;
 using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 using Ensage.Common.Extensions.SharpDX;
 

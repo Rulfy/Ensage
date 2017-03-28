@@ -1,12 +1,12 @@
 namespace Zaio.Heroes
 {
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
 
     using Ensage;
-    using Ensage.Common;
     using Ensage.Common.Extensions;
     using Ensage.Common.Extensions.SharpDX;
     using Ensage.Common.Menu;
@@ -18,8 +18,10 @@ namespace Zaio.Heroes
 
     using Zaio.Helpers;
     using Zaio.Interfaces;
+    using Zaio.Prediction;
 
     using AbilityId = Ensage.Common.Enums.AbilityId;
+    using Prediction = Ensage.Common.Prediction;
 
     [Hero(ClassID.CDOTA_Unit_Hero_QueenOfPain)]
     internal class QueenOfPain : ComboHero
@@ -43,20 +45,25 @@ namespace Zaio.Heroes
 
         private Ability _eAbility;
 
+        private MenuItem _minimumEnemyUltCount;
+
         private Ability _qAbility;
 
         private Ability _ultAbility;
 
         private Ability _wAbility;
 
+        private int EnemyCountForUlt => this._minimumEnemyUltCount.GetValue<Slider>().Value;
+
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
             // check if we are near the enemy
+            var myHeroNetworkPosition = this.MyHero.NetworkPosition;
             if (!await this.MoveOrBlinkToEnemy(target, tk, 200, 475))
             {
                 if (!this.MyHero.IsSilenced() && this.MyHero.Distance2D(target) >= 700)
                 {
-                    var pos = (target.NetworkPosition - this.MyHero.NetworkPosition).Normalized();
+                    var pos = (target.NetworkPosition - myHeroNetworkPosition).Normalized();
                     pos *= 475;
                     pos = target.NetworkPosition - pos;
 
@@ -106,18 +113,44 @@ namespace Zaio.Heroes
                 if (this._ultAbility.IsAbilityEnabled() && this._ultAbility.CanBeCasted(target)
                     && this._ultAbility.CanHit(target))
                 {
-                    var enemies =
+                    var enemyClose =
                         ObjectManager.GetEntitiesParallel<Hero>()
-                                     .Where(
+                                     .Any(
                                          x =>
-                                             x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
+                                             x.IsAlive && x != target && x.Team != this.MyHero.Team && !x.IsIllusion
                                              && this._ultAbility.CanBeCasted(x) && this._ultAbility.CanHit(x)
-                                             && !x.CantBeKilled());
-                    if (enemies.Count() >= 2)
+                                             && x.Distance2D(this.MyHero) <= 1500);
+                    List<Hero> enemies = null;
+                    if (enemyClose)
                     {
-                        Log.Debug($"use ult (two or more targets can be hit)");
-                        this._ultAbility.UseAbility(enemies.First().NetworkPosition);
-                        await Await.Delay(this.GetAbilityDelay(enemies.First().NetworkPosition, this._ultAbility), tk);
+                        var startWidth = this._ultAbility.GetAbilityData("starting_aoe");
+                        var endWidth = this._ultAbility.GetAbilityData("final_aoe");
+                        var distance = this._ultAbility.GetAbilityData("distance");
+                        var endPos = myHeroNetworkPosition
+                                     + (target.NetworkPosition - myHeroNetworkPosition).Normalized() * distance;
+                        var polygon = new Geometry.Polygon.Trapezoid(
+                            myHeroNetworkPosition,
+                            endPos,
+                            startWidth,
+                            endWidth);
+
+                        enemies =
+                            ObjectManager.GetEntitiesParallel<Hero>()
+                                         .Where(
+                                             x =>
+                                                 x.IsAlive && x != target && x.Team != this.MyHero.Team
+                                                 && !x.IsIllusion && this._ultAbility.CanBeCasted(x)
+                                                 && this._ultAbility.CanHit(x) && polygon.IsInside(x.NetworkPosition)
+                                                 && !x.CantBeKilled())
+                                         .ToList();
+                    }
+
+                    if (!enemyClose || enemies.Count() >= this.EnemyCountForUlt)
+                    {
+                        Log.Debug(
+                            $"use ult since no enemy {!enemyClose} or {enemies?.Count()} >= {this.EnemyCountForUlt}");
+                        this._ultAbility.UseAbility(target.NetworkPosition);
+                        await Await.Delay(this.GetAbilityDelay(target.NetworkPosition, this._ultAbility), tk);
                     }
                 }
             }
@@ -148,6 +181,11 @@ namespace Zaio.Heroes
             var supportedKillsteal = new MenuItem("zaioQueenOfPainKillstealAbilities", string.Empty);
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
+
+            this._minimumEnemyUltCount =
+                new MenuItem("zaioQueenOfPainMinEnemyCount", "Minimum Enemies for Ult").SetValue(new Slider(1, 0, 4));
+            this._minimumEnemyUltCount.Tooltip = "Minimum enemies besides your target to use ult.";
+            heroMenu.AddItem(this._minimumEnemyUltCount);
 
             this.OnLoadMenuItems(supportedStuff, supportedKillsteal);
 
@@ -187,7 +225,8 @@ namespace Zaio.Heroes
                 {
                     Log.Debug($"killsteal with scream based on enemy hp {enemy.Health} <= {damage} ");
                     this._eAbility.UseAbility();
-                    var dist = (int)(enemy.Distance2D(this.MyHero) / this._eAbility.GetAbilityData("projectile_speed") * 1000);
+                    var dist =
+                        (int)(enemy.Distance2D(this.MyHero) / this._eAbility.GetAbilityData("projectile_speed") * 1000);
                     await Await.Delay(this.GetAbilityDelay(this._eAbility) + dist);
                     return true;
                 }
