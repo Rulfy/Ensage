@@ -44,6 +44,10 @@ namespace Zaio.Heroes
 
         private Ability _ultAbility;
 
+        private MenuItem _minimumEnemyUltCount;
+
+        private int EnemyCountForUlt => this._minimumEnemyUltCount.GetValue<Slider>().Value;
+
         public override void OnLoad()
         {
             base.OnLoad();
@@ -59,6 +63,11 @@ namespace Zaio.Heroes
             var supportedKillsteal = new MenuItem("zaioAntiMageKillstealAbilities", string.Empty);
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
+
+            this._minimumEnemyUltCount =
+            new MenuItem("zaioAntiMageMinEnemyCount", "Minimum Enemies for Ult").SetValue(new Slider(1, 0, 4));
+            this._minimumEnemyUltCount.Tooltip = "Minimum enemies besides your target to use ult.";
+            heroMenu.AddItem(this._minimumEnemyUltCount);
 
             this.OnLoadMenuItems(supportedStuff, supportedKillsteal);
 
@@ -93,6 +102,7 @@ namespace Zaio.Heroes
                 var current_damage = 0.0;
                 var previous_target = default(Ensage.Hero);
                 var best_target = default(Ensage.Hero);
+                var killable_enemies = 0;
 
                 //Radius KS
                 foreach (var enemy in enemies)
@@ -117,31 +127,41 @@ namespace Zaio.Heroes
                     if(previous_target != default(Ensage.Hero) && polygon.IsInside(previous_target.NetworkPosition) 
                       && (current_damage * (1 - previous_target.MagicResistance()) >= previous_target.Health))
                     {
-                        //Ult
-                        this._ultAbility.UseAbility(enemy);
-                        await Await.Delay(this.GetAbilityDelay(this._ultAbility));
+                        //Add enemy to amount that can be killed
+                        killable_enemies += 1;
 
+                        //Ult once we reach the amount of enemies we want to kill
+                        if (EnemyCountForUlt == 0 && killable_enemies >= EnemyCountForUlt)
+                        {
+                            this._ultAbility.UseAbility(enemy);
+                            await Await.Delay(this.GetAbilityDelay(this._ultAbility));
+                        }
+
+
+                    }
+
+                    //Regular KS
+                    var enemy_r =
+                        ObjectManager.GetEntitiesParallel<Hero>()
+                            .FirstOrDefault(
+                                x =>
+                                    x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
+                                    && this._ultAbility.CanBeCasted() && this._ultAbility.CanHit(x)
+                                    && x.Health < (damage * (x.MaximumMana - x.Mana) * (1 - x.MagicResistance()))
+                                    && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
+
+                    if (enemy_r != null && killable_enemies >= EnemyCountForUlt)
+                    {
+                        Log.Debug($"{killable_enemies} {EnemyCountForUlt}");
+                        this._ultAbility.UseAbility(enemy_r);
+                        await Await.Delay(this.GetAbilityDelay(this._ultAbility));
                     }
 
                     previous_target = enemy;
 
                 }
 
-                //Regular KS
-                var enemy_r =
-                    ObjectManager.GetEntitiesParallel<Hero>()
-                        .FirstOrDefault(
-                            x =>
-                                x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
-                                && this._ultAbility.CanBeCasted() && this._ultAbility.CanHit(x)
-                                && x.Health < (damage * (x.MaximumMana - x.Mana) * (1 - x.MagicResistance()))
-                                && !x.IsLinkensProtected() && !x.CantBeAttacked() && !x.CantBeKilled());
 
-                if (enemy_r != null)
-                {
-                    this._ultAbility.UseAbility(enemy_r);
-                    await Await.Delay(this.GetAbilityDelay(this._ultAbility));
-                }
 
             }
 
