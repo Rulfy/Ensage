@@ -15,8 +15,9 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using Zaio.Prediction;
 using AbilityId = Ensage.Common.Enums.AbilityId;
+using Zaio.Prediction;
+
 
 namespace Zaio.Heroes
 {
@@ -88,7 +89,7 @@ namespace Zaio.Heroes
 
         private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
-            if (args.Order == Order.AbilityTarget && args.Ability.GetAbilityId() == AbilityId.windrunner_focusfire && args.Entities.Contains(MyHero))
+            if (args.Order == Order.AbilityTarget && args.Ability.Id == (uint)AbilityId.windrunner_focusfire && args.Entities.Contains(MyHero))
             {
                 _ultTarget = args.Target as Unit;
                 if(!MyHero.HasModifier("modifier_windrunner_focusfire"))

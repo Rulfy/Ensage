@@ -22,6 +22,7 @@ using Attribute = Ensage.Attribute;
 
 namespace Zaio.Interfaces
 {
+
     internal enum DisabledState
     {
         NotDisabled,
@@ -86,16 +87,20 @@ namespace Zaio.Interfaces
         private float _lastAttackRange;
         private Unit _target;
         protected Hero MyHero;
+
+        protected Player MyPlayer;
         protected Orbwalker Orbwalker;
 
         protected ComboHero() : base(ZaioMenu.ComboKey)
         {
             _repeatCombo = true;
+            MyPlayer = ObjectManager.LocalPlayer;
         }
 
         protected ComboHero(bool repeatCombo) : base(ZaioMenu.ComboKey)
         {
             _repeatCombo = repeatCombo;
+            MyPlayer = ObjectManager.LocalPlayer;
         }
 
 
@@ -594,7 +599,7 @@ namespace Zaio.Interfaces
                         item.UseAbility(Target);
 
                         // wait for eth hit to get bonus damage with following spells
-                        if (item.ID == (uint) ItemId.item_ethereal_blade)
+                        if (item.Id == (uint)Ensage.Common.Enums.ItemId.item_ethereal_blade)
                         {
                             var speed = item.GetAbilityData("projectile_speed");
                             var time = Target.Distance2D(MyHero) / speed;

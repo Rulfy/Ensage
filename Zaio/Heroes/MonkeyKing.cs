@@ -15,6 +15,7 @@ using Zaio.Helpers;
 using Zaio.Interfaces;
 using AbilityId = Ensage.Common.Enums.AbilityId;
 
+
 namespace Zaio.Heroes
 {
     [Hero(ClassID.CDOTA_Unit_Hero_MonkeyKing)]
@@ -87,7 +88,7 @@ namespace Zaio.Heroes
 
         private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
-            if (args.Order == Order.AbilityLocation && args.Ability.ID == (uint) AbilityId.monkey_king_primal_spring)
+            if (args.Order == Order.AbilityLocation && args.Ability.Id == (uint)AbilityId.monkey_king_primal_spring)
             {
                 if (Target != null)
                 {
