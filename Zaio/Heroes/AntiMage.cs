@@ -117,13 +117,6 @@ namespace Zaio.Heroes
 
                     }
 
-                    if (best_target != default(Ensage.Hero) && ((current_damage * (1 - best_target.MagicResistance())) >= best_target.Health))
-                    {
-                        Log.Debug($"Ult enemy for ks {current_damage}");
-                        this._ultAbility.UseAbility(best_target);
-                        await Await.Delay(this.GetAbilityDelay(this._ultAbility));
-                    }
-
                     previous_target = enemy;
 
                 }
