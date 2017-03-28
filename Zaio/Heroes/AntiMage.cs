@@ -66,7 +66,7 @@ namespace Zaio.Heroes
 
             this._minimumEnemyUltCount =
             new MenuItem("zaioAntiMageMinEnemyCount", "Minimum Enemies for Ult").SetValue(new Slider(1, 0, 4));
-            this._minimumEnemyUltCount.Tooltip = "Minimum enemies besides your target to use ult.";
+            this._minimumEnemyUltCount.Tooltip = "Minimum enemies besides your target to use ult. Killsteal must be enabled!";
             heroMenu.AddItem(this._minimumEnemyUltCount);
 
             this.OnLoadMenuItems(supportedStuff, supportedKillsteal);
