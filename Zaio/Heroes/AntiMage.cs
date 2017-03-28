@@ -1,10 +1,10 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Ensage;
-using Ensage.Common;
 using Ensage.Common.Extensions;
 using Ensage.Common.Extensions.SharpDX;
 using Ensage.Common.Menu;
@@ -16,8 +16,10 @@ using PlaySharp.Toolkit.Logging;
 
 using Zaio.Helpers;
 using Zaio.Interfaces;
+using Zaio.Prediction;
 
 using AbilityId = Ensage.Common.Enums.AbilityId;
+using Prediction = Ensage.Common.Prediction;
 
 
 namespace Zaio.Heroes
@@ -30,6 +32,11 @@ namespace Zaio.Heroes
         private static readonly string[] SupportedAbilities =
         {
             "antimage_blink",
+            "antimage_mana_void"
+        };
+
+        private static readonly string[] KillstealAbilities =
+        {
             "antimage_mana_void"
         };
 
@@ -48,14 +55,67 @@ namespace Zaio.Heroes
             supportedStuff.SetValue(new AbilityToggler(SupportedAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedStuff);
 
-            OnLoadMenuItems(supportedStuff);
+            heroMenu.AddItem(new MenuItem("zaioAntiMageKillstealAbilitiesText", "Supported Killsteal Abilities"));
+            var supportedKillsteal = new MenuItem("zaioAntiMageKillstealAbilities", string.Empty);
+            supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
+            heroMenu.AddItem(supportedKillsteal);
+
+            this.OnLoadMenuItems(supportedStuff, supportedKillsteal);
 
             ZaioMenu.LoadHeroSettings(heroMenu);
 
-            _blinkAbility = MyHero.GetAbilityById(AbilityId.antimage_blink);
-            _ultAbility = MyHero.GetAbilityById(AbilityId.antimage_mana_void);
+            this._blinkAbility = MyHero.GetAbilityById(AbilityId.antimage_blink);
+            this._ultAbility = MyHero.GetAbilityById(AbilityId.antimage_mana_void);
         }
 
+        protected override async Task<bool> Killsteal()
+        {
+            if (await base.Killsteal())
+            {
+                return true;
+            }
+
+            if (!this.MyHero.IsSilenced() && this._ultAbility.IsKillstealAbilityEnabled() && this._ultAbility.CanBeCasted())
+            {
+                var damage = _ultAbility.GetAbilityData("mana_void_damage_per_mana");
+                List<Hero> enemies = null;
+                enemies =
+                    ObjectManager.GetEntitiesParallel<Hero>()
+                        .Where(
+                             x =>
+                                 x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
+                                 && this._ultAbility.CanBeCasted() && this._ultAbility.CanHit(x)
+                                 && !x.IsMagicImmune() && x.Health < ((damage + damage * (x.MaximumMana - x.Mana)) * (1 - x.MagicResistance()))
+                                 && !x.CantBeAttacked() && !x.CantBeKilled())
+                                 .ToList();
+
+                var current_damage = 0.0;
+
+                var best_target = default(Ensage.Hero);
+
+                foreach (var enemy in enemies)
+                {
+                    var possible_damage = damage + (damage * enemy.MaximumMana - enemy.Mana) * (1 - enemy.MagicResistance());
+
+                    if (possible_damage >= current_damage)
+                    {
+                        best_target = enemy;
+                    }
+
+                    current_damage = possible_damage;
+                }
+
+                if (best_target != default(Ensage.Hero))
+                {
+                    Log.Debug($"Ult enemy for ks");
+                    this._ultAbility.UseAbility(best_target);
+                    await Await.Delay(this.GetAbilityDelay(this._ultAbility));
+                }
+
+            }
+
+            return false;
+        }
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
         {
@@ -135,5 +195,7 @@ namespace Zaio.Heroes
                 await Await.Delay(125, tk);
             }
         }
+
+
     }
 }
