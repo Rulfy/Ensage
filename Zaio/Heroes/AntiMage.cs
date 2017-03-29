@@ -114,7 +114,7 @@ namespace Zaio.Heroes
                                      .Where(
                                          x =>
                                              x.IsValid && x.IsAlive && x.IsVisible && x.Team != this.MyHero.Team
-                                             && this._ultAbility.CanHit(x)
+                                             && this._ultAbility.CanHit(x) && !x.IsLinkensProtected()
                                              && targetHealth < (x.MaximumMana - x.Mana) * damage * spellAmp
                                              && x.Distance2D(target) < radius)
                                      .OrderByDescending(x => x.MaximumMana - x.Mana)
@@ -221,7 +221,7 @@ namespace Zaio.Heroes
                                  .Where(
                                      x =>
                                          x.IsValid && x.IsAlive && x.IsVisible && x.Team != this.MyHero.Team
-                                         && !x.IsIllusion && this._ultAbility.CanHit(x))
+                                         && !x.IsIllusion && this._ultAbility.CanHit(x) && !x.IsLinkensProtected())
                                  .OrderByDescending(x => x.MaximumMana - x.Mana);
                 if (enemies.Any())
                 {
