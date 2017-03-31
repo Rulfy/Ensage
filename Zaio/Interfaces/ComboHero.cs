@@ -529,6 +529,8 @@ namespace Zaio.Interfaces
                 case OrbwalkerMode.Attack:
                     Orbwalker.Attack(Target, true);
                     break;
+                case OrbwalkerMode.None:
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

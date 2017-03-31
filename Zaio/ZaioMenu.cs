@@ -24,7 +24,8 @@ namespace Zaio
     {
         Mouse,
         Target,
-        Attack
+        Attack,
+        None
     }
 
     public enum ActiveControlMode
@@ -139,7 +140,7 @@ namespace Zaio
             SetNoTargetMode(_noTargetMode.GetValue<StringList>().SelectedValue);
 
             _orbwalkerMode = new MenuItem("zaioOrbwalkerMode", "Orbwalker Mode");
-            _orbwalkerMode.SetValue(new StringList(new[] {"Mouse Position", "Target Position", "Simple Attack"}));
+            _orbwalkerMode.SetValue(new StringList(new[] {"Mouse Position", "Target Position", "Simple Attack", "None"}));
             _orbwalkerMode.ValueChanged += _orbwalkerMode_ValueChanged;
             _orbwalkerMode.Tooltip = "Controls the orbwalker.";
             general.AddItem(_orbwalkerMode);
@@ -208,6 +209,9 @@ namespace Zaio
                     break;
                 case "Simple Attack":
                     OrbwalkerMode = OrbwalkerMode.Attack;
+                    break;
+                case "None":
+                    OrbwalkerMode = OrbwalkerMode.None;
                     break;
             }
         }
