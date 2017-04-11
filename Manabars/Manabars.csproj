@@ -40,16 +40,19 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\PlaySharp1\System\Ensage.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\PlaySharp1\System\Ensage.Common.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <HintPath>C:\PlaySharp1\System\SharpDX.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\SharpDX.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Direct3D9">
-      <HintPath>C:\PlaySharp1\System\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>C:\EnsageSharpTest\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />

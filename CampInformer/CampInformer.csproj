@@ -41,18 +41,21 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharp\References\Ensage.Common.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharp\References\SharpDX.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>C:\EnsageSharpTest\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />

@@ -14,15 +14,15 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
 using Zaio.Prediction;
 using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 
 namespace Zaio.Heroes
 {
-    using AbilityId = Ensage.Common.Enums.AbilityId;
+    using AbilityId = Ensage.AbilityId;
 
-    [Hero(ClassID.CDOTA_Unit_Hero_Pudge)]
+    [Hero(ClassId.CDOTA_Unit_Hero_Pudge)]
     internal class Pudge : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -166,7 +166,7 @@ namespace Zaio.Heroes
 
             if (_hookAbility.IsKillstealAbilityEnabled() && _hookAbility.CanBeCasted())
             {
-                var damage = MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
+                var damage = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
                     ? _hookAbility.GetAbilityData("damage_scepter")
                     : _hookAbility.GetDamage(_hookAbility.Level - 1);
                 damage *= GetSpellAmp();

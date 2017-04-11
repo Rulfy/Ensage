@@ -20,10 +20,10 @@ namespace Zaio.Heroes
     using Zaio.Interfaces;
     using Zaio.Prediction;
 
-    using AbilityId = Ensage.Common.Enums.AbilityId;
+    using AbilityId = Ensage.AbilityId;
     using Prediction = Ensage.Common.Prediction;
 
-    [Hero(ClassID.CDOTA_Unit_Hero_QueenOfPain)]
+    [Hero(ClassId.CDOTA_Unit_Hero_QueenOfPain)]
     internal class QueenOfPain : ComboHero
     {
         private static readonly string[] KillstealAbilities =
@@ -234,7 +234,7 @@ namespace Zaio.Heroes
 
             if (this._ultAbility.IsKillstealAbilityEnabled() && this._ultAbility.CanBeCasted())
             {
-                var damage = this.MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter)
+                var damage = this.MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
                                  ? this._ultAbility.GetAbilityData("damage_scepter")
                                  : this._ultAbility.GetAbilityData("damage");
 

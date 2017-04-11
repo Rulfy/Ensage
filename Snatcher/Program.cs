@@ -31,14 +31,14 @@ namespace Snatcher
         private static void Game_OnUpdate(EventArgs args)
         {
             var tick = Environment.TickCount;
-            var hero = ObjectMgr.LocalHero;
+            var hero = ObjectManager.LocalHero;
             if (hero == null || tick < sleeptick || !Menu.Item("hotkey").GetValue<KeyBind>().Active)
                 return;
             // check for runes
             if (Menu.Item("rune").GetValue<bool>())
             {
                 var runes =
-                    ObjectMgr.GetEntities<Rune>()
+                    ObjectManager.GetEntities<Rune>()
                         .Where(x => x.IsVisible && x.Distance2D(hero) < 400)
                         .ToList();
                 if (runes.Any())
@@ -49,7 +49,7 @@ namespace Snatcher
                 }
             }
             // check for aegis and cheese
-            if (hero.Inventory.FreeSlots.Any())
+            if (hero.Inventory.FreeInventorySlots.Any())
             {
                 var aegis = Menu.Item("aegis").GetValue<bool>();
                 var cheese = Menu.Item("cheese").GetValue<bool>();
@@ -57,7 +57,7 @@ namespace Snatcher
                     return;
 
                 var items =
-                    ObjectMgr.GetEntities<PhysicalItem>()
+                    ObjectManager.GetEntities<PhysicalItem>()
                         .Where(x => x.IsVisible && x.Distance2D(hero) < 400
                                     && ((aegis && x.Item.Name == "item_aegis") || (cheese && x.Item.Name == "item_cheese"))).ToList();
                 if (items.Any())

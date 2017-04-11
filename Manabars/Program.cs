@@ -18,14 +18,14 @@
             {
                 return;
             }
-            var player = ObjectMgr.LocalPlayer;
+            var player = ObjectManager.LocalPlayer;
             if (player == null || player.Team == Team.Observer)
             {
                 return;
             }
 
             var enemies =
-                ObjectMgr.GetEntities<Hero>()
+                ObjectManager.GetEntities<Hero>()
                     .Where(x => x.IsVisible && x.IsAlive && x.MaximumMana > 0 && !x.IsIllusion && x.Team != player.Team)
                     .ToList();
             foreach (var enemy in enemies)

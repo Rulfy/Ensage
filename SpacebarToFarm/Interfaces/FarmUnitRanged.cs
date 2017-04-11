@@ -128,7 +128,7 @@
             {
                 var quellingBlade =
                     ControlledUnit.Inventory.Items.FirstOrDefault(
-                        x => x.ClassID == ClassID.CDOTA_Item_QuellingBlade || x.ClassID == ClassID.CDOTA_Item_Iron_Talon);
+                        x => x.ClassId == ClassId.CDOTA_Item_QuellingBlade || x.ClassId == ClassId.CDOTA_Item_Iron_Talon);
 
                 if (quellingBlade != null)
                 {
@@ -139,7 +139,7 @@
                 }
 
                 var battleFury =
-                    ControlledUnit.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_Battlefury);
+                    ControlledUnit.Inventory.Items.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Item_Battlefury);
                 if (battleFury != null)
                 {
                     // 160
@@ -160,8 +160,8 @@
                 var diffusal =
                     ControlledUnit.Inventory.Items.FirstOrDefault(
                         x =>
-                            x.ClassID == ClassID.CDOTA_Item_Diffusal_Blade
-                            || x.ClassID == ClassID.CDOTA_Item_Diffusal_Blade_Level2);
+                            x.ClassId == ClassId.CDOTA_Item_Diffusal_Blade
+                            || x.ClassId == ClassId.CDOTA_Item_Diffusal_Blade_Level2);
                 if (diffusal != null)
                 {
                     if (ControlledUnit.IsIllusion)

@@ -22,9 +22,9 @@ namespace Zaio.Heroes
     using Zaio.Helpers;
     using Zaio.Interfaces;
 
-    using AbilityId = Ensage.Common.Enums.AbilityId;
+    using AbilityId = Ensage.AbilityId;
 
-    [Hero(ClassID.CDOTA_Unit_Hero_AntiMage)]
+    [Hero(ClassId.CDOTA_Unit_Hero_AntiMage)]
     internal class AntiMage : ComboHero
     {
         private static readonly string[] KillstealAbilities = { "antimage_mana_void" };

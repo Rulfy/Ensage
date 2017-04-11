@@ -44,10 +44,10 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharp\References\Ensage.Common.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>

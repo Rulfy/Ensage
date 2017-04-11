@@ -206,14 +206,14 @@ namespace FailSwitch
         private static void Player_OnExecuteAction(Player sender, ExecuteOrderEventArgs args)
         {
             var shouldCheckForPowerTreads = false;
-            switch (args.Order)
+            switch (args.OrderId)
             {
-                case Order.GlyphOfFortification:
+                case OrderId.GlyphOfFortification:
                     // Test if tower just died a second ago and prevent glyph
                     if (_lastTowerKillTick + 1000 > Environment.TickCount)
                         args.Process = false;
                     break;
-                case Order.AbilityTarget:
+                case OrderId.AbilityTarget:
                 {
                     if (_targetSpellsItem.GetValue<bool>())
                     {
@@ -224,14 +224,14 @@ namespace FailSwitch
                     shouldCheckForPowerTreads = args.Process;
                     break;
                 }
-                case Order.AbilityLocation:
+                case OrderId.AbilityLocation:
                 {
                     if (_areaSpellsItem.GetValue<bool>())
                         AreaSpellCheck(sender, args);
                     shouldCheckForPowerTreads = args.Process;
                     break;
                 }
-                case Order.Ability:
+                case OrderId.Ability:
                 {
                     if (_areaSpellsItem.GetValue<bool>())
                         AbilityCheck(sender, args);
@@ -345,19 +345,19 @@ namespace FailSwitch
                     Log.Debug("toggling");
                 }
                 await Await.Delay((int) Game.Ping);
-                switch (args.Order)
+                switch (args.OrderId)
                 {
-                    case Order.AbilityTarget:
+                    case OrderId.AbilityTarget:
                     {
                         args.Ability.UseAbility(args.Target as Unit);
                         break;
                     }
-                    case Order.AbilityLocation:
+                    case OrderId.AbilityLocation:
                     {
                         args.Ability.UseAbility(args.TargetPosition);
                         break;
                     }
-                    case Order.Ability:
+                    case OrderId.Ability:
                     {
                         args.Ability.UseAbility();
                         break;
@@ -368,7 +368,7 @@ namespace FailSwitch
                 await Await.Delay(delay);
 
                 var owner = powerTreads.Owner as Unit;
-                if ((owner != null && (owner.IsChanneling() || owner.IsInvisible())) || args.Ability.AbilityData2.ID == 5195 || args.Ability.AbilityData2.ID == 5598) // templar_assassin_meld legion_commander_duel
+                if ((owner != null && (owner.IsChanneling() || owner.IsInvisible())) || args.Ability.AbilityData.Id == AbilityId.templar_assassin_meld || args.Ability.AbilityData.Id == AbilityId.legion_commander_duel)
                 {
                     Log.Debug("NOT toggling back due to channeling or invis");
                     _powerTreadsFunc = null;
@@ -390,13 +390,12 @@ namespace FailSwitch
         private static void NotifyPlayer(string message, string ability)
         {
             if (_notifyItem.GetValue<bool>())
-                Game.PrintMessage($"<font color='#FF6666'>{message}</font> <font color='#66B2FF'>{ability}</font>",
-                    MessageType.LogMessage);
+                Game.PrintMessage($"<font color='#FF6666'>{message}</font> <font color='#66B2FF'>{ability}</font>");
         }
 
         private static Func<Hero, bool> GetExprFunc(Player sender, ExecuteOrderEventArgs args, SpecialSpellInfo info)
         {
-            var pos = args.Order == Order.AbilityTarget ? args.Target.Position : args.Ability.Owner.Position;
+            var pos = args.OrderId == OrderId.AbilityTarget ? args.Target.Position : args.Ability.Owner.Position;
             switch (info.PiercesMagic)
             {
                 case MagicPierce.No:
@@ -413,7 +412,7 @@ namespace FailSwitch
                         x =>
                             x.IsAlive && x.IsVisible && !x.IsIllusion && (x.Team != sender.Team) &&
                             (!x.IsMagicImmune() ||
-                             ((Unit)args.Ability.Owner).HasItem(ClassID.CDOTA_Item_UltimateScepter))
+                             ((Unit)args.Ability.Owner).HasItem(ClassId.CDOTA_Item_UltimateScepter))
                             && (x.Distance2D(pos) - x.HullRadius
                                 < args.Ability.AbilitySpecialData.First(s => s.Name == info.Radius).Value);
                 default:

@@ -51,7 +51,7 @@ namespace TowerRange
             if (args.GameEvent.Name == "dota_game_state_change")
             {
                 var state = (GameState) args.GameEvent.GetInt("new_state");
-                if (state == GameState.Started || state == GameState.Prestart )
+                if (state == GameState.GameInProgress || state == GameState.PreGame )
                     HandleTowers();
             }
         }
@@ -67,12 +67,12 @@ namespace TowerRange
             }
             Effects.Clear();
 
-            var player = ObjectMgr.LocalPlayer;
+            var player = ObjectManager.LocalPlayer;
             if (player == null)
                 return;
             var towers =
-                ObjectMgr.GetEntities<Building>()
-                    .Where(x => x.IsAlive && x.ClassID == ClassID.CDOTA_BaseNPC_Tower)
+                ObjectManager.GetEntities<Building>()
+                    .Where(x => x.IsAlive && x.ClassId == ClassId.CDOTA_BaseNPC_Tower)
                     .ToList();
             if (!towers.Any())
                 return;

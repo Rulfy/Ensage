@@ -13,12 +13,12 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
 using Zaio.Prediction;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassID.CDOTA_Unit_Hero_Rattletrap)]
+    [Hero(ClassId.CDOTA_Unit_Hero_Rattletrap)]
     internal class Clockwork : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -113,7 +113,7 @@ namespace Zaio.Heroes
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.IsKillstealAbilityEnabled() && MyHero.HasItem(ClassID.CDOTA_Item_UltimateScepter) && ult.CanBeCasted())
+            if (ult.IsKillstealAbilityEnabled() && MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter) && ult.CanBeCasted())
             {
                 var damage = ult.GetAbilityData("damage");
                 damage *= GetSpellAmp();

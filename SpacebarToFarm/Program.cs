@@ -28,9 +28,9 @@
 
         private static FarmUnit CreateFarmer(Unit unit)
         {
-            switch (unit.ClassID)
+            switch (unit.ClassId)
             {
-                case ClassID.CDOTA_BaseNPC_Invoker_Forged_Spirit:
+                case ClassId.CDOTA_BaseNPC_Invoker_Forged_Spirit:
                     return new FarmForgeSpirit(unit);
 
                 // TODO: special hero/unit implementations

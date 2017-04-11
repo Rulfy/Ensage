@@ -43,26 +43,24 @@
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
-    </Reference>
-    <Reference Include="Ensage.Common, Version=1.2.4.2, Culture=neutral, processorArchitecture=AMD64">
+    <Reference Include="Ensage, Version=0.0.0.1, Culture=neutral, PublicKeyToken=a41ba14f653257a6, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharp\References\Ensage.Common.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
     </Reference>
-    <Reference Include="log4net">
-      <HintPath>C:\EnsageSharp\Core\log4net.dll</HintPath>
+    <Reference Include="Ensage.Common, Version=1.2.5.6, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\EnsageSharpTest\References\Ensage.Common.dll</HintPath>
     </Reference>
-    <Reference Include="PlaySharp.Toolkit">
-      <HintPath>C:\EnsageSharp\Core\PlaySharp.Toolkit.dll</HintPath>
+    <Reference Include="PlaySharp.Toolkit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\EnsageSharpTest\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharp\References\SharpDX.dll</HintPath>
+      <HintPath>C:\EnsageSharpTest\References\SharpDX.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX.Direct3D9, Version=2.6.3.0, Culture=neutral, PublicKeyToken=345b829e6e492981, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharp\References\SharpDX.Direct3D9.dll</HintPath>
+    <Reference Include="SharpDX.Mathematics">
+      <HintPath>C:\EnsageSharpTest\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>

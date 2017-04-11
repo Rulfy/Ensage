@@ -65,23 +65,23 @@ namespace VisibleByEnemy
 
         private static bool IsWard(Entity sender)
         {
-            return sender.ClassID == ClassID.CDOTA_NPC_Observer_Ward ||
-                   sender.ClassID == ClassID.CDOTA_NPC_Observer_Ward_TrueSight;
+            return sender.ClassId == ClassId.CDOTA_NPC_Observer_Ward ||
+                   sender.ClassId == ClassId.CDOTA_NPC_Observer_Ward_TrueSight;
         }
 
         private static bool IsMine(Entity sender)
         {
-            return sender.ClassID == ClassID.CDOTA_NPC_TechiesMines;
+            return sender.ClassId == ClassId.CDOTA_NPC_TechiesMines;
         }
 
         private static bool IsUnit(Unit sender)
         {
             return !(sender is Hero) && !(sender is Building) &&
-                   (sender.ClassID != ClassID.CDOTA_BaseNPC_Creep_Lane &&
-                    sender.ClassID != ClassID.CDOTA_BaseNPC_Creep_Siege || sender.IsControllable)
-                   && sender.ClassID != ClassID.CDOTA_NPC_TechiesMines
-                   && sender.ClassID != ClassID.CDOTA_NPC_Observer_Ward
-                   && sender.ClassID != ClassID.CDOTA_NPC_Observer_Ward_TrueSight;
+                   (sender.ClassId != ClassId.CDOTA_BaseNPC_Creep_Lane &&
+                    sender.ClassId != ClassId.CDOTA_BaseNPC_Creep_Siege || sender.IsControllable)
+                   && sender.ClassId != ClassId.CDOTA_NPC_TechiesMines
+                   && sender.ClassId != ClassId.CDOTA_NPC_Observer_Ward
+                   && sender.ClassId != ClassId.CDOTA_NPC_Observer_Ward_TrueSight;
         }
 
         private static void Entity_OnInt32PropertyChange(Entity sender, Int32PropertyChangeEventArgs args)

@@ -21,7 +21,7 @@ namespace MultiItemUser
 
         private static void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
-            if (args.Order == Order.Ability)
+            if (args.OrderId == OrderId.Ability)
             {
                 var owner = args.Ability.Owner as Unit;
                 if (owner != null)
@@ -38,7 +38,7 @@ namespace MultiItemUser
                     }
                 }
             }
-            else if (args.Order == Order.AbilityTarget)
+            else if (args.OrderId == OrderId.AbilityTarget)
             {
                 var owner = args.Ability.Owner as Unit;
                 if (owner != null)

@@ -17,6 +17,7 @@ using PlaySharp.Toolkit.Logging;
 using SharpDX;
 using SpacebarToFarm;
 using Zaio.Helpers;
+using AbilityId = Ensage.AbilityId;
 using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 using Attribute = Ensage.Attribute;
 
@@ -397,7 +398,7 @@ namespace Zaio.Interfaces
 
             if (ZaioMenu.ShouldUseBlinkDagger && !MyHero.IsMuted())
             {
-                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Item_BlinkDagger);
                 if (blink != null && blink.CanBeCasted())
                 {
                     var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
@@ -424,7 +425,7 @@ namespace Zaio.Interfaces
             {
                 if (ZaioMenu.ShouldUseBlinkDagger)
                 {
-                    var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassID == ClassID.CDOTA_Item_BlinkDagger);
+                    var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Item_BlinkDagger);
                     if (blink != null && blink.CanBeCasted())
                     {
                         var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
@@ -603,7 +604,7 @@ namespace Zaio.Interfaces
                         item.UseAbility(Target);
 
                         // wait for eth hit to get bonus damage with following spells
-                        if (item.Id == (uint)Ensage.Common.Enums.ItemId.item_ethereal_blade)
+                        if (item.Id == AbilityId.item_ethereal_blade)
                         {
                             var speed = item.GetAbilityData("projectile_speed");
                             var time = Target.Distance2D(MyHero) / speed;

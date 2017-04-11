@@ -13,7 +13,7 @@ using log4net;
 using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
-using AbilityId = Ensage.Common.Enums.AbilityId;
+using AbilityId = Ensage.AbilityId;
 
 using MyAsyncHelpers = Zaio.Helpers.MyAsyncHelpers;
 
@@ -35,7 +35,7 @@ namespace Zaio.Heroes
         }
     }
 
-    [Hero(ClassID.CDOTA_Unit_Hero_Zuus)]
+    [Hero(ClassId.CDOTA_Unit_Hero_Zuus)]
     internal class Zeus : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
