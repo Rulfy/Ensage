@@ -159,11 +159,6 @@ namespace Zaio.Heroes
             {
                 this.Orbwalk();
             }
-            else
-            {
-                this.MyHero.Attack(target);
-                await Await.Delay(125, tk);
-            }
         }
 
         public override void OnLoad()

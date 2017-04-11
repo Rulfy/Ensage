@@ -476,11 +476,12 @@ namespace Zaio.Heroes
                 return;
             }
 
-            if (ZaioMenu.ShouldUseOrbwalker && (!MyHero.HasModifier("modifier_windrunner_focusfire" )|| ShouldUseOrbwalkWhileUlt))
+            var useOrbwalkerOnUlt = (!MyHero.HasModifier("modifier_windrunner_focusfire" )|| ShouldUseOrbwalkWhileUlt);
+            if (ZaioMenu.ShouldUseOrbwalker && useOrbwalkerOnUlt)
             {
                 Orbwalk();
             }
-            else
+            else if(!useOrbwalkerOnUlt)
             {
                 MyHero.Attack(target);
                 await Await.Delay(125, tk);

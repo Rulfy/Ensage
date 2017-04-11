@@ -25,12 +25,6 @@ namespace Zaio.Heroes
             if (ZaioMenu.ShouldUseOrbwalker)
             {
                 Orbwalk();
-                Log.Debug($"orbwalking");
-            }
-            else
-            {
-                MyHero.Attack(target);
-                await Await.Delay(125, tk);
             }
         }
     }

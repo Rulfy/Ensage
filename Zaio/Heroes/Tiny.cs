@@ -250,11 +250,12 @@ namespace Zaio.Heroes
                 await Await.Delay(250, tk);
             }
 
-            if (ZaioMenu.ShouldUseOrbwalker && !target.HasModifier("modifier_tiny_toss"))
+            var hasModifier = target.HasModifier("modifier_tiny_toss");
+            if (ZaioMenu.ShouldUseOrbwalker && !hasModifier)
             {
                 Orbwalk();
             }
-            else
+            else if(hasModifier)
             {
                 MyHero.Attack(target);
                 await Await.Delay(125, tk);
