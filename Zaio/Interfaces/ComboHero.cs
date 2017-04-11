@@ -467,11 +467,6 @@ namespace Zaio.Interfaces
             { 
                 Orbwalk();
             }
-            else
-            {
-                MyHero.Attack(target);
-                await Await.Delay(125, tk);
-            }
             return false;
         }
 
