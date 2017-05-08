@@ -4,6 +4,7 @@
 
 namespace VisibleByEnemy
 {
+    using System;
     using System.ComponentModel.Composition;
     using System.Linq;
 
@@ -18,12 +19,12 @@ namespace VisibleByEnemy
     {
         private readonly Hero owner;
 
-        private readonly IParticleManager particleManager;
+        private readonly Lazy<IParticleManager> particleManager;
 
         private VisibleByEnemyConfig config;
 
         [ImportingConstructor]
-        public Program([Import] IServiceContext context, [Import] IParticleManager particleManager)
+        public Program([Import] IServiceContext context, [Import] Lazy<IParticleManager> particleManager)
         {
             this.owner = context.Owner;
             this.particleManager = particleManager;
@@ -63,11 +64,11 @@ namespace VisibleByEnemy
         {
             if (visible && unit.IsAlive)
             {
-                this.particleManager.AddOrUpdate(unit, $"unit_{unit.Handle}", "particles/items_fx/aura_shivas.vpcf", ParticleAttachment.AbsOriginFollow);
+                this.particleManager.Value.AddOrUpdate(unit, $"unit_{unit.Handle}", "particles/items_fx/aura_shivas.vpcf", ParticleAttachment.AbsOriginFollow);
             }
             else
             {
-                this.particleManager.Remove($"unit_{unit.Handle}");
+                this.particleManager.Value.Remove($"unit_{unit.Handle}");
             }
         }
 

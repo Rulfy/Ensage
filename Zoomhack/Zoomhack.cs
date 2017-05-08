@@ -23,9 +23,11 @@ namespace Zoomhack
 
         private const int MinZoomValue = 0;
 
-        private readonly IInputManager inputManager;
+        private readonly Lazy<IInputManager> inputManager;
 
         private ConVar cameraDistanceConVar;
+
+        private MenuFactory factory;
 
         private MenuItem<KeyBind> key;
 
@@ -35,7 +37,7 @@ namespace Zoomhack
         private MenuItem<Slider> zoomSlider;
 
         [ImportingConstructor]
-        public Zoomhack([Import] IInputManager inputManager)
+        public Zoomhack([Import] Lazy<IInputManager> inputManager)
         {
             this.inputManager = inputManager;
         }
@@ -75,11 +77,11 @@ namespace Zoomhack
             this.cameraDistanceConVar = Game.GetConsoleVar("dota_camera_distance");
             this.ZoomCheatFlagsActive = false;
 
-            var factory = MenuFactory.Create("ZoomHack");
-            this.key = factory.Item("Key", new KeyBind(0x11, KeyBindType.Press));
-            this.zoomSlider = factory.Item("Camera Distance", new Slider(DefaultZoomValue, MinZoomValue, MaxZoomValue));
+            this.factory = MenuFactory.Create("ZoomHack");
+            this.key = this.factory.Item("Key", new KeyBind(0x11, KeyBindType.Press));
+            this.zoomSlider = this.factory.Item("Camera Distance", new Slider(DefaultZoomValue, MinZoomValue, MaxZoomValue));
             this.zoomSlider.Item.ValueChanged += this.ItemValueChanged;
-            this.inputManager.MouseWheel += this.InputManagerMouseWheel;
+            this.inputManager.Value.MouseWheel += this.InputManagerMouseWheel;
 
             this.ZoomValue = this.zoomSlider;
         }
@@ -87,7 +89,9 @@ namespace Zoomhack
         protected override void OnDeactivate()
         {
             this.zoomSlider.Item.ValueChanged -= this.ItemValueChanged;
-            this.inputManager.MouseWheel -= this.InputManagerMouseWheel;
+            this.inputManager.Value.MouseWheel -= this.InputManagerMouseWheel;
+
+            this.factory.Dispose();
 
             // reset zoom
             this.ZoomValue = DefaultZoomValue;
@@ -115,7 +119,9 @@ namespace Zoomhack
             }
 
             this.ZoomValue = value;
-            this.zoomSlider.Value.Value = value;
+
+            // this.zoomSlider.Value.Value = value;
+            this.zoomSlider.Item.SetValue(new Slider(value, MinZoomValue, MaxZoomValue));
         }
 
         private void ItemValueChanged(object sender, OnValueChangeEventArgs e)
