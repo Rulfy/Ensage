@@ -1,186 +1,74 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
-using Ensage;
-using Ensage.Common;
-using Ensage.Common.Extensions;
-using Ensage.Common.Extensions.SharpDX;
-using Ensage.Common.Threading;
-using Ensage.Items;
-using log4net;
-using PlaySharp.Toolkit.Logging;
-using SharpDX;
+﻿// <copyright file="Program.cs" company="Ensage">
+//    Copyright (c) 2017 Ensage.
+// </copyright>
 
 namespace IllusionSplitter
 {
-    class Program
+    using System;
+    using System.ComponentModel.Composition;
+    using System.Windows.Input;
+
+    using Ensage.Common.Menu;
+    using Ensage.SDK.Input;
+    using Ensage.SDK.Inventory;
+    using Ensage.SDK.Orbwalker;
+    using Ensage.SDK.Service;
+    using Ensage.SDK.Service.Metadata;
+
+    [ExportPlugin("IllusionSplitter")]
+    public class Program : Plugin
     {
-        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private static bool _added;
+        private readonly Lazy<IInputManager> input;
 
-        static void Main()
+        private readonly Lazy<IInventoryManager> inventoryMgr;
+
+        private readonly Lazy<IOrbwalkerManager> orbwalkerManager;
+
+        private IllusionSplitterConfig config;
+
+        [ImportingConstructor]
+        public Program([Import] Lazy<IInventoryManager> inventoryMgr, [Import] Lazy<IInputManager> input, [Import] Lazy<IOrbwalkerManager> orbwalkerManager)
         {
-            Events.OnLoad += Events_OnLoad;
+            this.inventoryMgr = inventoryMgr;
+            this.input = input;
+            this.orbwalkerManager = orbwalkerManager;
         }
 
-        private static void Events_OnLoad(object sender, EventArgs e)
-        {
-            if (!AssemblyMenu.BuildMenu())
-                return;
+        public IllusionSplitterMode OrbwalkerMode { get; private set; }
 
-            AssemblyMenu.SplitterHotkeyPressed += AssemblyMenu_SplitterHotkeyPressed;
+        private IOrbwalker Orbwalker => this.orbwalkerManager.Value.Active;
+
+        protected override void OnActivate()
+        {
+            this.config = new IllusionSplitterConfig();
+
+            var key = KeyInterop.KeyFromVirtualKey((int)this.config.SplitterHotkey.Value.Key);
+            this.OrbwalkerMode = new IllusionSplitterMode(this.Orbwalker, this.input.Value, key, this.config, this.inventoryMgr.Value);
+
+            this.config.SplitterHotkey.Item.ValueChanged += this.HotkeyChanged;
+
+            this.Orbwalker.RegisterMode(this.OrbwalkerMode);
         }
 
-#pragma warning disable 1998
-        private static async void GameDispatcher_OnIngameUpdate(EventArgs args)
-#pragma warning restore 1998
+        protected override void OnDeactivate()
         {
-            Await.Block("splitterLogic", SplitterLogic);
+            this.Orbwalker.UnregisterMode(this.OrbwalkerMode);
+
+            this.config.SplitterHotkey.Item.ValueChanged -= this.HotkeyChanged;
+
+            this.config?.Dispose();
         }
 
-        private static void AssemblyMenu_SplitterHotkeyPressed(object sender, EventArgs e)
+        private void HotkeyChanged(object sender, OnValueChangeEventArgs e)
         {
-            var hero = ObjectManager.LocalHero;
-            if (hero == null || _added || Game.IsPaused)
-                return;
-            _added = true;
-            GameDispatcher.OnIngameUpdate += GameDispatcher_OnIngameUpdate;
-            
-        }
-
-        private static async Task UseSpells(Hero hero)
-        {
-            var mirrorImage = hero.FindSpell("naga_siren_mirror_image");
-            if (mirrorImage != null && mirrorImage.CanBeCasted())
+            var keyCode = e.GetNewValue<KeyBind>().Key;
+            if (keyCode == e.GetOldValue<KeyBind>().Key)
             {
-                mirrorImage.UseAbility();
-                int delay = (int) ((mirrorImage.GetCastPoint(0) +
-                                   mirrorImage.AbilitySpecialData.First(x => x.Name == "invuln_duration").Value)*1000.0f) +
-                            250 + (int)Game.Ping;
-                Log.Debug($"using mirror image with delay {delay}");
-                await Await.Delay(delay);
                 return;
             }
 
-            var conjureImage = hero.FindSpell("terrorblade_conjure_image");
-            if (conjureImage != null && conjureImage.CanBeCasted())
-            {
-                conjureImage.UseAbility();
-                int delay = (int)(conjureImage.GetCastPoint(0) * 1000.0f + 250.0f) + (int)Game.Ping;
-                Log.Debug($"using conjure image with delay {delay}");
-                await Await.Delay(delay);
-                return;
-            }
-
-            var doppelWalk = hero.FindSpell("phantom_lancer_doppelwalk");
-            if (doppelWalk != null && doppelWalk.CanBeCasted())
-            {
-                var pos = Game.MousePosition - hero.Position;
-                if (pos.Length() > doppelWalk.CastRange)
-                {
-                    pos.Normalize();
-                    pos *= doppelWalk.CastRange;
-                }
-
-                doppelWalk.UseAbility(hero.Position + pos);
-                int delay = (int)(doppelWalk.GetCastPoint(0) +
-                                   doppelWalk.AbilitySpecialData.First(x => x.Name == "delay").Value) * 1000 +
-                            250 +(int)Game.Ping;
-                Log.Debug($"using doppel walk with delay {delay}");
-                await Await.Delay(delay);
-                // ReSharper disable once RedundantJumpStatement
-                return;
-            }
-        }
-
-        private static async Task SplitterLogic()
-        {
-            var hero = ObjectManager.LocalHero;
-            bool casted = false;
-            // checks for items
-            if (AssemblyMenu.ShouldUseItems)
-            {
-                var manta = hero.FindItem("item_manta");
-                if (manta != null && manta.CanBeCasted())
-                {
-                    Log.Debug("Used manta");
-                    manta.UseAbility();
-                    casted = true;
-
-                    await Await.Delay(250+(int)Game.Ping);
-                }
-                if (!casted)
-                {
-                    var bottle = hero.FindItem("item_bottle") as Bottle;
-                    if (bottle != null && bottle.StoredRune == RuneType.Illusion)
-                    {
-                        Log.Debug("Used bottle");
-                        bottle.UseAbility();
-                        casted = true;
-
-                        await Await.Delay(125 + (int)Game.Ping);
-                    }
-                }
-            }
-
-            if (!casted && AssemblyMenu.ShouldUseSpells)
-            {
-                await UseSpells(hero);
-            }
-
-            Vector3 heroTargetDirection;
-            if (AssemblyMenu.ShouldMoveHero)
-            {
-                Log.Debug($"Move hero to postition {Game.MousePosition}");
-                hero.Move(Game.MousePosition);
-                heroTargetDirection = Game.MousePosition - hero.Position;
-            }
-            else
-            {
-                heroTargetDirection = hero.InFront(250) - hero.Position;
-                Log.Debug($"Hero target dir {heroTargetDirection}");
-            }
-
-            var illusions =
-                ObjectManager.GetEntitiesFast<Hero>()
-                    .Where(x => x.IsIllusion && x.IsAlive && x.IsControllable && x.Distance2D(hero) < AssemblyMenu.IllusionRange)
-                    .ToList();
-            if (!illusions.Any())
-            {
-                GameDispatcher.OnIngameUpdate -= GameDispatcher_OnIngameUpdate;
-                _added = false;
-                return;
-            }
-
-            Vector3 middlePosition = illusions.Aggregate(hero.Position, (current, illusion) => current + illusion.Position);
-            var unitCount = illusions.Count + 1;
-
-            middlePosition /= unitCount;
-            float illuAngle = 360.0f / unitCount;
-
-            Random random = null;
-            if (AssemblyMenu.ShouldRandomizeAngle)
-                random = new Random();
-
-            foreach (var illusion in illusions)
-            {
-                if (random != null)
-                {
-                    var randomAngle = random.NextFloat(1, illuAngle / unitCount);
-                    heroTargetDirection = heroTargetDirection.Rotated(MathUtil.DegreesToRadians(illuAngle + randomAngle));
-                }
-                else
-                    heroTargetDirection = heroTargetDirection.Rotated(MathUtil.DegreesToRadians(illuAngle));
-
-                var dir = heroTargetDirection.Normalized();
-                dir *= AssemblyMenu.MinimumMoveRange;
-                var movePos = middlePosition + dir;
-                Log.Debug($"Move illu to {movePos}");
-                illusion.Move(movePos);
-            }
-            GameDispatcher.OnIngameUpdate -= GameDispatcher_OnIngameUpdate;
-            _added = false;
+            var key = KeyInterop.KeyFromVirtualKey((int)keyCode);
+            this.OrbwalkerMode.Key = key;
         }
     }
 }
