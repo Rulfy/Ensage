@@ -4,7 +4,6 @@
 
 namespace Snatcher
 {
-    using System;
     using System.ComponentModel.Composition;
     using System.Linq;
 
@@ -68,7 +67,7 @@ namespace Snatcher
 
                 if (grabAegis || grabRapier || grabCheese || grabGem)
                 {
-                    var query = ObjectManager.GetEntities<PhysicalItem>().Where(x => x.IsVisible && x.Distance2D(this.owner) < 400);
+                    var query = EntityManager<PhysicalItem>.Entities.Where(x => x.IsVisible && x.Distance2D(this.owner) < 400);
                     query = query.Where(
                         x => (grabAegis && x.Item.Id == AbilityId.item_aegis) || (grabCheese && x.Item.Id == AbilityId.item_cheese)
                              || (grabRapier && x.Item.Id == AbilityId.item_rapier) || (grabGem && x.Item.Id == AbilityId.item_gem));
@@ -84,8 +83,10 @@ namespace Snatcher
                             {
                                 return;
                             }
+
                             item.MoveItem(freeBackbackSlots.First());
                         }
+
                         this.owner.PickUpItem(physicalItem);
                         return;
                     }
@@ -94,7 +95,7 @@ namespace Snatcher
 
             if (this.config.SnatchOptions.Value.IsEnabled("rune_bounty"))
             {
-                var runes = ObjectManager.GetEntities<Rune>().Where(x => x.IsVisible && x.Distance2D(this.owner) < 400).ToList();
+                var runes = EntityManager<Rune>.Entities.Where(x => x.IsVisible && x.Distance2D(this.owner) < 400).ToList();
                 if (runes.Any())
                 {
                     this.owner.PickUpRune(runes.First());
