@@ -10,6 +10,7 @@ namespace Snatcher
     using Ensage;
     using Ensage.Common.Menu;
     using Ensage.SDK.Extensions;
+    using Ensage.SDK.Handlers;
     using Ensage.SDK.Helpers;
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
@@ -21,6 +22,8 @@ namespace Snatcher
 
         private SnatcherConfig config;
 
+        private IUpdateHandler updateHandler;
+
         [ImportingConstructor]
         public Program([Import] IServiceContext context)
         {
@@ -31,7 +34,7 @@ namespace Snatcher
         {
             this.config = new SnatcherConfig();
             this.config.ScanIntervall.Item.ValueChanged += this.ItemValueChanged;
-            UpdateManager.Subscribe(this.OnUpdate, this.config.ScanIntervall);
+            this.updateHandler = UpdateManager.Subscribe(this.OnUpdate, this.config.ScanIntervall);
         }
 
         protected override void OnDeactivate()
@@ -43,8 +46,11 @@ namespace Snatcher
 
         private void ItemValueChanged(object sender, OnValueChangeEventArgs e)
         {
-            UpdateManager.Unsubscribe(this.OnUpdate);
-            UpdateManager.Subscribe(this.OnUpdate, e.GetNewValue<Slider>().Value);
+            var handler = this.updateHandler?.Executor as TimeoutHandler;
+            if (handler != null)
+            {
+                handler.Timeout = e.GetNewValue<Slider>().Value;
+            }
         }
 
         private void OnUpdate()
