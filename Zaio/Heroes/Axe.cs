@@ -12,6 +12,7 @@ using PlaySharp.Toolkit.Logging;
 using Zaio.Helpers;
 using Zaio.Interfaces;
 using AbilityId = Ensage.AbilityId;
+using System;
 
 namespace Zaio.Heroes
 {
@@ -77,7 +78,7 @@ namespace Zaio.Heroes
             {
                 var threshold =
                     _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
-                        ? "kill_threshold_scepter"
+                        ? "kill_threshold"
                         : "kill_threshold");
 
                 var enemy = ObjectManager.GetEntitiesParallel<Hero>().FirstOrDefault(
@@ -106,8 +107,8 @@ namespace Zaio.Heroes
             {
                 var threshold =
                     _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
-                        ? "kill_threshold_scepter"
-                        : "kill_threshold");
+                    ? "kill_threshold"                
+                    : "kill_threshold");
                 if (target.Health < threshold)
                 {
                     Log.Debug($"using ult {target.Health} < {threshold}");
