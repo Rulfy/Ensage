@@ -76,9 +76,7 @@ namespace Zaio.Heroes
             if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted())
             {
                 var threshold =
-                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
-                        ? "kill_threshold_scepter"
-                        : "kill_threshold");
+                    _ultAbility.GetAbilityData("kill_threshold");
 
                 var enemy = ObjectManager.GetEntitiesParallel<Hero>().FirstOrDefault(
                     x =>
@@ -105,9 +103,7 @@ namespace Zaio.Heroes
                 await HasNoLinkens(target, tk))
             {
                 var threshold =
-                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
-                        ? "kill_threshold_scepter"
-                        : "kill_threshold");
+                    _ultAbility.GetAbilityData("kill_threshold");
                 if (target.Health < threshold)
                 {
                     Log.Debug($"using ult {target.Health} < {threshold}");
