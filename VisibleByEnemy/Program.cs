@@ -17,7 +17,7 @@ namespace VisibleByEnemy
     [ExportPlugin("VisibleByEnemy", StartupMode.Auto)]
     public class Program : Plugin
     {
-        private readonly Hero owner;
+        private readonly Unit owner;
 
         private readonly Lazy<IParticleManager> particleManager;
 

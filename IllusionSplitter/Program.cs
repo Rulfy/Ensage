@@ -47,12 +47,12 @@ namespace IllusionSplitter
 
             this.config.SplitterHotkey.Item.ValueChanged += this.HotkeyChanged;
 
-            this.Orbwalker.RegisterMode(this.OrbwalkerMode);
+            this.orbwalkerManager.Value.RegisterMode(this.OrbwalkerMode);
         }
 
         protected override void OnDeactivate()
         {
-            this.Orbwalker.UnregisterMode(this.OrbwalkerMode);
+            this.orbwalkerManager.Value.UnregisterMode(this.OrbwalkerMode);
 
             this.config.SplitterHotkey.Item.ValueChanged -= this.HotkeyChanged;
 
