@@ -34,20 +34,38 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="clipper_library">
-      <HintPath>C:\EnsageSharpTest\References\clipper_library.dll</HintPath>
+      <HintPath>D:\Downloads\References\clipper_library.dll</HintPath>
     </Reference>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
+      <HintPath>D:\Downloads\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharpTest\References\Ensage.Common.dll</HintPath>
+      <HintPath>D:\Downloads\References\Ensage.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Ensage.SDK">
+      <HintPath>D:\Downloads\References\Ensage.SDK.dll</HintPath>
     </Reference>
     <Reference Include="PlaySharp.Toolkit">
-      <HintPath>C:\EnsageSharpTest\References\PlaySharp.Toolkit.dll</HintPath>
+      <HintPath>D:\Downloads\References\PlaySharp.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX">
+      <HintPath>D:\Downloads\References\SharpDX.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct2D1">
+      <HintPath>D:\Downloads\References\SharpDX.Direct2D1.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D11">
+      <HintPath>D:\Downloads\References\SharpDX.Direct3D11.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.Direct3D9">
+      <HintPath>D:\Downloads\References\SharpDX.Direct3D9.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpDX.DXGI">
+      <HintPath>D:\Downloads\References\SharpDX.DXGI.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharpTest\References\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>D:\Downloads\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -63,6 +81,7 @@
     <Compile Include="Helpers\MyHeroExtension.cs" />
     <Compile Include="Helpers\UnitOrPositionWithRoute.cs" />
     <Compile Include="Heroes\Luna.cs" />
+    <Compile Include="Heroes\Oracle.cs" />
     <Compile Include="Heroes\TrollWarlord.cs" />
     <Compile Include="Heroes\Naga.cs" />
     <Compile Include="Heroes\Necrolyte.cs" />
