@@ -66,7 +66,7 @@ namespace Zoomhack
 
             set
             {
-                this.rFarZConVar.SetValue(value + 1000);
+                this.rFarZConVar.SetValue(value * 2);
                 this.cameraDistanceConVar.SetValue(value);
             }
         }
