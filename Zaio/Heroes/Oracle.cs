@@ -21,14 +21,15 @@
     using Ensage.Common.Threading;
     using Ensage.Common.Extensions.SharpDX;
     using System;
+    using System.Collections.Generic;
+    using Ensage.Common.Menu.MenuItems;
 
     [Hero(ClassId.CDOTA_Unit_Hero_Oracle)]
     internal class Oracle : ComboHero
     {
         private static readonly string[] KillstealAbilities =
             {
-                "oracle_purifying_flames",
-                "oracle_fates_edict"
+                "oracle_purifying_flames"
             };
 
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -39,6 +40,8 @@
                 "oracle_fates_edict",
                 "oracle_purifying_flames"
             };
+        public bool HelpAllies { get; private set; }
+
         private MenuItem _HPThreshold;
 
         private Ability _eAbility;
@@ -48,6 +51,8 @@
         private Ability _ultAbility;
 
         private Ability _wAbility;
+
+        private readonly Dictionary<string, bool> allyToggler = new Dictionary<string, bool>();
 
         private float AllyHPforHeal => this._HPThreshold.GetValue<Slider>().Value;
 
@@ -67,6 +72,13 @@
             supportedKillsteal.SetValue(new AbilityToggler(KillstealAbilities.ToDictionary(x => x, y => true)));
             heroMenu.AddItem(supportedKillsteal);
 
+            var helpAllies = new MenuItem("helpAllies", "Help allies").SetValue(false);
+            heroMenu.AddItem(helpAllies);
+            helpAllies.ValueChanged += (sender, args) => HelpAllies = args.GetNewValue<bool>();
+            HelpAllies = helpAllies.IsActive();
+
+            heroMenu.AddItem(new AllyHeroesToggler("enabledAllies", "Allies", allyToggler));
+
             this._HPThreshold =
                 new MenuItem("zaioOracleHealPercentage", "Minimum Percent for Heal").SetValue(new Slider(1, 0, 100));
             this._HPThreshold.Tooltip = "Percent of ally life before heal";
@@ -80,6 +92,13 @@
             this._wAbility = this.MyHero.GetAbilityById(AbilityId.oracle_fates_edict);
             this._eAbility = this.MyHero.GetAbilityById(AbilityId.oracle_purifying_flames);
             this._ultAbility = this.MyHero.GetAbilityById(AbilityId.oracle_false_promise);
+        }
+
+        public bool Enabled(string heroName)
+        {
+            bool enabled;
+            allyToggler.TryGetValue(heroName, out enabled);
+            return enabled;
         }
 
         public override async Task ExecuteComboAsync(Unit target, CancellationToken tk = new CancellationToken())
@@ -180,7 +199,7 @@
                 }
             }
 
-            if (this._wAbility.IsKillstealAbilityEnabled())
+            if (HelpAllies)
             {
                 var _tarHeal =
                                      ObjectManager.GetEntitiesParallel<Hero>()
@@ -201,7 +220,8 @@
                     }
 
                     if (_tarHeal != null && this._wAbility.CanBeCasted()
-                        && !_tarHeal.HasModifier("modifier_oracle_fates_edict") && this.MyHero.Distance2D(_tarHeal) <= 800)
+                        && !_tarHeal.HasModifier("modifier_oracle_fates_edict") && this.MyHero.Distance2D(_tarHeal) <= 800
+                        && Enabled(_tarHeal.Name))
                     {
                         Log.Debug($"w {_tarHeal}");
                         this._wAbility.UseAbility(_tarHeal);
@@ -215,7 +235,7 @@
                                              x.IsAlive && x.Team == this.MyHero.Team && !x.IsIllusion
                                              && !x.IsMagicImmune() && x.HasModifier("modifier_oracle_false_promise_timer"));
 
-                if (_ultAura != null && this._eAbility.CanBeCasted() && this.MyHero.Distance2D(_tarHeal) <= 800)
+                if (_ultAura != null && this._eAbility.CanBeCasted())
                 {
                     Log.Debug($"heal ulted target");
                     this._eAbility.UseAbility(_ultAura);
