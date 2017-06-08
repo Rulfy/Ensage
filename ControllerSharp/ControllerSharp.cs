@@ -17,6 +17,7 @@ namespace ControllerSharp
     using Ensage.SDK.Service.Metadata;
 
     using log4net;
+    using log4net.Core;
 
     using PlaySharp.Toolkit.Logging;
 
@@ -55,6 +56,8 @@ namespace ControllerSharp
         [ImportingConstructor]
         public ControllerSharp([Import] IServiceContext context, [Import] Lazy<IOrbwalkerManager> orbwalker)
         {
+            AssemblyLogs.ThresholdLocal = Level.Warn;
+
             this.owner = context.Owner;
             this.orbwalker = orbwalker;
         }
@@ -129,7 +132,7 @@ namespace ControllerSharp
                 }
             }
 
-            // Log.Debug($"{args.PropertyName}: {args.OldValue} => {args.NewValue}");
+            Log.Debug($"{args.PropertyName}: {args.OldValue} => {args.NewValue}");
         }
 
         private async void OnUpdate()
@@ -166,7 +169,7 @@ namespace ControllerSharp
                         this.orbwalkerCombo = orbwalkingModes.Skip(this.customOrbwalkerIndex).FirstOrDefault();
                         if (this.orbwalkerCombo != null)
                         {
-                            Game.PrintMessage($"Selected {this.orbwalkerCombo} orbwalker");
+                            Game.PrintMessage($"Selected <font color='#FF5050'>{this.orbwalkerCombo}</font> orbwalker");
                         }
                     }
                     else if (state.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadRight))
