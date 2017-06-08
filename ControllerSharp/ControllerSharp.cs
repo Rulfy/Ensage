@@ -8,7 +8,6 @@ namespace ControllerSharp
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
     using System.Linq;
-    using System.Reflection;
     using System.Threading.Tasks;
 
     using Ensage;
@@ -17,19 +16,13 @@ namespace ControllerSharp
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
-    using log4net;
-    using log4net.Core;
-
-    using PlaySharp.Toolkit.Logging;
-
     using SharpDX;
     using SharpDX.XInput;
 
     [ExportPlugin("ControllerSharp", priority: 1000)]
     public class ControllerSharp : Plugin
     {
-        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
+        // private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly Lazy<IOrbwalkerManager> orbwalker;
 
         private readonly Unit owner;
@@ -57,8 +50,7 @@ namespace ControllerSharp
         [ImportingConstructor]
         public ControllerSharp([Import] IServiceContext context, [Import] Lazy<IOrbwalkerManager> orbwalker)
         {
-            AssemblyLogs.ThresholdLocal = Level.Warn;
-
+            // AssemblyLogs.ThresholdLocal = Level.Warn;
             this.owner = context.Owner;
             this.orbwalker = orbwalker;
         }
@@ -99,41 +91,6 @@ namespace ControllerSharp
         private void ControllerIndexChanged(object sender, int e)
         {
             this.controller = new Controller((UserIndex)e);
-        }
-
-        private void OnVibrationCheck(Entity sender, Int32PropertyChangeEventArgs args)
-        {
-            if (sender != this.owner)
-            {
-                return;
-            }
-
-            if (args.PropertyName == "m_iRecentDamage")
-            {
-                if (args.NewValue > 0)
-                {
-                    if (!this.damageVibration)
-                    {
-                        this.StartVibration(1.0f);
-                        this.damageVibration = true;
-                    }
-                }
-                else
-                {
-                    this.StopVibration();
-                    this.damageVibration = false;
-                }
-            }
-
-            if (args.PropertyName == "m_iHealth")
-            {
-                if (args.NewValue <= 0)
-                {
-                    this.StartVibration(1.0f);
-                }
-            }
-
-            Log.Debug($"{args.PropertyName}: {args.OldValue} => {args.NewValue}");
         }
 
         private async void OnUpdate()
@@ -255,13 +212,39 @@ namespace ControllerSharp
             }
         }
 
-        private void SetActiveCustomOrbwalker(List<IOrbwalkingMode> orbwalkingModes)
+        private void OnVibrationCheck(Entity sender, Int32PropertyChangeEventArgs args)
         {
-            this.orbwalkerCombo = orbwalkingModes.Skip(this.customOrbwalkerIndex).FirstOrDefault();
-            if (this.orbwalkerCombo != null)
+            if (sender != this.owner)
             {
-                Game.PrintMessage($"Selected <font color='#FF5050'>{this.orbwalkerCombo}</font> orbwalker");
+                return;
             }
+
+            if (args.PropertyName == "m_iRecentDamage")
+            {
+                if (args.NewValue > 0)
+                {
+                    if (!this.damageVibration)
+                    {
+                        this.StartVibration(1.0f);
+                        this.damageVibration = true;
+                    }
+                }
+                else
+                {
+                    this.StopVibration();
+                    this.damageVibration = false;
+                }
+            }
+
+            if (args.PropertyName == "m_iHealth")
+            {
+                if (args.NewValue <= 0)
+                {
+                    this.StartVibration(1.0f);
+                }
+            }
+
+            // Log.Debug($"{args.PropertyName}: {args.OldValue} => {args.NewValue}");
         }
 
         private void OnVibrationUpdate()
@@ -275,6 +258,15 @@ namespace ControllerSharp
             if ((gameTime - this.vibrationStartTime) >= this.vibrationDuration)
             {
                 this.StopVibration();
+            }
+        }
+
+        private void SetActiveCustomOrbwalker(List<IOrbwalkingMode> orbwalkingModes)
+        {
+            this.orbwalkerCombo = orbwalkingModes.Skip(this.customOrbwalkerIndex).FirstOrDefault();
+            if (this.orbwalkerCombo != null)
+            {
+                Game.PrintMessage($"Selected <font color='#FF5050'>{this.orbwalkerCombo}</font> orbwalker");
             }
         }
 
