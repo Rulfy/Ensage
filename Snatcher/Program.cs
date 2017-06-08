@@ -1,69 +1,162 @@
-﻿using System;
-using System.Linq;
-using Ensage;
-using Ensage.Common.Menu;
+﻿// <copyright file="Program.cs" company="Ensage">
+//    Copyright (c) 2017 Ensage.
+// </copyright>
 
 namespace Snatcher
 {
-    using Ensage.Common.Extensions;
+    using System;
+    using System.ComponentModel.Composition;
+    using System.Linq;
+    using System.Threading.Tasks;
 
-    class Program
+    using Ensage;
+    using Ensage.SDK.Extensions;
+    using Ensage.SDK.Helpers;
+    using Ensage.SDK.Service;
+    using Ensage.SDK.Service.Metadata;
+
+    [ExportPlugin("Snatcher")]
+    public class Program : Plugin
     {
-        private static int sleeptick;
-        private static readonly Menu Menu = new Menu("Snatcher", "snatcher", true);
+        private const float PickUpDistance = 150.0f;
 
-        static void Main(string[] args)
+        private readonly Unit owner;
+
+        private SnatcherConfig config;
+
+        [ImportingConstructor]
+        public Program([Import] IServiceContext context)
         {
-            var hotkey = new MenuItem("hotkey", "Toggle hotkey").SetValue(
-                new KeyBind('P', KeyBindType.Toggle));
-            Menu.AddItem(hotkey);
-
-            Menu.AddItem(new MenuItem("aegis", "Grab aegis").SetValue(true));
-            Menu.AddItem(new MenuItem("cheese", "Grab cheese").SetValue(true));
-            Menu.AddItem(new MenuItem("rune", "Grab rune").SetValue(true));
-            
-           
-            Menu.AddToMainMenu();
-        
-            Game.OnIngameUpdate += Game_OnUpdate;
+            this.owner = context.Owner;
         }
 
-        private static void Game_OnUpdate(EventArgs args)
+        protected override void OnActivate()
         {
-            var tick = Environment.TickCount;
-            var hero = ObjectManager.LocalHero;
-            if (hero == null || tick < sleeptick || !Menu.Item("hotkey").GetValue<KeyBind>().Active)
-                return;
-            // check for runes
-            if (Menu.Item("rune").GetValue<bool>())
+            this.config = new SnatcherConfig();
+            UpdateManager.BeginInvoke(this.OnUpdate);
+        }
+
+        protected override void OnDeactivate()
+        {
+            this.config?.Dispose();
+        }
+
+        private async Task ApproachEntity(Ability blinkAbility, Entity entity, float checkRange)
+        {
+            if (blinkAbility != null)
             {
-                var runes =
-                    ObjectManager.GetEntities<Rune>()
-                        .Where(x => x.IsVisible && x.Distance2D(hero) < 400)
-                        .ToList();
-                if (runes.Any())
+                var distance = this.owner.Distance2D(entity);
+                if (distance >= PickUpDistance)
                 {
-                    hero.PickUpRune(runes.First());
-                    sleeptick = tick + 125;
-                    return;
+                    var dir = (entity.Position - this.owner.Position).Normalized();
+                    dir *= distance >= checkRange ? checkRange : distance;
+                    blinkAbility.UseAbility(this.owner.Position + dir);
+                    await Task.Delay(125);
                 }
             }
-            // check for aegis and cheese
-            if (hero.Inventory.FreeInventorySlots.Any())
-            {
-                var aegis = Menu.Item("aegis").GetValue<bool>();
-                var cheese = Menu.Item("cheese").GetValue<bool>();
-                if (!aegis && !cheese)
-                    return;
+        }
 
-                var items =
-                    ObjectManager.GetEntities<PhysicalItem>()
-                        .Where(x => x.IsVisible && x.Distance2D(hero) < 400
-                                    && ((aegis && x.Item.Name == "item_aegis") || (cheese && x.Item.Name == "item_cheese"))).ToList();
-                if (items.Any())
+        private async void OnUpdate()
+        {
+            while (this.IsActive)
+            {
+                await Task.Delay(this.config.ScanIntervall);
+
+                if (!this.config.HoldHotkey.Value.Active && !this.config.ToggleHotkey.Value.Active)
                 {
-                    hero.PickUpItem(items.First());
-                    sleeptick = tick + 125;
+                    continue;
+                }
+
+                if (Game.IsPaused || !this.owner.IsAlive)
+                {
+                    continue;
+                }
+
+                Ability blinkAbility = null;
+                float checkRange = 300;
+
+                // if (this.config.GreedMode.Value.Dictionary.Any(x => x.Value))
+                if (this.config.GreedMode)
+                {
+                    var blinkItem = this.owner.GetItemById(AbilityId.item_blink);
+                    if (blinkItem?.Cooldown <= 0)
+                    {
+                        checkRange = blinkItem.GetAbilitySpecialData("blink_range");
+                        blinkAbility = blinkItem;
+                    }
+
+                    // else
+                    // {
+                    // var blink = this.owner.GetAbilityById(AbilityId.antimage_blink);
+                    // blink = this.owner.GetAbilityById(AbilityId.queenofpain_blink);
+                    // }
+                }
+
+                var hasFreeSlots = this.owner.Inventory.FreeInventorySlots.Any();
+                var freeBackbackSlots = this.owner.Inventory.FreeBackpackSlots.ToList();
+
+                bool swapItem = this.config.SwapItem;
+                if (hasFreeSlots || (swapItem && freeBackbackSlots.Any()))
+                {
+                    var grabAegis = this.config.SnatchOptions.Value.IsEnabled("item_aegis");
+                    var grabRapier = this.config.SnatchOptions.Value.IsEnabled("item_rapier");
+                    var grabCheese = this.config.SnatchOptions.Value.IsEnabled("item_cheese");
+                    var grabGem = this.config.SnatchOptions.Value.IsEnabled("item_gem");
+
+                    if (grabAegis || grabRapier || grabCheese || grabGem)
+                    {
+                        var query = EntityManager<PhysicalItem>.Entities.Where(x => x.IsVisible && x.Distance2D(this.owner) < (checkRange + PickUpDistance));
+                        query = query.Where(
+                            x => (grabAegis && x.Item.Id == AbilityId.item_aegis) || (grabCheese && x.Item.Id == AbilityId.item_cheese)
+                                 || (grabRapier && x.Item.Id == AbilityId.item_rapier) || (grabGem && x.Item.Id == AbilityId.item_gem));
+
+                        var physicalItem = query.FirstOrDefault();
+                        if (physicalItem != null)
+                        {
+                            if (!hasFreeSlots)
+                            {
+                                // check if hero already has a cheese
+                                if (physicalItem.Item.Id != AbilityId.item_cheese || this.owner.GetItemById(AbilityId.item_cheese) != null)
+                                {
+                                    // swap lowest cost item
+                                    var item = this.owner.Inventory.Items.Where(x => x.IsKillable && x.Id != AbilityId.item_aegis).OrderBy(x => x.Cost).FirstOrDefault();
+                                    if (item == null)
+                                    {
+                                        continue;
+                                    }
+
+                                    item.MoveItem(freeBackbackSlots.First());
+                                }
+                            }
+
+                            // if (this.config.GreedMode.Value.IsEnabled(physicalItem.Item.Name))
+                            if (blinkAbility != null)
+                            {
+                                await this.ApproachEntity(blinkAbility, physicalItem, checkRange);
+                            }
+                            
+                            this.owner.PickUpItem(physicalItem);
+                            continue;
+                        }
+                    }
+                }
+
+                if (this.config.SnatchOptions.Value.IsEnabled("rune_bounty"))
+                {
+                    var runes = EntityManager<Rune>.Entities.Where(x => x.IsVisible && x.Distance2D(this.owner) < (checkRange + PickUpDistance)).ToList();
+                    if (runes.Any())
+                    {
+                        var rune = runes.First();
+
+                        // if (this.config.GreedMode.Value.IsEnabled("rune_bounty"))
+                        if (blinkAbility != null)
+                        {
+                            await this.ApproachEntity(blinkAbility, rune, checkRange);
+                        }
+
+                        this.owner.PickUpRune(rune);
+                        continue;
+                    }
                 }
             }
         }
