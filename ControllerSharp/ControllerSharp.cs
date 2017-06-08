@@ -81,12 +81,13 @@ namespace ControllerSharp
 
         protected override void OnDeactivate()
         {
+            UpdateManager.Unsubscribe(this.OnVibrationUpdate);
             this.StopVibration();
 
             Entity.OnInt32PropertyChange -= this.OnVibrationCheck;
 
             this.config.ControllerIndexChanged -= this.ControllerIndexChanged;
-            this.config?.Dispose();
+            this.config.Dispose();
 
             Game.ExecuteCommand("dota_camera_lock 0");
         }
