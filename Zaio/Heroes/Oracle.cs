@@ -37,8 +37,7 @@
             {
                 "oracle_fortunes_end",
                 "oracle_fates_edict",
-                "oracle_purifying_flames",
-                "oracle_false_promise"
+                "oracle_purifying_flames"
             };
         private MenuItem _HPThreshold;
 
