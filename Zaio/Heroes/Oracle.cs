@@ -192,7 +192,7 @@
 
 
                     if (_tarHeal != null && this._eAbility.CanBeCasted()
-                        && _tarHeal.HasModifier("modifier_oracle_fates_edict"))
+                        && _tarHeal.HasModifier("modifier_oracle_fates_edict") && this.MyHero.Distance2D(_tarHeal) <= 800)
                     {
                         
                         Log.Debug($"heal {_tarHeal}");
@@ -201,7 +201,7 @@
                     }
 
                     if (_tarHeal != null && this._wAbility.CanBeCasted()
-                        && !_tarHeal.HasModifier("modifier_oracle_fates_edict"))
+                        && !_tarHeal.HasModifier("modifier_oracle_fates_edict") && this.MyHero.Distance2D(_tarHeal) <= 800)
                     {
                         Log.Debug($"w {_tarHeal}");
                         this._wAbility.UseAbility(_tarHeal);
@@ -215,7 +215,7 @@
                                              x.IsAlive && x.Team == this.MyHero.Team && !x.IsIllusion
                                              && !x.IsMagicImmune() && x.HasModifier("modifier_oracle_false_promise_timer"));
 
-                if (_ultAura != null && this._eAbility.CanBeCasted())
+                if (_ultAura != null && this._eAbility.CanBeCasted() && this.MyHero.Distance2D(_tarHeal) <= 800)
                 {
                     Log.Debug($"heal ulted target");
                     this._eAbility.UseAbility(_ultAura);
