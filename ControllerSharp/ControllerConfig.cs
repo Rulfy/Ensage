@@ -24,12 +24,12 @@ namespace ControllerSharp
 
         public ControllerConfig()
         {
-            this.factory = MenuFactory.Create("Controller");
+            this.factory = MenuFactory.Create("ControllerSharp");
 
             this.selectedControllerItem = this.factory.Item("Controller", new StringList("Controller 1", "Controller 2", "Controller 3", "Controller 4"));
             this.selectedControllerItem.Item.ValueChanged += this.ControllerChanged;
 
-            this.vibrationItem = this.factory.Item("Vibration Intensity", new Slider(50));
+            this.vibrationItem = this.factory.Item("Vibration Intensity", new Slider(25));
             this.deadzoneItem = this.factory.Item("Deadzone", new Slider(33));
         }
 

@@ -5,6 +5,7 @@
 namespace ControllerSharp
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel.Composition;
     using System.Linq;
     using System.Reflection;
@@ -166,11 +167,7 @@ namespace ControllerSharp
                             this.customOrbwalkerIndex = orbwalkingModes.Count - 1;
                         }
 
-                        this.orbwalkerCombo = orbwalkingModes.Skip(this.customOrbwalkerIndex).FirstOrDefault();
-                        if (this.orbwalkerCombo != null)
-                        {
-                            Game.PrintMessage($"Selected <font color='#FF5050'>{this.orbwalkerCombo}</font> orbwalker");
-                        }
+                        this.SetActiveCustomOrbwalker(orbwalkingModes);
                     }
                     else if (state.Gamepad.Buttons.HasFlag(GamepadButtonFlags.DPadRight))
                     {
@@ -180,11 +177,7 @@ namespace ControllerSharp
                             this.customOrbwalkerIndex = 0;
                         }
 
-                        this.orbwalkerCombo = orbwalkingModes.Skip(this.customOrbwalkerIndex).FirstOrDefault();
-                        if (this.orbwalkerCombo != null)
-                        {
-                            Game.PrintMessage($"Selected <font color='#FF5050'>{this.orbwalkerCombo}</font> orbwalker");
-                        }
+                        this.SetActiveCustomOrbwalker(orbwalkingModes);
                     }
                 }
 
@@ -262,6 +255,15 @@ namespace ControllerSharp
             }
         }
 
+        private void SetActiveCustomOrbwalker(List<IOrbwalkingMode> orbwalkingModes)
+        {
+            this.orbwalkerCombo = orbwalkingModes.Skip(this.customOrbwalkerIndex).FirstOrDefault();
+            if (this.orbwalkerCombo != null)
+            {
+                Game.PrintMessage($"Selected <font color='#FF5050'>{this.orbwalkerCombo}</font> orbwalker");
+            }
+        }
+
         private void OnVibrationUpdate()
         {
             if (this.vibrationStartTime <= 0)
@@ -278,10 +280,16 @@ namespace ControllerSharp
 
         private void StartVibration(float duration)
         {
+            var intensity = this.config.VibrationIntensity;
+            if (intensity <= 0)
+            {
+                return;
+            }
+
             this.vibrationStartTime = Game.RawGameTime;
             this.vibrationDuration = duration;
 
-            var value = (ushort)(this.config.VibrationIntensity * ushort.MaxValue);
+            var value = (ushort)(intensity * ushort.MaxValue);
             this.controller.SetVibration(
                 new Vibration
                     {
