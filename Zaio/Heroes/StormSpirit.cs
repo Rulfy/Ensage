@@ -189,9 +189,9 @@ namespace Zaio.Heroes
         {
 
             var myHeroNetworkPosition = this.MyHero.NetworkPosition;
-            if (!await MoveOrBlinkToEnemy(target, tk, 235, 480))
+            if (!await MoveOrBlinkToEnemy(target, tk, 480, 800))
             {
-                if (!this.MyHero.IsSilenced() && this.MyHero.Distance2D(target) >= 235 && this.MyHero.Distance2D(target) <= maxYards)
+                if (!this.MyHero.IsSilenced() && this.MyHero.Distance2D(target) >= 480 && this.MyHero.Distance2D(target) <= maxYards)
                 {
                     var pos = (target.NetworkPosition - myHeroNetworkPosition).Normalized();
                     pos *= 100;
