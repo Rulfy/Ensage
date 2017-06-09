@@ -48,21 +48,6 @@
     <Reference Include="PlaySharp.Toolkit">
       <HintPath>D:\Downloads\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX">
-      <HintPath>D:\Downloads\References\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct2D1">
-      <HintPath>D:\Downloads\References\SharpDX.Direct2D1.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D11">
-      <HintPath>D:\Downloads\References\SharpDX.Direct3D11.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D9">
-      <HintPath>D:\Downloads\References\SharpDX.Direct3D9.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.DXGI">
-      <HintPath>D:\Downloads\References\SharpDX.DXGI.dll</HintPath>
-    </Reference>
     <Reference Include="SharpDX.Mathematics, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Downloads\References\SharpDX.Mathematics.dll</HintPath>
