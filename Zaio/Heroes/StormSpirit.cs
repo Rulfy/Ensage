@@ -266,7 +266,7 @@ namespace Zaio.Heroes
                         this._wAbility.UseAbility(target);
                         await Await.Delay(GetAbilityDelay(_wAbility), tk);
                         MyHero.Attack(target);
-                        await Await.Delay(850);
+                        await Await.Delay(600);
                     }
 
                     else
@@ -274,7 +274,7 @@ namespace Zaio.Heroes
                         this._wAbility.UseAbility();
                         await Await.Delay(GetAbilityDelay(_wAbility), tk);
                         MyHero.Attack(target);
-                        await Await.Delay(850);
+                        await Await.Delay(600);
                     }
                     
                 }
@@ -285,7 +285,7 @@ namespace Zaio.Heroes
                     this._qAbility.UseAbility();
                     await Await.Delay(GetAbilityDelay(_qAbility), tk);
                     MyHero.Attack(target);
-                    await Await.Delay(850);
+                    await Await.Delay(600);
                 }
 
                 if(_ultAbility.IsAbilityEnabled() && (!_qAbility.CanBeCasted() || this.MyHero.Distance2D(target) >= _qAbility.GetAbilityData("static_remnant_radius")) && (!_wAbility.CanBeCasted(target) || MyHero.Distance2D(target) >= _wAbility.GetAbilityData("Cast range"))
@@ -294,13 +294,13 @@ namespace Zaio.Heroes
                     this._ultAbility.UseAbility(pos);
                     await Await.Delay(GetAbilityDelay(_ultAbility), tk);
                     MyHero.Attack(target);
-                    await Await.Delay(850);
+                    await Await.Delay(600);
                 }
 
                 if(this.MyHero.HasModifier("modifier_storm_spirit_overload"))
                 {
                     MyHero.Attack(target);
-                    await Await.Delay(850);
+                    await Await.Delay(600);
                 }
 
             }
