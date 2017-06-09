@@ -30,6 +30,7 @@ namespace Zaio.Heroes
         private static readonly string[] SupportedAbilities =
         {
             "storm_spirit_static_remnant",
+            "storm_spirit_ball_lightning",
             "storm_spirit_electric_vortex"
         };
 
