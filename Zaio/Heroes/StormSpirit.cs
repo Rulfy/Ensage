@@ -111,7 +111,7 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            float _qAutoDamage = this._qAbility.GetAbilityData("tatic_remnant_damage") + this._eAbility.GetAbilityData("#AbilityDamage");
+            float _qAutoDamage = this._qAbility.GetAbilityData("static_remnant_damage") + this._eAbility.GetAbilityData("#AbilityDamage");
             _qAutoDamage += (MyHero.MinimumDamage + MyHero.BonusDamage);
             _qAutoDamage *= GetSpellAmp();
 
@@ -126,14 +126,14 @@ namespace Zaio.Heroes
                                              .FirstOrDefault(
                                                  x =>
                                                      x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
-                                                     && this._qAbility.CanBeCasted() && this._qAbility.CanHit(x) && x.Health < _qAutoDamage
+                                                     && this._qAbility.CanBeCasted() && this._qAbility.CanHit(x) && x.Health < _qAutoDamage * (1 - x.MagicResistance())
                                                      && x.Distance2D(this.MyHero) <= 235);
                 var AutokillableTar =
                 ObjectManager.GetEntitiesParallel<Hero>()
                              .FirstOrDefault(
                                  x =>
                                      x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
-                                     && x.Health < _eAutoDamage
+                                     && x.Health < _eAutoDamage * (1 - x.MagicResistance())
                                      && x.Distance2D(this.MyHero) <= 480);
 
                 if (this.MyHero.HasModifier("modifier_storm_spirit_overload"))
