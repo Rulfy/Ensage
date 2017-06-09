@@ -126,14 +126,18 @@ namespace Zaio.Heroes
                                              .FirstOrDefault(
                                                  x =>
                                                      x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
-                                                     && this._qAbility.CanBeCasted() && this._qAbility.CanHit(x) && x.Health < _qAutoDamage * (1 - x.MagicResistance())
+                                                     && this._qAbility.CanBeCasted() && this._qAbility.CanHit(x) 
+                                                     && x.Health < ((_qAutoDamage + _eAutoDamage) * (1 - x.MagicResistance()))
+                                                     && !x.IsMagicImmune() && !x.CantBeKilled() && !x.CantBeAttacked()
                                                      && x.Distance2D(this.MyHero) <= 235);
+
                 var AutokillableTar =
                 ObjectManager.GetEntitiesParallel<Hero>()
                              .FirstOrDefault(
                                  x =>
                                      x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
                                      && x.Health < _eAutoDamage * (1 - x.MagicResistance())
+                                     && !x.IsMagicImmune() && !x.CantBeKilled() && !x.CantBeAttacked()
                                      && x.Distance2D(this.MyHero) <= 480);
 
                 if (this.MyHero.HasModifier("modifier_storm_spirit_overload"))
