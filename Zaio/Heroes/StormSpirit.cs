@@ -186,8 +186,8 @@ namespace Zaio.Heroes
                 if (!this.MyHero.IsSilenced() && this.MyHero.Distance2D(target) >= 235 && this.MyHero.Distance2D(target) <= maxYards)
                 {
                     var pos = (target.NetworkPosition - myHeroNetworkPosition).Normalized();
-                    pos *= 180;
-                    pos = target.NetworkPosition - pos;
+                    pos *= 100;
+                    pos = target.NetworkPosition + pos;
                     float mana = MyHero.MaximumMana;
                     
                     if (this._ultAbility.IsAbilityEnabled())
@@ -195,7 +195,7 @@ namespace Zaio.Heroes
                         if (target.IsMoving)
                         {
                             Log.Debug($"Jumping the gun");
-                            var moves = Cock.InFront(target, 200);
+                            var moves = Cock.InFront(target, 300);
                             double consumedMana = (_ultAbility.GetAbilityData("ball_lightning_initial_mana_base") + ((_ultAbility.GetAbilityData("ball_lightning_initial_mana_percentage") / 100) * mana))
                                 + ((MyHero.Distance2D(moves) / 100) * (((_ultAbility.GetAbilityData("ball_lightning_travel_cost_percent") / 100) * mana)));
 
@@ -243,7 +243,7 @@ namespace Zaio.Heroes
                 float wCost = _wAbility.GetAbilityData("Mana cost");
                 float myMana = MyHero.Mana;
                 float mana = MyHero.MaximumMana;
-                var moves = Cock.InFront(target, 200);
+                var moves = Cock.InFront(target, 300);
                 double consumedMana = (_ultAbility.GetAbilityData("ball_lightning_initial_mana_base") + ((_ultAbility.GetAbilityData("ball_lightning_initial_mana_percentage") / 100) * mana))
                     + ((MyHero.Distance2D(moves) / 100) * (((_ultAbility.GetAbilityData("ball_lightning_travel_cost_percent") / 100) * mana)));
 
