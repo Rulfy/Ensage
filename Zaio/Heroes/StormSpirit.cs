@@ -111,11 +111,11 @@ namespace Zaio.Heroes
                 return false;
             }
 
-            float _qAutoDamage = this._qAbility.GetAbilityData("static_remnant_damage") + this._eAbility.GetAbilityData("#AbilityDamage");
+            float _qAutoDamage = this._qAbility.GetAbilityData("static_remnant_damage") + this._eAbility.GetDamage(_eAbility.Level -1);
             _qAutoDamage += (MyHero.MinimumDamage + MyHero.BonusDamage);
             _qAutoDamage *= GetSpellAmp();
 
-            float _eAutoDamage = this._eAbility.GetAbilityData("#AbilityDamage");
+            float _eAutoDamage = this._eAbility.GetDamage(_eAbility.Level -1);
             _eAutoDamage += (MyHero.MinimumDamage + MyHero.BonusDamage);
             _eAutoDamage *= GetSpellAmp();
 
@@ -127,7 +127,7 @@ namespace Zaio.Heroes
                                                  x =>
                                                      x.IsAlive && x.Team != this.MyHero.Team && !x.IsIllusion
                                                      && this._qAbility.CanBeCasted() && this._qAbility.CanHit(x) 
-                                                     && x.Health < ((_qAutoDamage + _eAutoDamage) * (1 - x.MagicResistance()))
+                                                     && x.Health < (_qAutoDamage * (1 - x.MagicResistance()))
                                                      && !x.IsMagicImmune() && !x.CantBeKilled() && !x.CantBeAttacked()
                                                      && x.Distance2D(this.MyHero) <= 235);
 
@@ -140,7 +140,7 @@ namespace Zaio.Heroes
                                      && !x.IsMagicImmune() && !x.CantBeKilled() && !x.CantBeAttacked()
                                      && x.Distance2D(this.MyHero) <= 480);
 
-                if (this.MyHero.HasModifier("modifier_storm_spirit_overload"))
+                if (this.MyHero.HasModifier("modifier_storm_spirit_overload") && AutokillableTar != null)
                 {
                     MyHero.Attack(AutokillableTar);
                     Await.Block("zaioAutoAttack", StormAuto);
@@ -148,7 +148,7 @@ namespace Zaio.Heroes
 
                 if (AutokillableTar != null && _qAbility.CanBeCasted() && !MyHero.HasModifier("modifier_storm_spirit_overload"))
                 {
-                    Log.Debug($"Killing with auto");
+                    Log.Debug($"Killing with auto {MyHero.HasModifier("modifier_storm_spirit_overload")}");
                     _qAbility.UseAbility();
                     await Await.Delay(GetAbilityDelay(_qAbility));
                     MyHero.Attack(AutokillableTar);
@@ -156,16 +156,17 @@ namespace Zaio.Heroes
 
                 }
 
-                if (AutokillableTar != null && !_qAbility.CanBeCasted() && _ultAbility.CanBeCasted() && !MyHero.HasModifier("modifier_storm_spirit_overload"))
+                if (AutokillableTar != null && _ultAbility.CanBeCasted() && !_qAbility.CanBeCasted() && !MyHero.HasModifier("modifier_storm_spirit_overload"))
                 {
-                    Log.Debug($"Killable with auto, q not available");
-                    _ultAbility.UseAbility(AutokillableTar);
+                    var moves = Cock.InFront(AutokillableTar, 50);
+                    Log.Debug($"Killable with auto, q not available {MyHero.HasModifier("modifier_storm_spirit_overload")}");
+                    _ultAbility.UseAbility(moves);
                     await Await.Delay(GetAbilityDelay(_ultAbility));
                     MyHero.Attack(AutokillableTar);
                     Await.Block("zaioAutoAttack", StormAuto);
                 }
 
-                if(qAutokillableTar != null)
+                if(qAutokillableTar != null && _qAbility.CanBeCasted())
                 {
                     Log.Debug($"Killing with q and auto");
                     _qAbility.UseAbility();
@@ -173,6 +174,8 @@ namespace Zaio.Heroes
                     MyHero.Attack(qAutokillableTar);
                     Await.Block("zaioAutoAttack", StormAuto);
                 }
+
+
 
             }
                 
@@ -243,7 +246,7 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
-                var hasAgha = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                bool hasAgha = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
                 float qCost = _qAbility.GetAbilityData("Mana cost");
                 float wCost = _wAbility.GetAbilityData("Mana cost");
                 float myMana = MyHero.Mana;
