@@ -80,6 +80,7 @@
     <Compile Include="Helpers\MyAbilityExtension.cs" />
     <Compile Include="Helpers\MyHeroExtension.cs" />
     <Compile Include="Helpers\UnitOrPositionWithRoute.cs" />
+    <Compile Include="Heroes\StormSpirit.cs" />
     <Compile Include="Heroes\Luna.cs" />
     <Compile Include="Heroes\Oracle.cs" />
     <Compile Include="Heroes\TrollWarlord.cs" />
