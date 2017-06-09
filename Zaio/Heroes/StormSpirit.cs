@@ -239,22 +239,37 @@ namespace Zaio.Heroes
 
             if (!MyHero.IsSilenced())
             {
+                var hasAgha = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
                 float qCost = _qAbility.GetAbilityData("Mana cost");
                 float wCost = _wAbility.GetAbilityData("Mana cost");
                 float myMana = MyHero.Mana;
                 float mana = MyHero.MaximumMana;
-                var moves = Cock.InFront(target, 300);
+                var pos = (target.NetworkPosition - myHeroNetworkPosition).Normalized();
+                pos *= 100;
+                pos = target.NetworkPosition + pos;
                 double consumedMana = (_ultAbility.GetAbilityData("ball_lightning_initial_mana_base") + ((_ultAbility.GetAbilityData("ball_lightning_initial_mana_percentage") / 100) * mana))
-                    + ((MyHero.Distance2D(moves) / 100) * (((_ultAbility.GetAbilityData("ball_lightning_travel_cost_percent") / 100) * mana)));
+                    + ((MyHero.Distance2D(pos) / 100) * (((_ultAbility.GetAbilityData("ball_lightning_travel_cost_percent") / 100) * mana)));
 
                 if (_qAbility.IsAbilityEnabled() && _qAbility.CanBeCasted()
                     && _wAbility.IsAbilityEnabled() && _wAbility.CanBeCasted()
                     && (qCost + wCost) <= myMana && !this.MyHero.HasModifier("modifier_storm_spirit_overload"))
                 {
-                    this._wAbility.UseAbility(target);
-                    await Await.Delay(GetAbilityDelay(_wAbility), tk);
-                    MyHero.Attack(target);
-                    await Await.Delay(850);
+                    if(!hasAgha)
+                    {
+                        this._wAbility.UseAbility(target);
+                        await Await.Delay(GetAbilityDelay(_wAbility), tk);
+                        MyHero.Attack(target);
+                        await Await.Delay(850);
+                    }
+
+                    else
+                    {
+                        this._wAbility.UseAbility();
+                        await Await.Delay(GetAbilityDelay(_wAbility), tk);
+                        MyHero.Attack(target);
+                        await Await.Delay(850);
+                    }
+                    
                 }
 
                 if(_qAbility.IsAbilityEnabled() && _qAbility.CanBeCasted() && !this.MyHero.HasModifier("modifier_storm_spirit_overload")
@@ -266,10 +281,10 @@ namespace Zaio.Heroes
                     await Await.Delay(850);
                 }
 
-                if(_ultAbility.IsAbilityEnabled() && !_qAbility.CanBeCasted() && (!_wAbility.CanBeCasted(target) || MyHero.Distance2D(target) >= _wAbility.GetAbilityData("Cast range"))
+                if(_ultAbility.IsAbilityEnabled() && (!_qAbility.CanBeCasted() || this.MyHero.Distance2D(target) >= _qAbility.GetAbilityData("static_remnant_radius")) && (!_wAbility.CanBeCasted(target) || MyHero.Distance2D(target) >= _wAbility.GetAbilityData("Cast range"))
                     && this.MyHero.Distance2D(target) <= maxYards && !this.MyHero.HasModifier("modifier_storm_spirit_overload"))
                 {
-                    this._ultAbility.UseAbility(moves);
+                    this._ultAbility.UseAbility(pos);
                     await Await.Delay(GetAbilityDelay(_ultAbility), tk);
                     MyHero.Attack(target);
                     await Await.Delay(850);
