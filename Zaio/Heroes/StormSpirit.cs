@@ -74,7 +74,7 @@ namespace Zaio.Heroes
             heroMenu.AddItem(supportedKillsteal);
 
             this._maxChaseDistance =
-            new MenuItem("zaioMaxUltDistance", "Maximum distance for ult").SetValue(new Slider(1, 0, 10000));
+            new MenuItem("zaioMaxUltDistance", "Maximum distance for ult").SetValue(new Slider(1000, 0, 10000));
             this._maxChaseDistance.Tooltip = "Maximum number of yards between you and your target before you ult";
             heroMenu.AddItem(this._maxChaseDistance);
 
