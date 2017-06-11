@@ -174,11 +174,11 @@ namespace IllusionSplitter
             {
                 foreach (var item in e.NewItems.OfType<InventoryItem>())
                 {
-                    if (item.Id == ItemId.item_manta)
+                    if (item.Id == AbilityId.item_manta)
                     {
                         this.manta = item;
                     }
-                    else if (item.Id == ItemId.item_bottle)
+                    else if (item.Id == AbilityId.item_bottle)
                     {
                         if (item.Item is Bottle)
                         {
@@ -191,11 +191,11 @@ namespace IllusionSplitter
             {
                 foreach (var item in e.OldItems.OfType<InventoryItem>())
                 {
-                    if (item.Id == ItemId.item_manta)
+                    if (item.Id == AbilityId.item_manta)
                     {
                         this.manta = null;
                     }
-                    else if (item.Id == ItemId.item_bottle)
+                    else if (item.Id == AbilityId.item_bottle)
                     {
                         this.bottle = null;
                     }
