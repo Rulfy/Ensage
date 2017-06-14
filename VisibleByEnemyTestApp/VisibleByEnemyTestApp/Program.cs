@@ -1,13 +1,20 @@
-﻿using System;
+﻿// <copyright file="Program.cs" company="Ensage">
+//    Copyright (c) 2017 Ensage.
+// </copyright>
 
 namespace VisibleByEnemyTestApp
 {
+    using System;
+
     using Ensage;
 
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        private static bool? lastState;
+
+        public static void Main(string[] args)
         {
+            Game.OnIngameUpdate += Game_OnIngameUpdate;
             Entity.OnInt32PropertyChange += Entity_OnInt32PropertyChange;
             Console.WriteLine("VisibleByEnemyTestApp loaded");
         }
@@ -19,8 +26,19 @@ namespace VisibleByEnemyTestApp
             {
                 var me = ObjectManager.LocalHero;
 
-                var output = $"{sender.Name}: {args.OldValue} => {args.NewValue} | IsVisibleToEnemies: {!hero.IsVisibleToEnemies} | OwnTeam: {hero.Team == me?.Team} | Me: {hero == me}";
+                var output =
+                    $"{sender.Name}: {args.OldValue} => {args.NewValue} | IsVisibleToEnemies: {!hero.IsVisibleToEnemies} | OwnTeam: {hero.Team == me?.Team} | Me: {hero == me}";
                 Console.WriteLine(output);
+            }
+        }
+
+        private static void Game_OnIngameUpdate(EventArgs args)
+        {
+            var state = ObjectManager.LocalHero?.IsVisibleToEnemies;
+            if (state != lastState)
+            {
+                Game.PrintMessage($"IsVisibleToEnemies: {state}");
+                lastState = state;
             }
         }
     }
