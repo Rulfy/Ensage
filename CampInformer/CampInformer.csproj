@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{125BE89F-7C6C-47A9-A955-6D6D9CE050C1}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CampInformer</RootNamespace>
     <AssemblyName>CampInformer</AssemblyName>
@@ -37,6 +37,9 @@
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
@@ -46,19 +49,19 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
+      <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharpTest\References\Ensage.Common.dll</HintPath>
+    <Reference Include="Ensage.SDK">
+      <HintPath>C:\EnsageSharp\References\Ensage.SDK.dll</HintPath>
     </Reference>
-    <Reference Include="SharpDX">
-      <HintPath>C:\EnsageSharpTest\References\SharpDX.dll</HintPath>
+    <Reference Include="PlaySharp.Toolkit">
+      <HintPath>C:\EnsageSharp\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics">
-      <HintPath>C:\EnsageSharpTest\References\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>C:\EnsageSharp\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Drawing" />
+    <Reference Include="System.ComponentModel.Composition" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
