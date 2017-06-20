@@ -57,8 +57,11 @@ namespace Vaper
                 this.Factory = factory.Menu("General");
 
                 this.Killsteal = this.Factory.Item("Killsteal", true);
+                this.DrawTargetLine = this.Factory.Item("Draw Target Line", true);
                 this.ComboKey = this.Factory.Item("Combo Key", new KeyBind(32));
             }
+
+            public MenuItem<bool> DrawTargetLine { get; }
 
             public MenuItem<KeyBind> ComboKey { get; }
 

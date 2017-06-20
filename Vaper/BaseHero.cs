@@ -4,6 +4,7 @@
 
 namespace Vaper
 {
+    using System;
     using System.Collections.Specialized;
     using System.ComponentModel;
     using System.ComponentModel.Composition;
@@ -13,14 +14,11 @@ namespace Vaper
     using Ensage;
     using Ensage.SDK.Handlers;
     using Ensage.SDK.Helpers;
-    using Ensage.SDK.Orbwalker;
     using Ensage.SDK.Service;
 
     public abstract class BaseHero : ControllableService, IHero
     {
-        private IOrbwalkingMode orbwalkingMode;
-
-        public TaskHandler KillstealHandler { get; set; }
+        private VaperOrbwalkingMode orbwalkingMode;
 
         public VaperMenu Menu { get; private set; }
 
@@ -30,6 +28,10 @@ namespace Vaper
         internal bool IsKillstealing { get; private set; }
 
         internal Hero Owner { get; private set; }
+
+        protected TaskHandler KillstealHandler { get; set; }
+
+        protected TaskHandler UpdateParticlesHandler { get; set; }
 
         protected async Task AwaitKillstealDelay(int castDelay, CancellationToken token = default(CancellationToken))
         {
@@ -44,7 +46,7 @@ namespace Vaper
             }
         }
 
-        protected abstract IOrbwalkingMode GetOrbwalkingMode();
+        protected abstract VaperOrbwalkingMode GetOrbwalkingMode();
 
         protected virtual void InventoryChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -71,7 +73,9 @@ namespace Vaper
             this.Ensage.Orbwalker.RegisterMode(this.orbwalkingMode);
 
             this.KillstealHandler = UpdateManager.Run(this.OnKillsteal, true, this.Menu.General.Killsteal);
+            this.UpdateParticlesHandler = UpdateManager.Run(this.OnUpdateParticles, true, this.Menu.General.DrawTargetLine);
 
+            this.Menu.General.DrawTargetLine.PropertyChanged += this.DrawTargetLinePropertyChanged;
             this.Menu.General.Killsteal.PropertyChanged += this.KillstealPropertyChanged;
             this.Ensage.Inventory.CollectionChanged += this.InventoryChanged;
         }
@@ -79,6 +83,7 @@ namespace Vaper
         protected override void OnDeactivate()
         {
             this.Ensage.Inventory.CollectionChanged -= this.InventoryChanged;
+            this.Menu.General.DrawTargetLine.PropertyChanged -= this.DrawTargetLinePropertyChanged;
             this.Menu.General.Killsteal.PropertyChanged -= this.KillstealPropertyChanged;
 
             this.KillstealHandler.Cancel();
@@ -88,8 +93,38 @@ namespace Vaper
             this.Menu.Dispose();
         }
 
-        protected virtual async Task OnKillsteal(CancellationToken cancellationToken)
+        protected virtual async Task OnKillsteal(CancellationToken token)
         {
+        }
+
+        protected virtual async Task OnUpdateParticles(CancellationToken token)
+        {
+            if (this.orbwalkingMode == null)
+            {
+                return;
+            }
+
+            if (this.orbwalkingMode.CanExecute && this.orbwalkingMode.CurrentTarget != null)
+            {
+                this.Ensage.Particle.DrawTargetLine(this.Owner, "vaper_targetLine", this.orbwalkingMode.CurrentTarget.Position);
+            }
+            else
+            {
+                this.Ensage.Particle.Remove("vaper_targetLine");
+            }
+        }
+
+        private void DrawTargetLinePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (this.Menu.General.DrawTargetLine)
+            {
+                this.UpdateParticlesHandler.RunAsync();
+            }
+            else
+            {
+                this.Ensage.Particle.Remove("vaper_targetLine");
+                this.UpdateParticlesHandler.Cancel();
+            }
         }
     }
 }

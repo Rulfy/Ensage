@@ -15,7 +15,6 @@ namespace Vaper.Heroes
     using Ensage.SDK.Abilities.npc_dota_hero_axe;
     using Ensage.SDK.Helpers;
     using Ensage.SDK.Inventory;
-    using Ensage.SDK.Orbwalker;
 
     using Vaper.OrbwalkingModes;
 
@@ -30,11 +29,11 @@ namespace Vaper.Heroes
 
         internal axe_culling_blade CullingBlade { get; private set; }
 
-        internal item_lotus_orb LotusOrb { get; private set; }
-
         internal item_force_staff ForceStaff { get; private set; }
 
-        protected override IOrbwalkingMode GetOrbwalkingMode()
+        internal item_lotus_orb LotusOrb { get; private set; }
+
+        protected override VaperOrbwalkingMode GetOrbwalkingMode()
         {
             return new AxeComboOrbwalkingMode(this);
         }
@@ -105,7 +104,6 @@ namespace Vaper.Heroes
                 await Task.Delay(125, token);
                 return;
             }
-
 
             var forceStaffReady = this.ForceStaff != null && this.ForceStaff.CanBeCasted;
             var killstealTarget = EntityManager<Hero>.Entities.FirstOrDefault(

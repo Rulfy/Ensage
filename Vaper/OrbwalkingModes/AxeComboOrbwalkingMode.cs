@@ -4,24 +4,22 @@
 
 namespace Vaper.OrbwalkingModes
 {
-    using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
-    using Ensage.Common.Extensions;
-    using Ensage.SDK.Orbwalker.Modes;
-
-    using SharpDX;
+    using Ensage.SDK.Extensions;
 
     using Vaper.Heroes;
 
-    public class AxeComboOrbwalkingMode : KeyPressOrbwalkingModeAsync
+    using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
+
+    public class AxeComboOrbwalkingMode : VaperOrbwalkingMode
     {
         private readonly Axe hero;
 
         public AxeComboOrbwalkingMode(Axe hero)
-            : base(hero.Ensage.Orbwalker, hero.Ensage.Input, hero.Menu.General.ComboKey)
+            : base(hero)
         {
             this.hero = hero;
         }
@@ -30,6 +28,7 @@ namespace Vaper.OrbwalkingModes
         {
             if (!this.hero.Owner.IsAlive || this.hero.IsKillstealing)
             {
+                this.CurrentTarget = null;
                 await Task.Delay(125, token);
                 return;
             }
@@ -41,12 +40,13 @@ namespace Vaper.OrbwalkingModes
             var maxRange = blink?.CastRange * 1.5f ?? 1000.0f;
 
             var target = this.hero.Ensage.TargetSelector.Active.GetTargets().FirstOrDefault(x => x.Distance2D(this.Owner) <= maxRange);
+            this.CurrentTarget = target;
             if (target == null)
             {
                 this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
                 return;
             }
-
+           
             var cullingBlade = this.hero.CullingBlade;
             var cullingBladeKill = cullingBlade.CanBeCasted && cullingBlade.GetDamage(target) > target.Health && (!target.IsLinkensProtected() || forceStaffReady);
 
@@ -55,8 +55,7 @@ namespace Vaper.OrbwalkingModes
             if (blink != null && blink.CanBeCasted && blink.CanHit(target))
             {
                 // only blink when we can call or use ult to kill him
-                if ((call.CanBeCasted && !call.CanHit(target)) 
-                    || (cullingBladeKill && !cullingBlade.CanHit(target)))
+                if (call.CanBeCasted && !call.CanHit(target) || cullingBladeKill && !cullingBlade.CanHit(target))
                 {
                     // TODO: get best blink location with prediction to hit target + max other targets
                     var blinkPos = target.IsMoving ? target.InFront(75) : target.Position;
@@ -85,17 +84,17 @@ namespace Vaper.OrbwalkingModes
                     if (!canHit && forceStaffReady)
                     {
                         // check if we can move the enemy with forcestaff into our call
-                        if (target.InFront(forceStaff.PushLength).Distance2D(this.Owner) < call.Radius)
+                        if (!target.IsRotating() && !target.IsLinkensProtected() && this.Owner.Distance2D(target.InFront(forceStaff.PushLength)) < call.Radius)
                         {
                             forceStaff.UseAbility(target);
-                            var travelTime = (int)(forceStaff.PushLength / forceStaff.PushSpeed * 1000f);
+                            var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
                             await Task.Delay(forceStaff.GetCastDelay(target) + travelTime, token);
                         }
                         // check if we can move us with forcestaff to the enemy to call
-                        else if (this.Owner.InFront(forceStaff.PushLength).Distance2D(target) < call.Radius)  
+                        else if (!this.Owner.IsRotating() && target.Distance2D(this.Owner.InFront(forceStaff.PushLength)) < call.Radius)
                         {
                             forceStaff.UseAbility(this.Owner);
-                            var travelTime = (int)(forceStaff.PushLength / forceStaff.PushSpeed * 1000f);
+                            var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
                             await Task.Delay(forceStaff.GetCastDelay() + travelTime, token);
                         }
 
