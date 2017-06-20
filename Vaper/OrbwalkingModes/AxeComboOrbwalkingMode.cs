@@ -47,10 +47,14 @@ namespace Vaper.OrbwalkingModes
             var call = this.hero.Call;
 
             // TODO: get best blink location with prediction to hit target + max other targets
-            if (blink != null && blink.CanBeCasted && blink.CanHit(target) && (call.CanBeCasted && !call.CanHit(target) || cullingBladeKill && !cullingBlade.CanHit(target)))
+            if (blink != null && blink.CanBeCasted && blink.CanHit(target))
             {
-                blink.UseAbility(target.Position);
-                await Task.Delay(blink.GetCastDelay(target), token);
+                if ((call.CanBeCasted && !call.CanHit(target)) 
+                    || (cullingBladeKill && !cullingBlade.CanHit(target)))
+                {
+                    blink.UseAbility(target.Position);
+                    await Task.Delay(blink.GetCastDelay(target), token);
+                }
             }
 
             if (cullingBladeKill && cullingBlade.CanHit(target))
