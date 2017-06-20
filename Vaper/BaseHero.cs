@@ -18,6 +18,8 @@ namespace Vaper
 
     public abstract class BaseHero : ControllableService, IHero
     {
+        private IOrbwalkingMode orbwalkingMode;
+
         public TaskHandler KillstealHandler { get; set; }
 
         public VaperMenu Menu { get; private set; }
@@ -65,7 +67,8 @@ namespace Vaper
             this.Owner = (Hero)this.Ensage.Context.Owner;
             this.Menu = new VaperMenu(this.Owner.HeroId);
 
-            this.Ensage.Orbwalker.RegisterMode(this.GetOrbwalkingMode());
+            this.orbwalkingMode = this.GetOrbwalkingMode();
+            this.Ensage.Orbwalker.RegisterMode(this.orbwalkingMode);
 
             this.KillstealHandler = UpdateManager.Run(this.OnKillsteal, true, this.Menu.General.Killsteal);
 
@@ -79,6 +82,8 @@ namespace Vaper
             this.Menu.General.Killsteal.PropertyChanged -= this.KillstealPropertyChanged;
 
             this.KillstealHandler.Cancel();
+
+            this.Ensage.Orbwalker.UnregisterMode(this.orbwalkingMode);
 
             this.Menu.Dispose();
         }
