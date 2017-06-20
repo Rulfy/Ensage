@@ -4,7 +4,6 @@
 
 namespace Vaper
 {
-    using System;
     using System.Collections.Specialized;
     using System.ComponentModel;
     using System.ComponentModel.Composition;
@@ -30,8 +29,6 @@ namespace Vaper
         internal Hero Owner { get; private set; }
 
         protected TaskHandler KillstealHandler { get; set; }
-
-        protected TaskHandler UpdateParticlesHandler { get; set; }
 
         protected async Task AwaitKillstealDelay(int castDelay, CancellationToken token = default(CancellationToken))
         {
@@ -73,7 +70,7 @@ namespace Vaper
             this.Ensage.Orbwalker.RegisterMode(this.orbwalkingMode);
 
             this.KillstealHandler = UpdateManager.Run(this.OnKillsteal, true, this.Menu.General.Killsteal);
-            this.UpdateParticlesHandler = UpdateManager.Run(this.OnUpdateParticles, true, this.Menu.General.DrawTargetLine);
+            UpdateManager.Subscribe(this.OnUpdateParticles);
 
             this.Menu.General.DrawTargetLine.PropertyChanged += this.DrawTargetLinePropertyChanged;
             this.Menu.General.Killsteal.PropertyChanged += this.KillstealPropertyChanged;
@@ -83,9 +80,10 @@ namespace Vaper
         protected override void OnDeactivate()
         {
             this.Ensage.Inventory.CollectionChanged -= this.InventoryChanged;
-            this.Menu.General.DrawTargetLine.PropertyChanged -= this.DrawTargetLinePropertyChanged;
             this.Menu.General.Killsteal.PropertyChanged -= this.KillstealPropertyChanged;
-
+            this.Menu.General.DrawTargetLine.PropertyChanged -= this.DrawTargetLinePropertyChanged;
+            
+            UpdateManager.Unsubscribe(this.OnUpdateParticles);
             this.KillstealHandler.Cancel();
 
             this.Ensage.Orbwalker.UnregisterMode(this.orbwalkingMode);
@@ -97,9 +95,9 @@ namespace Vaper
         {
         }
 
-        protected virtual async Task OnUpdateParticles(CancellationToken token)
+        protected virtual void OnUpdateParticles()
         {
-            if (this.orbwalkingMode == null)
+            if (this.orbwalkingMode == null || !this.Menu.General.DrawTargetLine)
             {
                 return;
             }
@@ -116,14 +114,9 @@ namespace Vaper
 
         private void DrawTargetLinePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (this.Menu.General.DrawTargetLine)
-            {
-                this.UpdateParticlesHandler.RunAsync();
-            }
-            else
+            if (!this.Menu.General.DrawTargetLine)
             {
                 this.Ensage.Particle.Remove("vaper_targetLine");
-                this.UpdateParticlesHandler.Cancel();
             }
         }
     }

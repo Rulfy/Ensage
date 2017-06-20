@@ -54,11 +54,14 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Heroes\Axe.cs" />
-    <Compile Include="OrbwalkingModes\AxeComboOrbwalkingMode.cs" />
+    <Compile Include="Heroes\PhantomAssassin.cs" />
+    <Compile Include="OrbwalkingModes\PhantomAssassinOrbwalker.cs" />
+    <Compile Include="OrbwalkingModes\AxeComboOrbwalker.cs" />
     <Compile Include="BaseHero.cs" />
     <Compile Include="EnsageWorkUnit.cs" />
     <Compile Include="ExportHeroAttribute.cs" />
@@ -72,6 +75,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Menu\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

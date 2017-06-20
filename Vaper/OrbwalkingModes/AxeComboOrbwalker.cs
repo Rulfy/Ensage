@@ -1,4 +1,4 @@
-// <copyright file="AxeComboOrbwalkingMode.cs" company="Ensage">
+// <copyright file="AxeComboOrbwalker.cs" company="Ensage">
 //    Copyright (c) 2017 Ensage.
 // </copyright>
 
@@ -12,13 +12,11 @@ namespace Vaper.OrbwalkingModes
 
     using Vaper.Heroes;
 
-    using UnitExtensions = Ensage.SDK.Extensions.UnitExtensions;
-
-    public class AxeComboOrbwalkingMode : VaperOrbwalkingMode
+    public class AxeComboOrbwalker : VaperOrbwalkingMode
     {
         private readonly Axe hero;
 
-        public AxeComboOrbwalkingMode(Axe hero)
+        public AxeComboOrbwalker(Axe hero)
             : base(hero)
         {
             this.hero = hero;
@@ -46,7 +44,7 @@ namespace Vaper.OrbwalkingModes
                 this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
                 return;
             }
-           
+
             var cullingBlade = this.hero.CullingBlade;
             var cullingBladeKill = cullingBlade.CanBeCasted && cullingBlade.GetDamage(target) > target.Health && (!target.IsLinkensProtected() || forceStaffReady);
 
@@ -90,6 +88,7 @@ namespace Vaper.OrbwalkingModes
                             var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
                             await Task.Delay(forceStaff.GetCastDelay(target) + travelTime, token);
                         }
+
                         // check if we can move us with forcestaff to the enemy to call
                         else if (!this.Owner.IsRotating() && target.Distance2D(this.Owner.InFront(forceStaff.PushLength)) < call.Radius)
                         {

@@ -61,9 +61,9 @@ namespace Vaper
                 this.ComboKey = this.Factory.Item("Combo Key", new KeyBind(32));
             }
 
-            public MenuItem<bool> DrawTargetLine { get; }
-
             public MenuItem<KeyBind> ComboKey { get; }
+
+            public MenuItem<bool> DrawTargetLine { get; }
 
             public MenuFactory Factory { get; }
 

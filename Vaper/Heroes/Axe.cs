@@ -35,7 +35,7 @@ namespace Vaper.Heroes
 
         protected override VaperOrbwalkingMode GetOrbwalkingMode()
         {
-            return new AxeComboOrbwalkingMode(this);
+            return new AxeComboOrbwalker(this);
         }
 
         protected override void InventoryChanged(object sender, NotifyCollectionChangedEventArgs e)
