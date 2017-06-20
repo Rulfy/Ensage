@@ -32,6 +32,8 @@ namespace Vaper.Heroes
 
         internal item_lotus_orb LotusOrb { get; private set; }
 
+        internal item_force_staff ForceStaff { get; private set; }
+
         protected override IOrbwalkingMode GetOrbwalkingMode()
         {
             return new AxeComboOrbwalkingMode(this);
@@ -54,6 +56,9 @@ namespace Vaper.Heroes
                         case AbilityId.item_lotus_orb:
                             this.LotusOrb = this.Ensage.AbilityFactory.GetAbility<item_lotus_orb>(newItem.Item);
                             break;
+                        case AbilityId.item_force_staff:
+                            this.ForceStaff = this.Ensage.AbilityFactory.GetAbility<item_force_staff>(newItem.Item);
+                            break;
                     }
                 }
             }
@@ -72,6 +77,9 @@ namespace Vaper.Heroes
                         case AbilityId.item_lotus_orb:
                             this.LotusOrb = null;
                             break;
+                        case AbilityId.item_force_staff:
+                            this.ForceStaff = null;
+                            break;
                     }
                 }
             }
@@ -87,6 +95,7 @@ namespace Vaper.Heroes
             this.BladeMail = this.Ensage.AbilityFactory.GetItem<item_blade_mail>();
             this.Blink = this.Ensage.AbilityFactory.GetItem<item_blink>();
             this.LotusOrb = this.Ensage.AbilityFactory.GetItem<item_lotus_orb>();
+            this.ForceStaff = this.Ensage.AbilityFactory.GetItem<item_force_staff>();
         }
 
         protected override async Task OnKillsteal(CancellationToken token)

@@ -4,12 +4,15 @@
 
 namespace Vaper.OrbwalkingModes
 {
+    using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
     using Ensage.Common.Extensions;
     using Ensage.SDK.Orbwalker.Modes;
+
+    using SharpDX;
 
     using Vaper.Heroes;
 
@@ -46,14 +49,15 @@ namespace Vaper.OrbwalkingModes
 
             var call = this.hero.Call;
 
-            // TODO: get best blink location with prediction to hit target + max other targets
             if (blink != null && blink.CanBeCasted && blink.CanHit(target))
             {
                 if ((call.CanBeCasted && !call.CanHit(target)) 
                     || (cullingBladeKill && !cullingBlade.CanHit(target)))
                 {
-                    blink.UseAbility(target.Position);
-                    await Task.Delay(blink.GetCastDelay(target), token);
+                    // TODO: get best blink location with prediction to hit target + max other targets
+                    var blinkPos = target.IsMoving ? target.InFront(75) : target.Position;
+                    blink.UseAbility(blinkPos);
+                    await Task.Delay(blink.GetCastDelay(blinkPos), token);
                 }
             }
 
@@ -67,14 +71,14 @@ namespace Vaper.OrbwalkingModes
                 if (call.CanBeCasted && call.CanHit(target))
                 {
                     var bladeMail = this.hero.BladeMail;
-                    if (bladeMail.CanBeCasted)
+                    if (bladeMail != null && bladeMail.CanBeCasted)
                     {
                         bladeMail.UseAbility();
                         await Task.Delay(bladeMail.GetCastDelay(), token);
                     }
 
                     var lotusOrb = this.hero.LotusOrb;
-                    if (lotusOrb.CanBeCasted)
+                    if (lotusOrb != null && lotusOrb.CanBeCasted)
                     {
                         lotusOrb.UseAbility(this.Owner);
                         await Task.Delay(lotusOrb.GetCastDelay(), token);
