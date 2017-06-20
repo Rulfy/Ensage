@@ -106,16 +106,27 @@ namespace Vaper.Heroes
                 return;
             }
 
+
+            var forceStaffReady = this.ForceStaff != null && this.ForceStaff.CanBeCasted;
             var killstealTarget = EntityManager<Hero>.Entities.FirstOrDefault(
                 x => x.IsAlive
                      && x.Team != this.Owner.Team
                      && !x.IsIllusion
                      && this.CullingBlade.CanHit(x)
-                     && !x.IsLinkensProtected()
+                     && (forceStaffReady || !x.IsLinkensProtected())
                      && this.CullingBlade.GetDamage(x) > x.Health);
 
             if (killstealTarget != null)
             {
+                if (forceStaffReady && killstealTarget.IsLinkensProtected())
+                {
+                    if (this.ForceStaff.UseAbility(killstealTarget))
+                    {
+                        var castDelay = this.ForceStaff.GetCastDelay(killstealTarget);
+                        await this.AwaitKillstealDelay(castDelay, token);
+                    }
+                }
+
                 if (this.CullingBlade.UseAbility(killstealTarget))
                 {
                     var castDelay = this.CullingBlade.GetCastDelay(killstealTarget);

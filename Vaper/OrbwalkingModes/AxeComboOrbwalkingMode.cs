@@ -34,6 +34,9 @@ namespace Vaper.OrbwalkingModes
                 return;
             }
 
+            var forceStaff = this.hero.ForceStaff;
+            var forceStaffReady = forceStaff != null && forceStaff.CanBeCasted;
+
             var blink = this.hero.Blink;
             var maxRange = blink?.CastRange * 1.5f ?? 1000.0f;
 
@@ -45,12 +48,13 @@ namespace Vaper.OrbwalkingModes
             }
 
             var cullingBlade = this.hero.CullingBlade;
-            var cullingBladeKill = cullingBlade.CanBeCasted && cullingBlade.GetDamage(target) > target.Health && !target.IsLinkensProtected();
+            var cullingBladeKill = cullingBlade.CanBeCasted && cullingBlade.GetDamage(target) > target.Health && (!target.IsLinkensProtected() || forceStaffReady);
 
             var call = this.hero.Call;
 
             if (blink != null && blink.CanBeCasted && blink.CanHit(target))
             {
+                // only blink when we can call or use ult to kill him
                 if ((call.CanBeCasted && !call.CanHit(target)) 
                     || (cullingBladeKill && !cullingBlade.CanHit(target)))
                 {
@@ -63,29 +67,60 @@ namespace Vaper.OrbwalkingModes
 
             if (cullingBladeKill && cullingBlade.CanHit(target))
             {
+                // break linkens with forcestaff
+                if (forceStaffReady && target.IsLinkensProtected())
+                {
+                    forceStaff.UseAbility(target);
+                    await Task.Delay(forceStaff.GetCastDelay(target), token);
+                }
+
                 cullingBlade.UseAbility(target);
                 await Task.Delay(cullingBlade.GetCastDelay(target), token);
             }
             else
             {
-                if (call.CanBeCasted && call.CanHit(target))
+                if (call.CanBeCasted)
                 {
-                    var bladeMail = this.hero.BladeMail;
-                    if (bladeMail != null && bladeMail.CanBeCasted)
+                    var canHit = call.CanHit(target);
+                    if (!canHit && forceStaffReady)
                     {
-                        bladeMail.UseAbility();
-                        await Task.Delay(bladeMail.GetCastDelay(), token);
+                        // check if we can move the enemy with forcestaff into our call
+                        if (target.InFront(forceStaff.PushLength).Distance2D(this.Owner) < call.Radius)
+                        {
+                            forceStaff.UseAbility(target);
+                            var travelTime = (int)(forceStaff.PushLength / forceStaff.PushSpeed * 1000f);
+                            await Task.Delay(forceStaff.GetCastDelay(target) + travelTime, token);
+                        }
+                        // check if we can move us with forcestaff to the enemy to call
+                        else if (this.Owner.InFront(forceStaff.PushLength).Distance2D(target) < call.Radius)  
+                        {
+                            forceStaff.UseAbility(this.Owner);
+                            var travelTime = (int)(forceStaff.PushLength / forceStaff.PushSpeed * 1000f);
+                            await Task.Delay(forceStaff.GetCastDelay() + travelTime, token);
+                        }
+
+                        canHit = call.CanHit(target);
                     }
 
-                    var lotusOrb = this.hero.LotusOrb;
-                    if (lotusOrb != null && lotusOrb.CanBeCasted)
+                    if (canHit)
                     {
-                        lotusOrb.UseAbility(this.Owner);
-                        await Task.Delay(lotusOrb.GetCastDelay(), token);
-                    }
+                        var bladeMail = this.hero.BladeMail;
+                        if (bladeMail != null && bladeMail.CanBeCasted)
+                        {
+                            bladeMail.UseAbility();
+                            await Task.Delay(bladeMail.GetCastDelay(), token);
+                        }
 
-                    call.UseAbility();
-                    await Task.Delay(call.GetCastDelay(), token);
+                        var lotusOrb = this.hero.LotusOrb;
+                        if (lotusOrb != null && lotusOrb.CanBeCasted)
+                        {
+                            lotusOrb.UseAbility(this.Owner);
+                            await Task.Delay(lotusOrb.GetCastDelay(), token);
+                        }
+
+                        call.UseAbility();
+                        await Task.Delay(call.GetCastDelay(), token);
+                    }
                 }
             }
 
