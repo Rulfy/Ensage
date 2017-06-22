@@ -127,6 +127,11 @@ namespace Vaper.Heroes
                             this.Mjollnir = null;
                             break;
                         case AbilityId.item_diffusal_blade:
+                            if (this.Diffusal is item_diffusal_blade)
+                            {
+                                this.Diffusal = null;
+                            }
+                            break;
                         case AbilityId.item_diffusal_blade_2:
                             this.Diffusal = null;
                             break;
@@ -273,7 +278,7 @@ namespace Vaper.Heroes
             {
                 var enemyHeroes = EntityManager<Hero>.Entities.Where(x => x.IsAlive && x.IsVisible && x.Team != team && x.Distance2D(this.healingWardUnit) < 1000).ToList();
                 var alliedHeroes = EntityManager<Hero>
-                    .Entities.Where(x => x.IsAlive && x.IsVisible && x.Team == team && x.HealthPercent() <= 0.9f && x.Distance2D(this.healingWardUnit) < 1000)
+                    .Entities.Where(x => x.IsAlive && x.IsVisible && x.Team == team && x.HealthPercent() <= 0.9f && x.Distance2D(this.healingWardUnit) < 800)
                     .OrderBy(x => x.HealthPercent())
                     .ToList();
                 if (!alliedHeroes.Any())
@@ -293,7 +298,7 @@ namespace Vaper.Heroes
                 foreach (var enemyHero in enemyHeroes)
                 {
                     var dangerRange = enemyHero.AttackRange(this.healingWardUnit);
-                    dangerRange = enemyHero.IsMelee ? dangerRange * 2f : dangerRange * 1.5f;
+                    dangerRange = enemyHero.IsMelee ? dangerRange * 2f : dangerRange * 1.2f;
 
                     var circle = new Polygon.Circle(enemyHero.Position, dangerRange);
 
@@ -337,7 +342,7 @@ namespace Vaper.Heroes
                         }
 
                         Log.Debug($"removing target since radius {mecResult.Radius} or movePos to dangerous");
-                        var itemToRemove = healCircles.MaxOrDefault((target) => healCircles[0].Center.DistanceSquared(target.Center));
+                        var itemToRemove = healCircles.Where(x => x.Center != this.Owner.Position.ToVector2()).MaxOrDefault((target) => healCircles[0].Center.DistanceSquared(target.Center));
                         healCircles.Remove(itemToRemove);
                     }
                 }
@@ -345,7 +350,8 @@ namespace Vaper.Heroes
                 // no safe area available... so just move to the target who needs it most and hope for the best
                 if (!healCircles.Any() || !hasMoved)
                 {
-                    var heroPos = alliedHeroes.First().Position;
+                    var isOwnerLow = this.Owner.HealthPercent() <= 0.5f;
+                    var heroPos = isOwnerLow ? this.Owner.Position : alliedHeroes.First().Position;
                     if (!avoidCircles.Any())
                     {
                         this.healingWardUnit.Move(heroPos);
