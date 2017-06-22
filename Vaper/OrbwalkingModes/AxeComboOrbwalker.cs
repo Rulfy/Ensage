@@ -4,6 +4,7 @@
 
 namespace Vaper.OrbwalkingModes
 {
+    using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -38,6 +39,7 @@ namespace Vaper.OrbwalkingModes
             var maxRange = blink?.CastRange * 1.5f ?? 1000.0f;
 
             var target = this.hero.Ensage.TargetSelector.Active.GetTargets().FirstOrDefault(x => x.Distance2D(this.Owner) <= maxRange);
+            Console.WriteLine($"Target: {target?.Name}");
             this.CurrentTarget = target;
             if (target == null)
             {
@@ -46,14 +48,14 @@ namespace Vaper.OrbwalkingModes
             }
 
             var cullingBlade = this.hero.CullingBlade;
-            var cullingBladeKill = cullingBlade.CanBeCasted && cullingBlade.GetDamage(target) > target.Health && (!target.IsLinkensProtected() || forceStaffReady);
+            var cullingBladeKill = cullingBlade != null && cullingBlade.CanBeCasted && cullingBlade.GetDamage(target) > target.Health && (!target.IsLinkensProtected() || forceStaffReady);
 
             var call = this.hero.Call;
 
             if (blink != null && blink.CanBeCasted && blink.CanHit(target))
             {
                 // only blink when we can call or use ult to kill him
-                if (call.CanBeCasted && !call.CanHit(target) || cullingBladeKill && !cullingBlade.CanHit(target))
+                if ((call != null && call.CanBeCasted && !call.CanHit(target)) || (cullingBladeKill != null && cullingBladeKill && !cullingBlade.CanHit(target)))
                 {
                     // TODO: get best blink location with prediction to hit target + max other targets
                     var blinkPos = target.IsMoving ? target.InFront(75) : target.Position;
@@ -76,7 +78,7 @@ namespace Vaper.OrbwalkingModes
             }
             else
             {
-                if (call.CanBeCasted)
+                if (call != null && call.CanBeCasted)
                 {
                     var canHit = call.CanHit(target);
                     if (!canHit && forceStaffReady)

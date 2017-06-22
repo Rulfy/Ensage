@@ -36,6 +36,10 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="clipper_library, Version=1.0.0.0, Culture=neutral, PublicKeyToken=07aeca4266f4b547, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\EnsageSharp\References\clipper_library.dll</HintPath>
+    </Reference>
     <Reference Include="Ensage">
       <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
     </Reference>
@@ -59,7 +63,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Heroes\Axe.cs" />
+    <Compile Include="Heroes\Juggernaut.cs" />
     <Compile Include="Heroes\PhantomAssassin.cs" />
+    <Compile Include="OrbwalkingModes\JuggernautOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\PhantomAssassinOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\AxeComboOrbwalker.cs" />
     <Compile Include="BaseHero.cs" />

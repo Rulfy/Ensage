@@ -42,14 +42,14 @@ namespace Vaper.OrbwalkingModes
             }
 
             var dagger = this.hero.Dagger;
-            if (dagger.CanBeCasted && dagger.CanHit(target))
+            if (dagger != null && dagger.CanBeCasted && dagger.CanHit(target))
             {
                 dagger.UseAbility(target);
                 await Task.Delay(dagger.GetCastDelay(target), token);
             }
 
             var blink = this.hero.PhantomStrike;
-            if (blink.CanBeCasted && blink.CanHit(target))
+            if (blink != null && blink.CanBeCasted && blink.CanHit(target))
             {
                 blink.UseAbility(target);
                 await Task.Delay(blink.GetCastDelay(target), token);

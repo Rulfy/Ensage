@@ -18,6 +18,7 @@ namespace Vaper.Heroes
     using Ensage.SDK.Helpers;
     using Ensage.SDK.Inventory;
     using Ensage.SDK.Menu;
+    using Ensage.SDK.Utils;
 
     using SharpDX;
 
@@ -28,8 +29,6 @@ namespace Vaper.Heroes
     [ExportHero(HeroId.npc_dota_hero_phantom_assassin)]
     public class PhantomAssassin : BaseHero
     {
-        public const float CritPrd = 0.03221f; // = 15%
-
         public item_abyssal_blade AbyssalBlade { get; private set; }
 
         public phantom_assassin_blur Blur { get; private set; }
@@ -39,6 +38,8 @@ namespace Vaper.Heroes
         public phantom_assassin_coup_de_grace Crit { get; private set; }
 
         public MenuItem<bool> CritIndicator { get; private set; }
+
+        public float CritPrd { get; private set; } // 0.03221f; // = 15%
 
         public float CurrentCritChance { get; private set; }
 
@@ -90,17 +91,27 @@ namespace Vaper.Heroes
 
             this.AbyssalBlade = this.Ensage.AbilityFactory.GetItem<item_abyssal_blade>();
 
+            this.CritPrd = Utils.GetPseudoChance(this.Crit.ProcChance);
+
             var factory = this.Menu.Hero.Factory;
             this.CritIndicator = factory.Item("Show Crit Indicator", true);
+            this.CritIndicator.PropertyChanged += this.CritIndicatorPropertyChanged;
             this.BlurIndicator = factory.Item("Show Blur Indicator", true);
             this.BlurIndicator.PropertyChanged += this.BlurIndicatorPropertyChanged;
 
-            this.Ensage.Renderer.Draw += this.OnDraw;
+            if (this.CritIndicator)
+            {
+                this.Ensage.Renderer.Draw += this.OnDraw;
+            }
+
             Entity.OnInt32PropertyChange += this.OnNetworkActivity;
         }
 
         protected override void OnDeactivate()
         {
+            this.CritIndicator.PropertyChanged -= this.CritIndicatorPropertyChanged;
+            this.BlurIndicator.PropertyChanged -= this.BlurIndicatorPropertyChanged;
+
             Entity.OnInt32PropertyChange -= this.OnNetworkActivity;
             this.Ensage.Renderer.Draw -= this.OnDraw;
 
@@ -160,6 +171,18 @@ namespace Vaper.Heroes
             }
         }
 
+        private void CritIndicatorPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (this.CritIndicator)
+            {
+                this.Ensage.Renderer.Draw += this.OnDraw;
+            }
+            else
+            {
+                this.Ensage.Renderer.Draw -= this.OnDraw;
+            }
+        }
+
         private void OnDraw(object sender, EventArgs e)
         {
             if (!this.CritIndicator || this.Crit.Ability.Level <= 0)
@@ -171,7 +194,7 @@ namespace Vaper.Heroes
             var barPos = this.Owner.Position + new Vector3(0, 0, this.Owner.HealthBarOffset);
             if (Drawing.WorldToScreen(barPos, out screenPos))
             {
-                this.Ensage.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 15, 80, 7), Color.Red, 1.0f);
+                this.Ensage.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 15, 80, 7), Color.Red);
 
                 var critWidth = 80.0f * this.CurrentCritChance;
                 this.Ensage.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 11), new Vector2((screenPos.X - 40) + critWidth, screenPos.Y - 11), Color.Red, 7);
@@ -180,6 +203,11 @@ namespace Vaper.Heroes
 
         private void OnNetworkActivity(Entity sender, Int32PropertyChangeEventArgs args)
         {
+            if (this.Crit.Ability.Level <= 0)
+            {
+                return;
+            }
+
             if (sender != this.Owner)
             {
                 return;
@@ -197,12 +225,12 @@ namespace Vaper.Heroes
                 case NetworkActivity.Attack:
                 case NetworkActivity.Attack2:
                     // TODO: check for allies, buildings and wards target
-                    this.CurrentCritChance = Math.Min(1.0f, this.CurrentCritChance + CritPrd);
+                    this.CurrentCritChance = Math.Min(1.0f, this.CurrentCritChance + this.CritPrd);
                     break;
 
                 case NetworkActivity.Crit:
                     // Pseudo-random_distribution
-                    this.CurrentCritChance = CritPrd;
+                    this.CurrentCritChance = this.CritPrd;
                     break;
             }
         }
