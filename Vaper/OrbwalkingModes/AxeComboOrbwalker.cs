@@ -39,7 +39,6 @@ namespace Vaper.OrbwalkingModes
             var maxRange = blink?.CastRange * 1.5f ?? 1000.0f;
 
             var target = this.hero.Ensage.TargetSelector.Active.GetTargets().FirstOrDefault(x => x.Distance2D(this.Owner) <= maxRange);
-            Console.WriteLine($"Target: {target?.Name}");
             this.CurrentTarget = target;
             if (target == null)
             {
@@ -55,7 +54,7 @@ namespace Vaper.OrbwalkingModes
             if (blink != null && blink.CanBeCasted && blink.CanHit(target))
             {
                 // only blink when we can call or use ult to kill him
-                if ((call != null && call.CanBeCasted && !call.CanHit(target)) || (cullingBladeKill != null && cullingBladeKill && !cullingBlade.CanHit(target)))
+                if ((call != null && call.CanBeCasted && !call.CanHit(target)) || (cullingBladeKill && !cullingBlade.CanHit(target)))
                 {
                     // TODO: get best blink location with prediction to hit target + max other targets
                     var blinkPos = target.IsMoving ? target.InFront(75) : target.Position;

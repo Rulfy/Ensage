@@ -17,8 +17,6 @@ namespace Vaper
 
     public abstract class BaseHero : ControllableService, IHero
     {
-        private VaperOrbwalkingMode orbwalkingMode;
-
         public VaperMenu Menu { get; private set; }
 
         [Import(typeof(IEnsageWorkUnit))]
@@ -29,6 +27,8 @@ namespace Vaper
         internal Hero Owner { get; private set; }
 
         protected TaskHandler KillstealHandler { get; set; }
+
+        protected VaperOrbwalkingMode OrbwalkingMode { get; private set; }
 
         protected async Task AwaitKillstealDelay(int castDelay, CancellationToken token = default(CancellationToken))
         {
@@ -66,8 +66,8 @@ namespace Vaper
             this.Owner = (Hero)this.Ensage.Context.Owner;
             this.Menu = new VaperMenu(this.Owner.HeroId);
 
-            this.orbwalkingMode = this.GetOrbwalkingMode();
-            this.Ensage.Orbwalker.RegisterMode(this.orbwalkingMode);
+            this.OrbwalkingMode = this.GetOrbwalkingMode();
+            this.Ensage.Orbwalker.RegisterMode(this.OrbwalkingMode);
 
             this.KillstealHandler = UpdateManager.Run(this.OnKillsteal, true, this.Menu.General.Killsteal);
             UpdateManager.Subscribe(this.OnUpdateParticles);
@@ -82,11 +82,11 @@ namespace Vaper
             this.Ensage.Inventory.CollectionChanged -= this.InventoryChanged;
             this.Menu.General.Killsteal.PropertyChanged -= this.KillstealPropertyChanged;
             this.Menu.General.DrawTargetLine.PropertyChanged -= this.DrawTargetLinePropertyChanged;
-            
+
             UpdateManager.Unsubscribe(this.OnUpdateParticles);
             this.KillstealHandler.Cancel();
 
-            this.Ensage.Orbwalker.UnregisterMode(this.orbwalkingMode);
+            this.Ensage.Orbwalker.UnregisterMode(this.OrbwalkingMode);
 
             this.Menu.Dispose();
         }
@@ -97,14 +97,14 @@ namespace Vaper
 
         protected virtual void OnUpdateParticles()
         {
-            if (this.orbwalkingMode == null || !this.Menu.General.DrawTargetLine)
+            if (this.OrbwalkingMode == null || !this.Menu.General.DrawTargetLine)
             {
                 return;
             }
 
-            if (this.orbwalkingMode.CanExecute && this.orbwalkingMode.CurrentTarget != null)
+            if (this.OrbwalkingMode.CanExecute && this.OrbwalkingMode.CurrentTarget != null)
             {
-                this.Ensage.Particle.DrawTargetLine(this.Owner, "vaper_targetLine", this.orbwalkingMode.CurrentTarget.Position);
+                this.Ensage.Particle.DrawTargetLine(this.Owner, "vaper_targetLine", this.OrbwalkingMode.CurrentTarget.Position);
             }
             else
             {

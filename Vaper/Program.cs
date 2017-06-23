@@ -13,7 +13,7 @@ namespace Vaper
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
-    [ExportPlugin("Vaper", HeroId.npc_dota_hero_axe, HeroId.npc_dota_hero_phantom_assassin, HeroId.npc_dota_hero_juggernaut)]
+    [ExportPlugin("Vaper", HeroId.npc_dota_hero_axe, HeroId.npc_dota_hero_phantom_assassin, HeroId.npc_dota_hero_juggernaut, HeroId.npc_dota_hero_alchemist)]
     public class Program : Plugin
     {
         private readonly Hero owner;

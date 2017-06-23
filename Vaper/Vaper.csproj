@@ -62,9 +62,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Heroes\Alchemist.cs" />
     <Compile Include="Heroes\Axe.cs" />
     <Compile Include="Heroes\Juggernaut.cs" />
     <Compile Include="Heroes\PhantomAssassin.cs" />
+    <Compile Include="OrbwalkingModes\AlchemistComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\JuggernautOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\PhantomAssassinOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\AxeComboOrbwalker.cs" />
