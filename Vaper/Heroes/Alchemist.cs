@@ -185,8 +185,8 @@ namespace Vaper.Heroes
             this.LastHitIndicator = factory.Item("Show Lasthit Indicator", true);
             this.LastHitIndicator.PropertyChanged += this.LastHitIndicatorPropertyChanged;
 
-            Unit.OnModifierAdded += this.OnModifierAdded;
-            Entity.OnInt32PropertyChange += this.OnLastHit;
+            Unit.OnModifierAdded += this.OnConcoction;
+            Entity.OnParticleEffectAdded += this.OnLastHit;
             this.AlchemistController = UpdateManager.Run(this.OnUpdate);
 
             if (this.LastHitIndicator)
@@ -195,12 +195,20 @@ namespace Vaper.Heroes
             }
         }
 
+        private void OnLastHit(Entity sender, ParticleEffectAddedEventArgs args)
+        {
+            if (sender == this.Player && args.Name == "particles/msg_fx/msg_gold.vpcf")
+            {
+                this.LastHitTime = Game.GameTime;
+            }
+        }
+
         protected override void OnDeactivate()
         {
             this.Ensage.Renderer.Draw -= this.OnDraw;
             this.AlchemistController.Cancel();
-            Entity.OnInt32PropertyChange -= this.OnLastHit;
-            Unit.OnModifierAdded -= this.OnModifierAdded;
+            Entity.OnParticleEffectAdded -= this.OnLastHit;
+            Unit.OnModifierAdded += this.OnConcoction;
 
             this.LastHitIndicator.PropertyChanged -= this.LastHitIndicatorPropertyChanged;
 
@@ -240,35 +248,7 @@ namespace Vaper.Heroes
             }
         }
 
-        private void OnLastHit(Entity sender, Int32PropertyChangeEventArgs args)
-        {
-            if (args.PropertyName == "m_iLastHitCount" && this.Player.LastHitCount == args.OldValue)
-            {
-                DelayAction.Add(
-                    50,
-                    () =>
-                        {
-                            if (this.Player.LastHitCount == args.NewValue)
-                            {
-                                this.LastHitTime = Game.GameTime;
-                            }
-                        });
-            }
-            else if (args.PropertyName == "m_iKills" && this.Player.Kills == args.OldValue)
-            {
-                DelayAction.Add(
-                    50,
-                    () =>
-                        {
-                            if (this.Player.Kills == args.NewValue)
-                            {
-                                this.LastHitTime = Game.GameTime;
-                            }
-                        });
-            }
-        }
-
-        private void OnModifierAdded(Unit sender, ModifierChangedEventArgs args)
+        private void OnConcoction(Unit sender, ModifierChangedEventArgs args)
         {
             if (sender == this.Owner && args.Modifier.Name == this.Concoction.ModifierName)
             {
