@@ -67,7 +67,7 @@ namespace Vaper.OrbwalkingModes
             {
                 var enemiesClose = EntityManager<Hero>.Entities.Any(x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.Team != this.Owner.Team && x.Distance2D(target) < 800);
                 var healthPercent = this.Owner.HealthPercent();
-                if (healthPercent < 0.5f || enemiesClose && healthPercent < 0.85f)
+                if (healthPercent < 0.5f || (enemiesClose && healthPercent < 0.85f))
                 {
                     rage.UseAbility();
                     await Task.Delay(rage.GetCastDelay(), token);

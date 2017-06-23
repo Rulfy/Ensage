@@ -270,7 +270,7 @@ namespace Vaper.Heroes
 
         private void OnModifierAdded(Unit sender, ModifierChangedEventArgs args)
         {
-            if (args.Modifier.Name == this.Concoction.ModifierName)
+            if (sender == this.Owner && args.Modifier.Name == this.Concoction.ModifierName)
             {
                 this.ConcoctionStartTime = Game.GameTime;
             }
