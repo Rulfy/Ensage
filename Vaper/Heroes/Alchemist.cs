@@ -13,7 +13,6 @@ namespace Vaper.Heroes
     using System.Threading.Tasks;
 
     using Ensage;
-    using Ensage.Common;
     using Ensage.SDK.Abilities.Items;
     using Ensage.SDK.Abilities.npc_dota_hero_alchemist;
     using Ensage.SDK.Extensions;
@@ -65,6 +64,8 @@ namespace Vaper.Heroes
         public float ConcoctionStartTime { get; private set; }
 
         public alchemist_goblins_greed Greed { get; private set; }
+
+        public bool HasUserEnabledArmlet { get; private set; }
 
         public MenuItem<bool> LastHitIndicator { get; private set; }
 
@@ -188,6 +189,7 @@ namespace Vaper.Heroes
             Unit.OnModifierAdded += this.OnConcoction;
             Entity.OnParticleEffectAdded += this.OnLastHit;
             this.AlchemistController = UpdateManager.Run(this.OnUpdate);
+            Player.OnExecuteOrder += this.Player_OnExecuteOrder;
 
             if (this.LastHitIndicator)
             {
@@ -195,16 +197,9 @@ namespace Vaper.Heroes
             }
         }
 
-        private void OnLastHit(Entity sender, ParticleEffectAddedEventArgs args)
-        {
-            if (sender == this.Player && args.Name == "particles/msg_fx/msg_gold.vpcf")
-            {
-                this.LastHitTime = Game.GameTime;
-            }
-        }
-
         protected override void OnDeactivate()
         {
+            Player.OnExecuteOrder -= this.Player_OnExecuteOrder;
             this.Ensage.Renderer.Draw -= this.OnDraw;
             this.AlchemistController.Cancel();
             Entity.OnParticleEffectAdded -= this.OnLastHit;
@@ -224,6 +219,14 @@ namespace Vaper.Heroes
             else
             {
                 this.Ensage.Renderer.Draw -= this.OnDraw;
+            }
+        }
+
+        private void OnConcoction(Unit sender, ModifierChangedEventArgs args)
+        {
+            if (sender == this.Owner && args.Modifier.Name == this.Concoction.ModifierName)
+            {
+                this.ConcoctionStartTime = Game.GameTime;
             }
         }
 
@@ -248,11 +251,11 @@ namespace Vaper.Heroes
             }
         }
 
-        private void OnConcoction(Unit sender, ModifierChangedEventArgs args)
+        private void OnLastHit(Entity sender, ParticleEffectAddedEventArgs args)
         {
-            if (sender == this.Owner && args.Modifier.Name == this.Concoction.ModifierName)
+            if (sender == this.Player && args.Name == "particles/msg_fx/msg_gold.vpcf")
             {
-                this.ConcoctionStartTime = Game.GameTime;
+                this.LastHitTime = Game.GameTime;
             }
         }
 
@@ -321,14 +324,35 @@ namespace Vaper.Heroes
                 }
             }
 
-            var isInvisible = this.Owner.IsInvisible() || this.Owner.InvisiblityLevel > 0;
-            if (this.Armlet != null && !isInvisible)
+            if (!this.HasUserEnabledArmlet)
             {
-                this.Armlet.Enabled = EntityManager<Hero>.Entities.Any(x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.Team != this.Owner.Team && x.Distance2D(this.Owner) < 1000);
-                await Task.Delay(this.Armlet.GetCastDelay(), token);
+                var isInvisible = this.Owner.IsInvisible() || this.Owner.InvisiblityLevel > 0;
+                if (this.Armlet != null && !isInvisible)
+                {
+                    var enemiesNear = EntityManager<Hero>.Entities.Any(
+                        x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.Team != this.Owner.Team && x.Distance2D(this.Owner) < 1000);
+                    if (enemiesNear && (this.Owner.HasModifier(this.Rage.ModifierName) || this.Owner.HealthPercent() <= 0.75))
+                    {
+                        this.Armlet.Enabled = true;
+                    }
+                    else
+                    {
+                        this.Armlet.Enabled = false;
+                    }
+                    await Task.Delay(this.Armlet.GetCastDelay(), token);
+                }
             }
 
             await Task.Delay(125, token);
+        }
+
+        private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
+        {
+            if (this.Armlet != null && args.IsPlayerInput && args.OrderId == OrderId.ToggleAbility && args.Ability == this.Armlet.Ability)
+            {
+                Log.Debug($"user toggled armlet");
+                this.HasUserEnabledArmlet = !this.Armlet.Enabled;
+            }
         }
     }
 }
