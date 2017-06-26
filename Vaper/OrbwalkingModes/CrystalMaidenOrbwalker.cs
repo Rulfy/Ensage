@@ -132,7 +132,7 @@ namespace Vaper.OrbwalkingModes
                     }
 
                     ult.UseAbility();
-                    await Task.Delay(ult.GetCastDelay(), token);
+                    await Task.Delay(ult.GetCastDelay() + 500, token);
                     return;
                 }
             }
@@ -176,8 +176,41 @@ namespace Vaper.OrbwalkingModes
 
                 if (enemyCount >= 1 || (!notDisabled && (this.CurrentTarget.Health * 3) > ult.GetDamage(this.CurrentTarget)))
                 {
+                    var bkb = this.hero.Bkb;
+                    if ((bkb != null) && bkb.CanBeCasted)
+                    {
+                        bkb.UseAbility();
+                        await Task.Delay(bkb.GetCastDelay(), token);
+                    }
+
+                    var glimmer = this.hero.GlimmerCape;
+                    if ((glimmer != null) && this.Owner.CanCastAbilities(glimmer, ult))
+                    {
+                        glimmer.UseAbility(this.Owner);
+                        await Task.Delay(glimmer.GetCastDelay(), token);
+                    }
+
+                    if ((veil != null) && this.Owner.CanCastAbilities(veil, ult) && veil.CanHit(this.CurrentTarget))
+                    {
+                        veil.UseAbility(this.CurrentTarget.Position);
+                        await Task.Delay(veil.GetCastDelay(this.CurrentTarget.Position), token);
+                    }
+
+                    var lotus = this.hero.Lotus;
+                    if ((lotus != null) && this.Owner.CanCastAbilities(lotus, ult) && lotus.CanHit(this.CurrentTarget))
+                    {
+                        lotus.UseAbility(this.Owner);
+                        await Task.Delay(lotus.GetCastDelay(), token);
+                    }
+
+                    if ((frostbite != null) && this.Owner.CanCastAbilities(frostbite, ult) && frostbite.CanHit(this.CurrentTarget))
+                    {
+                        frostbite.UseAbility(this.CurrentTarget);
+                        await Task.Delay(frostbite.GetCastDelay(this.CurrentTarget) + 500, token); // bro science
+                    }
+
                     ult.UseAbility();
-                    await Task.Delay(ult.GetCastDelay(), token);
+                    await Task.Delay(ult.GetCastDelay() + 500, token);
                     return;
                 }
             }
