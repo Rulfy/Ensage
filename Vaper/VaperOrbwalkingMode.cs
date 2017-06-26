@@ -23,10 +23,6 @@ namespace Vaper
             this.MaxTargetRange = maxTargetRange;
         }
 
-        public Unit CurrentTarget { get; protected set; }
-
-        public float MaxTargetRange { get; protected set; }
-
         public override bool CanExecute
         {
             get
@@ -36,9 +32,14 @@ namespace Vaper
                 {
                     this.CurrentTarget = null;
                 }
+
                 return result;
             }
         }
+
+        public Unit CurrentTarget { get; protected set; }
+
+        public float MaxTargetRange { get; protected set; }
 
         protected async Task<bool> ShouldExecute(CancellationToken token)
         {
@@ -55,7 +56,7 @@ namespace Vaper
                 return false;
             }
 
-            if (!this.baseHero.Menu.General.LockTarget || this.CurrentTarget == null || !this.CurrentTarget.IsAlive)
+            if (!this.baseHero.Menu.General.LockTarget || (this.CurrentTarget == null) || !this.CurrentTarget.IsAlive)
             {
                 this.CurrentTarget = this.baseHero.Ensage.TargetSelector.Active.GetTargets().FirstOrDefault(x => x.Distance2D(this.Owner) <= this.MaxTargetRange);
             }

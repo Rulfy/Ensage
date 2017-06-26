@@ -5,20 +5,21 @@
 namespace Vaper.Heroes
 {
     using System;
-    using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
     using Ensage;
-    using Ensage.Common.Extensions;
     using Ensage.SDK.Abilities.Items;
     using Ensage.SDK.Abilities.npc_dota_hero_phantom_assassin;
+    using Ensage.SDK.Extensions;
     using Ensage.SDK.Helpers;
-    using Ensage.SDK.Inventory;
+    using Ensage.SDK.Inventory.Metadata;
     using Ensage.SDK.Menu;
     using Ensage.SDK.Utils;
+
+    using PlaySharp.Toolkit.Helper.Annotations;
 
     using SharpDX;
 
@@ -29,6 +30,8 @@ namespace Vaper.Heroes
     [ExportHero(HeroId.npc_dota_hero_phantom_assassin)]
     public class PhantomAssassin : BaseHero
     {
+        [PublicAPI]
+        [ItemBinding]
         public item_abyssal_blade AbyssalBlade { get; private set; }
 
         public phantom_assassin_blur Blur { get; private set; }
@@ -52,44 +55,15 @@ namespace Vaper.Heroes
             return new PhantomAssassinOrbwalker(this);
         }
 
-        protected override void InventoryChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                foreach (var newItem in e.NewItems.OfType<InventoryItem>())
-                {
-                    switch (newItem.Id)
-                    {
-                        case AbilityId.item_abyssal_blade:
-                            this.AbyssalBlade = this.Ensage.AbilityFactory.GetAbility<item_abyssal_blade>(newItem.Item);
-                            break;
-                    }
-                }
-            }
-            else if (e.Action == NotifyCollectionChangedAction.Remove)
-            {
-                foreach (var oldItem in e.OldItems.OfType<InventoryItem>())
-                {
-                    switch (oldItem.Id)
-                    {
-                        case AbilityId.item_abyssal_blade:
-                            this.AbyssalBlade = null;
-                            break;
-                    }
-                }
-            }
-        }
-
         protected override void OnActivate()
         {
             base.OnActivate();
+            this.Ensage.Inventory.Attach(this);
 
             this.Dagger = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_stifling_dagger>();
             this.PhantomStrike = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_phantom_strike>();
             this.Blur = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_blur>();
             this.Crit = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_coup_de_grace>();
-
-            this.AbyssalBlade = this.Ensage.AbilityFactory.GetItem<item_abyssal_blade>();
 
             this.CritPrd = Utils.GetPseudoChance(this.Crit.ProcChance);
 
@@ -115,6 +89,7 @@ namespace Vaper.Heroes
             Entity.OnInt32PropertyChange -= this.OnNetworkActivity;
             this.Ensage.Renderer.Draw -= this.OnDraw;
 
+            this.Ensage.Inventory.Detach(this);
             base.OnDeactivate();
         }
 
@@ -128,11 +103,11 @@ namespace Vaper.Heroes
 
             var killstealTarget = EntityManager<Hero>.Entities.FirstOrDefault(
                 x => x.IsAlive
-                     && x.Team != this.Owner.Team
+                     && (x.Team != this.Owner.Team)
                      && !x.IsIllusion
                      && this.Dagger.CanHit(x)
                      && !x.IsLinkensProtected()
-                     && this.Dagger.GetDamage(x) > x.Health);
+                     && (this.Dagger.GetDamage(x) > x.Health));
 
             if (killstealTarget != null)
             {
@@ -185,7 +160,7 @@ namespace Vaper.Heroes
 
         private void OnDraw(object sender, EventArgs e)
         {
-            if (!this.CritIndicator || this.Crit.Ability.Level <= 0)
+            if (!this.CritIndicator || (this.Crit.Ability.Level <= 0))
             {
                 return;
             }

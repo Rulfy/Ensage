@@ -4,9 +4,12 @@
 
 namespace Vaper
 {
+    using System;
     using System.Collections.Specialized;
     using System.ComponentModel;
     using System.ComponentModel.Composition;
+    using System.Diagnostics;
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -15,8 +18,18 @@ namespace Vaper
     using Ensage.SDK.Helpers;
     using Ensage.SDK.Service;
 
+    using log4net;
+
+    using PlaySharp.Toolkit.Logging;
+
+    using SharpDX;
+
+    using Color = System.Drawing.Color;
+
     public abstract class BaseHero : ControllableService, IHero
     {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public VaperMenu Menu { get; private set; }
 
         [Import(typeof(IEnsageWorkUnit))]
@@ -75,6 +88,44 @@ namespace Vaper
             this.Menu.General.DrawTargetLine.PropertyChanged += this.DrawTargetLinePropertyChanged;
             this.Menu.General.Killsteal.PropertyChanged += this.KillstealPropertyChanged;
             this.Ensage.Inventory.CollectionChanged += this.InventoryChanged;
+
+            // Intro
+            this.Ensage.Renderer.Draw += this.IntroDraw;
+            UpdateManager.Run(
+                async token =>
+                    {
+                        var particleCount = 4;
+                        var rnd = new Random();
+                        var stopwatch = new Stopwatch();
+                        stopwatch.Start();
+
+                        while (stopwatch.ElapsedMilliseconds < (10 * 1000))
+                        {
+                            for (var i = 0; i < particleCount; ++i)
+                            {
+                                this.Ensage.Particle.AddOrUpdate(
+                                    this.Owner,
+                                    $"vaper_smoke_{i}",
+                                    "particles/world_environmental_fx/rune_ambient_01_smoke.vpcf",
+                                    ParticleAttachment.AbsOrigin,
+                                    false,
+                                    0,
+                                    this.Owner.Position + new Vector3(rnd.NextFloat(-500, 500), rnd.NextFloat(-500, 500), 0));
+                            }
+
+                            await Task.Delay(125, token);
+                        }
+
+                        stopwatch.Stop();
+
+                        Log.Debug($"deleting vape particles");
+                        this.Ensage.Renderer.Draw -= this.IntroDraw;
+                        for (var i = 0; i < particleCount; ++i)
+                        {
+                            this.Ensage.Particle.Remove($"vaper_smoke_{i}");
+                        }
+                    },
+                false);
         }
 
         protected override void OnDeactivate()
@@ -97,12 +148,12 @@ namespace Vaper
 
         protected virtual void OnUpdateParticles()
         {
-            if (this.OrbwalkingMode == null || !this.Menu.General.DrawTargetLine)
+            if ((this.OrbwalkingMode == null) || !this.Menu.General.DrawTargetLine)
             {
                 return;
             }
 
-            if (this.OrbwalkingMode.CanExecute && this.OrbwalkingMode.CurrentTarget != null)
+            if (this.OrbwalkingMode.CanExecute && (this.OrbwalkingMode.CurrentTarget != null))
             {
                 this.Ensage.Particle.DrawTargetLine(this.Owner, "vaper_targetLine", this.OrbwalkingMode.CurrentTarget.Position);
             }
@@ -117,6 +168,15 @@ namespace Vaper
             if (!this.Menu.General.DrawTargetLine)
             {
                 this.Ensage.Particle.Remove("vaper_targetLine");
+            }
+        }
+
+        private void IntroDraw(object sender, EventArgs e)
+        {
+            Vector2 screenPos;
+            if (Drawing.WorldToScreen(this.Owner.Position + new Vector3(-140, -50, 0), out screenPos))
+            {
+                this.Ensage.Renderer.DrawText(screenPos, "Vaper loaded", Color.Gold, "Calibri", 35);
             }
         }
     }

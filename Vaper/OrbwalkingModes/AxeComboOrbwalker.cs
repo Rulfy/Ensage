@@ -4,8 +4,6 @@
 
 namespace Vaper.OrbwalkingModes
 {
-    using System;
-    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -31,29 +29,32 @@ namespace Vaper.OrbwalkingModes
             }
 
             var forceStaff = this.hero.ForceStaff;
-            var forceStaffReady = forceStaff != null && forceStaff.CanBeCasted;
+            var forceStaffReady = (forceStaff != null) && forceStaff.CanBeCasted;
 
             var blink = this.hero.Blink;
             if (blink != null)
             {
                 this.MaxTargetRange = blink.CastRange * 1.5f;
             }
-           
-            if (this.CurrentTarget == null || !this.CurrentTarget.IsVisible)
+
+            if ((this.CurrentTarget == null) || !this.CurrentTarget.IsVisible)
             {
                 this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
                 return;
             }
 
             var cullingBlade = this.hero.CullingBlade;
-            var cullingBladeKill = cullingBlade != null && cullingBlade.CanBeCasted && cullingBlade.GetDamage(this.CurrentTarget) > this.CurrentTarget.Health && (!this.CurrentTarget.IsLinkensProtected() || forceStaffReady);
+            var cullingBladeKill = (cullingBlade != null)
+                                   && cullingBlade.CanBeCasted
+                                   && (cullingBlade.GetDamage(this.CurrentTarget) > this.CurrentTarget.Health)
+                                   && (!this.CurrentTarget.IsLinkensProtected() || forceStaffReady);
 
             var call = this.hero.Call;
 
-            if (blink != null && blink.CanBeCasted && blink.CanHit(this.CurrentTarget))
+            if ((blink != null) && blink.CanBeCasted && blink.CanHit(this.CurrentTarget))
             {
                 // only blink when we can call or use ult to kill him
-                if ((call != null && call.CanBeCasted && !call.CanHit(this.CurrentTarget)) || (cullingBladeKill && !cullingBlade.CanHit(this.CurrentTarget)))
+                if (((call != null) && call.CanBeCasted && !call.CanHit(this.CurrentTarget)) || (cullingBladeKill && !cullingBlade.CanHit(this.CurrentTarget)))
                 {
                     // TODO: get best blink location with prediction to hit target + max other targets
                     var blinkPos = this.CurrentTarget.IsMoving ? this.CurrentTarget.InFront(75) : this.CurrentTarget.Position;
@@ -76,13 +77,15 @@ namespace Vaper.OrbwalkingModes
             }
             else
             {
-                if (call != null && call.CanBeCasted)
+                if ((call != null) && call.CanBeCasted)
                 {
                     var canHit = call.CanHit(this.CurrentTarget);
                     if (!canHit && forceStaffReady)
                     {
                         // check if we can move the enemy with forcestaff into our call
-                        if (!this.CurrentTarget.IsRotating() && !this.CurrentTarget.IsLinkensProtected() && this.Owner.Distance2D(this.CurrentTarget.InFront(forceStaff.PushLength)) < call.Radius)
+                        if (!this.CurrentTarget.IsRotating()
+                            && !this.CurrentTarget.IsLinkensProtected()
+                            && (this.Owner.Distance2D(this.CurrentTarget.InFront(forceStaff.PushLength)) < call.Radius))
                         {
                             forceStaff.UseAbility(this.CurrentTarget);
                             var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
@@ -90,7 +93,7 @@ namespace Vaper.OrbwalkingModes
                         }
 
                         // check if we can move us with forcestaff to the enemy to call
-                        else if (!this.Owner.IsRotating() && this.CurrentTarget.Distance2D(this.Owner.InFront(forceStaff.PushLength)) < call.Radius)
+                        else if (!this.Owner.IsRotating() && (this.CurrentTarget.Distance2D(this.Owner.InFront(forceStaff.PushLength)) < call.Radius))
                         {
                             forceStaff.UseAbility(this.Owner);
                             var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
@@ -103,14 +106,14 @@ namespace Vaper.OrbwalkingModes
                     if (canHit)
                     {
                         var bladeMail = this.hero.BladeMail;
-                        if (bladeMail != null && bladeMail.CanBeCasted)
+                        if ((bladeMail != null) && bladeMail.CanBeCasted)
                         {
                             bladeMail.UseAbility();
                             await Task.Delay(bladeMail.GetCastDelay(), token);
                         }
 
                         var lotusOrb = this.hero.LotusOrb;
-                        if (lotusOrb != null && lotusOrb.CanBeCasted)
+                        if ((lotusOrb != null) && lotusOrb.CanBeCasted)
                         {
                             lotusOrb.UseAbility(this.Owner);
                             await Task.Delay(lotusOrb.GetCastDelay(), token);

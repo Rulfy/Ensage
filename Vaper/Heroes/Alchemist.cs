@@ -5,7 +5,6 @@
 namespace Vaper.Heroes
 {
     using System;
-    using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Linq;
     using System.Reflection;
@@ -18,11 +17,12 @@ namespace Vaper.Heroes
     using Ensage.SDK.Extensions;
     using Ensage.SDK.Handlers;
     using Ensage.SDK.Helpers;
-    using Ensage.SDK.Inventory;
+    using Ensage.SDK.Inventory.Metadata;
     using Ensage.SDK.Menu;
 
     using log4net;
 
+    using PlaySharp.Toolkit.Helper.Annotations;
     using PlaySharp.Toolkit.Logging;
 
     using SharpDX;
@@ -36,14 +36,20 @@ namespace Vaper.Heroes
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        [PublicAPI]
+        [ItemBinding]
         public item_abyssal_blade AbyssalBlade { get; private set; }
 
-        public alchemist_acid_spray Acid { get; private set; }
+        public alchemist_acid_spray Acid { get; protected set; }
 
         public TaskHandler AlchemistController { get; set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_armlet Armlet { get; private set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_silver_edge BreakBlade { get; private set; }
 
         public alchemist_unstable_concoction Concoction { get; private set; }
@@ -52,7 +58,7 @@ namespace Vaper.Heroes
         {
             get
             {
-                if (this.ConcoctionStartTime > 0 && this.Owner.HasModifier(this.Concoction.ModifierName))
+                if ((this.ConcoctionStartTime > 0) && this.Owner.HasModifier(this.Concoction.ModifierName))
                 {
                     return Game.GameTime - this.ConcoctionStartTime;
                 }
@@ -71,20 +77,28 @@ namespace Vaper.Heroes
 
         public float LastHitTime { get; private set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_manta Manta { get; private set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_medallion_of_courage Medallion { get; private set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_mjollnir Mjollnir { get; private set; }
-
-        public int MyLastHits { get; private set; }
 
         public Player Player { get; private set; }
 
         public alchemist_chemical_rage Rage { get; private set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_invis_sword ShadowBlade { get; private set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_solar_crest SolarCrest { get; private set; }
 
         protected override VaperOrbwalkingMode GetOrbwalkingMode()
@@ -92,79 +106,10 @@ namespace Vaper.Heroes
             return new AlchemistComboOrbwalker(this);
         }
 
-        protected override void InventoryChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                foreach (var newItem in e.NewItems.OfType<InventoryItem>())
-                {
-                    switch (newItem.Id)
-                    {
-                        case AbilityId.item_abyssal_blade:
-                            this.AbyssalBlade = this.Ensage.AbilityFactory.GetAbility<item_abyssal_blade>(newItem.Item);
-                            break;
-                        case AbilityId.item_manta:
-                            this.Manta = this.Ensage.AbilityFactory.GetAbility<item_manta>(newItem.Item);
-                            break;
-                        case AbilityId.item_mjollnir:
-                            this.Mjollnir = this.Ensage.AbilityFactory.GetAbility<item_mjollnir>(newItem.Item);
-                            break;
-                        case AbilityId.item_armlet:
-                            this.Armlet = this.Ensage.AbilityFactory.GetAbility<item_armlet>(newItem.Item);
-                            break;
-                        case AbilityId.item_medallion_of_courage:
-                            this.Medallion = this.Ensage.AbilityFactory.GetAbility<item_medallion_of_courage>(newItem.Item);
-                            break;
-                        case AbilityId.item_solar_crest:
-                            this.SolarCrest = this.Ensage.AbilityFactory.GetAbility<item_solar_crest>(newItem.Item);
-                            break;
-                        case AbilityId.item_invis_sword:
-                            this.ShadowBlade = this.Ensage.AbilityFactory.GetAbility<item_invis_sword>(newItem.Item);
-                            break;
-                        case AbilityId.item_silver_edge:
-                            this.BreakBlade = this.Ensage.AbilityFactory.GetAbility<item_silver_edge>(newItem.Item);
-                            break;
-                    }
-                }
-            }
-            else if (e.Action == NotifyCollectionChangedAction.Remove)
-            {
-                foreach (var oldItem in e.OldItems.OfType<InventoryItem>())
-                {
-                    switch (oldItem.Id)
-                    {
-                        case AbilityId.item_abyssal_blade:
-                            this.AbyssalBlade = null;
-                            break;
-                        case AbilityId.item_manta:
-                            this.Manta = null;
-                            break;
-                        case AbilityId.item_mjollnir:
-                            this.Mjollnir = null;
-                            break;
-                        case AbilityId.item_armlet:
-                            this.Armlet = null;
-                            break;
-                        case AbilityId.item_medallion_of_courage:
-                            this.Medallion = null;
-                            break;
-                        case AbilityId.item_solar_crest:
-                            this.SolarCrest = null;
-                            break;
-                        case AbilityId.item_invis_sword:
-                            this.ShadowBlade = null;
-                            break;
-                        case AbilityId.item_silver_edge:
-                            this.BreakBlade = null;
-                            break;
-                    }
-                }
-            }
-        }
-
         protected override void OnActivate()
         {
             base.OnActivate();
+            this.Ensage.Inventory.Attach(this);
 
             this.Player = ObjectManager.LocalPlayer;
 
@@ -172,15 +117,6 @@ namespace Vaper.Heroes
             this.Concoction = this.Ensage.AbilityFactory.GetAbility<alchemist_unstable_concoction>();
             this.Greed = this.Ensage.AbilityFactory.GetAbility<alchemist_goblins_greed>();
             this.Rage = this.Ensage.AbilityFactory.GetAbility<alchemist_chemical_rage>();
-
-            this.Armlet = this.Ensage.AbilityFactory.GetItem<item_armlet>();
-            this.Manta = this.Ensage.AbilityFactory.GetItem<item_manta>();
-            this.AbyssalBlade = this.Ensage.AbilityFactory.GetItem<item_abyssal_blade>();
-            this.Mjollnir = this.Ensage.AbilityFactory.GetItem<item_mjollnir>();
-            this.Medallion = this.Ensage.AbilityFactory.GetItem<item_medallion_of_courage>();
-            this.SolarCrest = this.Ensage.AbilityFactory.GetItem<item_solar_crest>();
-            this.ShadowBlade = this.Ensage.AbilityFactory.GetItem<item_invis_sword>();
-            this.BreakBlade = this.Ensage.AbilityFactory.GetItem<item_silver_edge>();
 
             var factory = this.Menu.Hero.Factory;
             this.LastHitIndicator = factory.Item("Show Lasthit Indicator", true);
@@ -207,6 +143,7 @@ namespace Vaper.Heroes
 
             this.LastHitIndicator.PropertyChanged -= this.LastHitIndicatorPropertyChanged;
 
+            this.Ensage.Inventory.Detach(this);
             base.OnDeactivate();
         }
 
@@ -224,7 +161,7 @@ namespace Vaper.Heroes
 
         private void OnConcoction(Unit sender, ModifierChangedEventArgs args)
         {
-            if (sender == this.Owner && args.Modifier.Name == this.Concoction.ModifierName)
+            if ((sender == this.Owner) && (args.Modifier.Name == this.Concoction.ModifierName))
             {
                 this.ConcoctionStartTime = Game.GameTime;
             }
@@ -253,7 +190,7 @@ namespace Vaper.Heroes
 
         private void OnLastHit(Entity sender, ParticleEffectAddedEventArgs args)
         {
-            if (sender == this.Player && args.Name == "particles/msg_fx/msg_gold.vpcf")
+            if ((sender == this.Player) && (args.Name == "particles/msg_fx/msg_gold.vpcf"))
             {
                 this.LastHitTime = Game.GameTime;
             }
@@ -262,9 +199,9 @@ namespace Vaper.Heroes
         private async Task OnUpdate(CancellationToken token)
         {
             var gameTime = Game.GameTime;
-            if (this.ConcoctionStartTime > 0
+            if ((this.ConcoctionStartTime > 0)
                 && !((AlchemistComboOrbwalker)this.OrbwalkingMode).HasValidThrowTarget
-                && (gameTime - this.ConcoctionStartTime) > (this.Concoction.Duration * 0.85f)
+                && ((gameTime - this.ConcoctionStartTime) > (this.Concoction.Duration * 0.85f))
                 && this.Owner.HasModifier(this.Concoction.ModifierName))
             {
                 var elapsedTime = gameTime - this.ConcoctionStartTime;
@@ -272,9 +209,9 @@ namespace Vaper.Heroes
                 var enemyHeroes = EntityManager<Hero>.Entities.Where(
                     x => x.IsVisible
                          && x.IsAlive
-                         && x.Team != this.Owner.Team
+                         && (x.Team != this.Owner.Team)
                          && !x.IsReflectingAbilities()
-                         && x.Distance2D(this.Owner) <= this.Concoction.CastRange);
+                         && (x.Distance2D(this.Owner) <= this.Concoction.CastRange));
 
                 var throwTarget = enemyHeroes.OrderBy(x => x.IsLinkensProtected())
                                              .ThenByDescending(x => x.IsIllusion)
@@ -297,7 +234,7 @@ namespace Vaper.Heroes
                     }
                 }
 
-                if (this.Manta != null && this.Manta.CanBeCasted)
+                if ((this.Manta != null) && this.Manta.CanBeCasted)
                 {
                     // manta modifier duration = 0.1
                     var waitTime = (int)(((this.Concoction.ExplosionDuration - elapsedTime) * 1000.0f) - 50 - Game.Ping);
@@ -312,7 +249,7 @@ namespace Vaper.Heroes
                     }
                 }
 
-                if (this.Rage != null && this.Rage.CanBeCasted)
+                if ((this.Rage != null) && this.Rage.CanBeCasted)
                 {
                     if (this.Rage.UseAbility())
                     {
@@ -326,12 +263,12 @@ namespace Vaper.Heroes
 
             if (!this.HasUserEnabledArmlet)
             {
-                var isInvisible = this.Owner.IsInvisible() || this.Owner.InvisiblityLevel > 0;
-                if (this.Armlet != null && !isInvisible)
+                var isInvisible = this.Owner.IsInvisible() || (this.Owner.InvisiblityLevel > 0);
+                if ((this.Armlet != null) && !isInvisible)
                 {
                     var enemiesNear = EntityManager<Hero>.Entities.Any(
-                        x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.Team != this.Owner.Team && x.Distance2D(this.Owner) < 1000);
-                    if (enemiesNear && (this.Owner.HasModifier(this.Rage.ModifierName) || this.Owner.HealthPercent() <= 0.75))
+                        x => x.IsVisible && x.IsAlive && !x.IsIllusion && (x.Team != this.Owner.Team) && (x.Distance2D(this.Owner) < 1000));
+                    if (enemiesNear && (this.Owner.HasModifier(this.Rage.ModifierName) || (this.Owner.HealthPercent() <= 0.75)))
                     {
                         this.Armlet.Enabled = true;
                     }
@@ -339,6 +276,7 @@ namespace Vaper.Heroes
                     {
                         this.Armlet.Enabled = false;
                     }
+
                     await Task.Delay(this.Armlet.GetCastDelay(), token);
                 }
             }
@@ -348,7 +286,7 @@ namespace Vaper.Heroes
 
         private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
-            if (this.Armlet != null && args.IsPlayerInput && args.OrderId == OrderId.ToggleAbility && args.Ability == this.Armlet.Ability)
+            if ((this.Armlet != null) && args.IsPlayerInput && (args.OrderId == OrderId.ToggleAbility) && (args.Ability == this.Armlet.Ability))
             {
                 Log.Debug($"user toggled armlet");
                 this.HasUserEnabledArmlet = !this.Armlet.Enabled;

@@ -6,7 +6,6 @@ namespace Vaper.Heroes
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.Specialized;
     using System.ComponentModel;
     using System.Linq;
     using System.Reflection;
@@ -21,12 +20,13 @@ namespace Vaper.Heroes
     using Ensage.SDK.Geometry;
     using Ensage.SDK.Handlers;
     using Ensage.SDK.Helpers;
-    using Ensage.SDK.Inventory;
+    using Ensage.SDK.Inventory.Metadata;
     using Ensage.SDK.Menu;
     using Ensage.SDK.Utils;
 
     using log4net;
 
+    using PlaySharp.Toolkit.Helper.Annotations;
     using PlaySharp.Toolkit.Logging;
 
     using SharpDX;
@@ -44,10 +44,16 @@ namespace Vaper.Heroes
 
         private float lastAttackTime;
 
+        [PublicAPI]
+        [ItemBinding]
         public item_abyssal_blade AbyssalBlade { get; private set; }
 
         public juggernaut_blade_fury BladeFury { get; private set; }
 
+        public MenuItem<bool> BladeFuryMoveOnly { get; private set; }
+
+        [PublicAPI]
+        [ItemBinding]
         public item_blink Blink { get; private set; }
 
         public MenuItem<bool> ControlWard { get; set; }
@@ -58,17 +64,40 @@ namespace Vaper.Heroes
 
         public float CurrentCritChance { get; private set; }
 
-        public DiffusalBlade Diffusal { get; private set; }
+        public DiffusalBlade Diffusal
+        {
+            get
+            {
+                if (this.Diffu2 != null)
+                {
+                    return this.Diffu2;
+                }
+
+                return this.Diffu1;
+            }
+        }
 
         public juggernaut_healing_ward HealingWard { get; private set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_manta Manta { get; private set; }
 
+        [PublicAPI]
+        [ItemBinding]
         public item_mjollnir Mjollnir { get; private set; }
 
         public MenuItem<bool> OmniBlink { get; private set; }
 
         public juggernaut_omni_slash OmniSlash { get; private set; }
+
+        [PublicAPI]
+        [ItemBinding]
+        protected item_diffusal_blade Diffu1 { get; private set; }
+
+        [PublicAPI]
+        [ItemBinding]
+        protected item_diffusal_blade_2 Diffu2 { get; private set; }
 
         protected TaskHandler HealingWardControlHandler { get; private set; }
 
@@ -79,81 +108,15 @@ namespace Vaper.Heroes
             return new JuggernautOrbwalker(this);
         }
 
-        protected override void InventoryChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                foreach (var newItem in e.NewItems.OfType<InventoryItem>())
-                {
-                    switch (newItem.Id)
-                    {
-                        case AbilityId.item_abyssal_blade:
-                            this.AbyssalBlade = this.Ensage.AbilityFactory.GetAbility<item_abyssal_blade>(newItem.Item);
-                            break;
-                        case AbilityId.item_manta:
-                            this.Manta = this.Ensage.AbilityFactory.GetAbility<item_manta>(newItem.Item);
-                            break;
-                        case AbilityId.item_blink:
-                            this.Blink = this.Ensage.AbilityFactory.GetAbility<item_blink>(newItem.Item);
-                            break;
-                        case AbilityId.item_mjollnir:
-                            this.Mjollnir = this.Ensage.AbilityFactory.GetAbility<item_mjollnir>(newItem.Item);
-                            break;
-                        case AbilityId.item_diffusal_blade:
-                            this.Diffusal = this.Ensage.AbilityFactory.GetAbility<item_diffusal_blade>(newItem.Item);
-                            break;
-                        case AbilityId.item_diffusal_blade_2:
-                            this.Diffusal = this.Ensage.AbilityFactory.GetAbility<item_diffusal_blade_2>(newItem.Item);
-                            break;
-                    }
-                }
-            }
-            else if (e.Action == NotifyCollectionChangedAction.Remove)
-            {
-                foreach (var oldItem in e.OldItems.OfType<InventoryItem>())
-                {
-                    switch (oldItem.Id)
-                    {
-                        case AbilityId.item_abyssal_blade:
-                            this.AbyssalBlade = null;
-                            break;
-                        case AbilityId.item_manta:
-                            this.Manta = null;
-                            break;
-                        case AbilityId.item_blink:
-                            this.Blink = null;
-                            break;
-                        case AbilityId.item_mjollnir:
-                            this.Mjollnir = null;
-                            break;
-                        case AbilityId.item_diffusal_blade:
-                            if (this.Diffusal is item_diffusal_blade)
-                            {
-                                this.Diffusal = null;
-                            }
-                            break;
-                        case AbilityId.item_diffusal_blade_2:
-                            this.Diffusal = null;
-                            break;
-                    }
-                }
-            }
-        }
-
         protected override void OnActivate()
         {
             base.OnActivate();
+            this.Ensage.Inventory.Attach(this);
 
             this.BladeFury = this.Ensage.AbilityFactory.GetAbility<juggernaut_blade_fury>();
             this.HealingWard = this.Ensage.AbilityFactory.GetAbility<juggernaut_healing_ward>();
             this.Crit = this.Ensage.AbilityFactory.GetAbility<juggernaut_blade_dance>();
             this.OmniSlash = this.Ensage.AbilityFactory.GetAbility<juggernaut_omni_slash>();
-
-            this.AbyssalBlade = this.Ensage.AbilityFactory.GetItem<item_abyssal_blade>();
-            this.Manta = this.Ensage.AbilityFactory.GetItem<item_manta>();
-            this.Blink = this.Ensage.AbilityFactory.GetItem<item_blink>();
-            this.Mjollnir = this.Ensage.AbilityFactory.GetItem<item_mjollnir>();
-            this.Diffusal = this.Ensage.AbilityFactory.GetItem<item_diffusal_blade_2>() ?? (DiffusalBlade)this.Ensage.AbilityFactory.GetItem<item_diffusal_blade>();
 
             this.OmniBlinkHandler = UpdateManager.Run(this.OnOmniBlink, false, false);
             this.HealingWardControlHandler = UpdateManager.Run(this.OnHealingWardControl, false, false);
@@ -184,8 +147,6 @@ namespace Vaper.Heroes
             }
         }
 
-        public MenuItem<bool> BladeFuryMoveOnly { get; private set; }
-
         protected override void OnDeactivate()
         {
             this.ControlWard.PropertyChanged -= this.ControlWardPropertyChanged;
@@ -199,6 +160,7 @@ namespace Vaper.Heroes
 
             this.OmniBlinkHandler.Cancel();
 
+            this.Ensage.Inventory.Detach(this);
             base.OnDeactivate();
         }
 
@@ -261,7 +223,7 @@ namespace Vaper.Heroes
         private void OnHealingWardAdded(EntityEventArgs args)
         {
             var unit = args.Entity as Unit;
-            if (unit != null && unit.Team == this.Owner.Team && args.Entity.Name == "npc_dota_juggernaut_healing_ward")
+            if ((unit != null) && (unit.Team == this.Owner.Team) && (args.Entity.Name == "npc_dota_juggernaut_healing_ward"))
             {
                 this.healingWardUnit = unit;
                 this.HealingWardControlHandler.RunAsync();
@@ -277,11 +239,11 @@ namespace Vaper.Heroes
 
             var team = this.healingWardUnit.Team;
             var healingRadius = this.HealingWard.Radius;
-            while (this.healingWardUnit != null && this.healingWardUnit.IsValid && this.healingWardUnit.IsAlive)
+            while ((this.healingWardUnit != null) && this.healingWardUnit.IsValid && this.healingWardUnit.IsAlive)
             {
-                var enemyHeroes = EntityManager<Hero>.Entities.Where(x => x.IsAlive && x.IsVisible && x.Team != team && x.Distance2D(this.healingWardUnit) < 1000).ToList();
+                var enemyHeroes = EntityManager<Hero>.Entities.Where(x => x.IsAlive && x.IsVisible && (x.Team != team) && (x.Distance2D(this.healingWardUnit) < 1000)).ToList();
                 var alliedHeroes = EntityManager<Hero>
-                    .Entities.Where(x => x.IsAlive && x.IsVisible && x.Team == team && x.HealthPercent() <= 0.9f && x.Distance2D(this.healingWardUnit) < 800)
+                    .Entities.Where(x => x.IsAlive && x.IsVisible && (x.Team == team) && (x.HealthPercent() <= 0.9f) && (x.Distance2D(this.healingWardUnit) < 800))
                     .OrderBy(x => x.HealthPercent())
                     .ToList();
                 if (!alliedHeroes.Any())
@@ -330,7 +292,7 @@ namespace Vaper.Heroes
                     while (healCircles.Count > 1)
                     {
                         var mecResult = MEC.GetMec(healCircles.Select((target) => target.Center).ToList());
-                        if (mecResult.Radius != 0f && mecResult.Radius < healingRadius)
+                        if ((mecResult.Radius != 0f) && (mecResult.Radius < healingRadius))
                         {
                             var movePos = new Vector3(
                                 healCircles.Count <= 2 ? (healCircles[0].Center + healCircles[1].Center) / 2 : mecResult.Center,
@@ -345,7 +307,8 @@ namespace Vaper.Heroes
                         }
 
                         Log.Debug($"removing target since radius {mecResult.Radius} or movePos to dangerous");
-                        var itemToRemove = healCircles.Where(x => x.Center != this.Owner.Position.ToVector2()).MaxOrDefault((target) => healCircles[0].Center.DistanceSquared(target.Center));
+                        var itemToRemove = healCircles.Where(x => x.Center != this.Owner.Position.ToVector2())
+                                                      .MaxOrDefault((target) => healCircles[0].Center.DistanceSquared(target.Center));
                         healCircles.Remove(itemToRemove);
                     }
                 }
@@ -435,10 +398,10 @@ namespace Vaper.Heroes
             Unit lastTarget = null;
 
             await Task.Delay((int)(this.OmniSlash.TickRate * 1000), token);
-            while ((Game.GameTime - startTime) <= duration && this.Owner.HasModifier(this.OmniSlash.ModifierName))
+            while (((Game.GameTime - startTime) <= duration) && this.Owner.HasModifier(this.OmniSlash.ModifierName))
             {
                 var closestTarget = EntityManager<Unit>
-                    .Entities.Where(x => x.IsVisible && x.IsAlive && x.Team != myTeam && !(x is Building) && x.IsRealUnit() && x.Distance2D(this.Owner) < radius)
+                    .Entities.Where(x => x.IsVisible && x.IsAlive && (x.Team != myTeam) && !(x is Building) && x.IsRealUnit() && (x.Distance2D(this.Owner) < radius))
                     .OrderBy(x => x.Distance2D(this.Owner))
                     .FirstOrDefault();
 
@@ -474,11 +437,11 @@ namespace Vaper.Heroes
                             .Entities.Where(
                                 x => x.IsVisible
                                      && x.IsAlive
-                                     && x.Team != myTeam
-                                     && x != closestTarget
-                                     && x != lastTarget
+                                     && (x.Team != myTeam)
+                                     && (x != closestTarget)
+                                     && (x != lastTarget)
                                      && !x.IsIllusion
-                                     && x.Distance2D(this.Owner) < (this.Blink.CastRange + (radius / 2)))
+                                     && (x.Distance2D(this.Owner) < (this.Blink.CastRange + (radius / 2))))
                             .OrderBy(x => x.Health)
                             .FirstOrDefault();
 
@@ -512,7 +475,7 @@ namespace Vaper.Heroes
                 return;
             }
 
-            if (this.OmniBlink && this.Blink != null)
+            if (this.OmniBlink && (this.Blink != null))
             {
                 this.OmniBlinkHandler.RunAsync();
             }

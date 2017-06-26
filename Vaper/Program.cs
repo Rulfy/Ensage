@@ -10,19 +10,24 @@ namespace Vaper
     using System.Linq;
 
     using Ensage;
+    using Ensage.SDK.Renderer.Particle;
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
-    [ExportPlugin("Vaper", HeroId.npc_dota_hero_axe, HeroId.npc_dota_hero_phantom_assassin, HeroId.npc_dota_hero_juggernaut, HeroId.npc_dota_hero_alchemist)]
+    [ExportPlugin("Vaper", HeroId.npc_dota_hero_axe, HeroId.npc_dota_hero_phantom_assassin, HeroId.npc_dota_hero_juggernaut, HeroId.npc_dota_hero_alchemist,
+        HeroId.npc_dota_hero_crystal_maiden)]
     public class Program : Plugin
     {
         private readonly Hero owner;
 
+        private readonly Lazy<IParticleManager> particleManager;
+
         private Lazy<IHero, IHeroMetadata> hero;
 
         [ImportingConstructor]
-        public Program([Import] IServiceContext context)
+        public Program([Import] IServiceContext context, [Import] Lazy<IParticleManager> particleManager)
         {
+            this.particleManager = particleManager;
             this.owner = context.Owner as Hero;
         }
 

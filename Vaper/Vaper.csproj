@@ -65,9 +65,11 @@
     <Compile Include="Heroes\Alchemist.cs" />
     <Compile Include="Heroes\Axe.cs" />
     <Compile Include="Heroes\Juggernaut.cs" />
+    <Compile Include="Heroes\CrystalMaiden.cs" />
     <Compile Include="Heroes\PhantomAssassin.cs" />
     <Compile Include="OrbwalkingModes\AlchemistComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\JuggernautOrbwalker.cs" />
+    <Compile Include="OrbwalkingModes\CrystalMaidenOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\PhantomAssassinOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\AxeComboOrbwalker.cs" />
     <Compile Include="BaseHero.cs" />
