@@ -42,6 +42,16 @@ namespace Vaper.OrbwalkingModes
 
             if (this.Owner.HasModifier(this.hero.OmniSlash.ModifierName))
             {
+                if (this.CurrentTarget.IsEthereal())
+                {
+                    var diff = this.hero.Diffusal;
+                    if (diff != null && diff.CanBeCasted && diff.CanHit(this.CurrentTarget))
+                    {
+                        diff.UseAbility(this.CurrentTarget);
+                        await Task.Delay(diff.GetCastDelay(), token);
+                    }
+                }
+
                 await Task.Delay(125, token);
                 return;
             }
@@ -82,6 +92,7 @@ namespace Vaper.OrbwalkingModes
 
                         var abilityLevel = omni.Ability.Level - 1;
                         // Log.Debug($"unitsclose: {unitsClose.Count} ");
+                        Log.Debug($"{EntityManager<Entity>.Entities.Count()} - { EntityManager<Unit>.Entities.Count()} - { EntityManager<Hero>.Entities.Count()}");
                         if (unitsClose.Count > 0 && unitsClose.Count <= abilityLevel)
                         {
                             var close = unitsClose;
@@ -200,9 +211,17 @@ namespace Vaper.OrbwalkingModes
                 await Task.Delay(mjollnir.GetCastDelay(), token);
             }
 
-            if (diffusal != null && !this.CurrentTarget.IsStunned() && this.CurrentTarget.IsMoving && diffusal.CanBeCasted && diffusal.CanHit(this.CurrentTarget))
+            if (diffusal != null && diffusal.CanBeCasted && diffusal.CanHit(this.CurrentTarget))
             {
-                if (!this.CurrentTarget.HasModifier(diffusal.TargetModifierName) && targetDistance > attackRange * 1.4f && this.CurrentTarget.MovementSpeed > this.Owner.MovementSpeed * 1.1f)
+                var useDiffu = this.CurrentTarget.IsEthereal() && !this.Owner.HasModifier(bladeFury.ModifierName);
+                // Log.Debug($"{targetDistance} > {attackRange * 1.2f} && {this.CurrentTarget.MovementSpeed} > {this.Owner.MovementSpeed * 1.1f}");
+                if (!useDiffu && !this.CurrentTarget.IsStunned() && this.CurrentTarget.IsMoving && !this.CurrentTarget.HasModifier(diffusal.TargetModifierName) 
+                    && targetDistance > attackRange * 1.4f && this.CurrentTarget.MovementSpeed > this.Owner.MovementSpeed)
+                {
+                    useDiffu = true;
+                }
+
+                if (useDiffu)
                 {
                     diffusal.UseAbility(this.CurrentTarget);
                     await Task.Delay(diffusal.GetCastDelay(this.CurrentTarget), token);
