@@ -27,6 +27,19 @@ namespace Vaper
 
         public float MaxTargetRange { get; protected set; }
 
+        public override bool CanExecute
+        {
+            get
+            {
+                var result = base.CanExecute;
+                if (!result)
+                {
+                    this.CurrentTarget = null;
+                }
+                return result;
+            }
+        }
+
         protected async Task<bool> ShouldExecute(CancellationToken token)
         {
             if (!this.baseHero.Owner.IsAlive)
