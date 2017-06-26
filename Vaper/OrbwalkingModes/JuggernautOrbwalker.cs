@@ -4,14 +4,12 @@
 
 namespace Vaper.OrbwalkingModes
 {
-    using System;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
 
     using Ensage;
-    using Ensage.SDK.Abilities.Items;
     using Ensage.SDK.Extensions;
     using Ensage.SDK.Helpers;
 
@@ -61,7 +59,7 @@ namespace Vaper.OrbwalkingModes
             {
                 this.MaxTargetRange = blink.CastRange * 1.5f;
             }
-         
+
             if (this.CurrentTarget == null || !this.CurrentTarget.IsVisible)
             {
                 this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
@@ -79,20 +77,26 @@ namespace Vaper.OrbwalkingModes
                 if (!useOmni)
                 {
                     // check if we can finish of the enemy without problems or need help with omni slash
-                   
-                    // Log.Debug($"{targetDistance > attackRange * 1.5f} && {this.Owner.MovementSpeed < this.CurrentTarget.MovementSpeed * 1.2f} OR {this.CurrentTarget.Health > omni.GetTickDamage(this.CurrentTarget)}");
 
-                    if ((targetDistance > attackRange * 1.5f && this.Owner.MovementSpeed < this.CurrentTarget.MovementSpeed * 1.2f)
+                    // Log.Debug($"{targetDistance > attackRange * 1.5f} && {this.Owner.MovementSpeed < this.CurrentTarget.MovementSpeed * 1.2f} OR {this.CurrentTarget.Health > omni.GetTickDamage(this.CurrentTarget)}");
+                    if ((targetDistance > (attackRange * 1.5f) && this.Owner.MovementSpeed < (this.CurrentTarget.MovementSpeed * 1.2f))
                         || this.CurrentTarget.Health > omni.GetTickDamage(this.CurrentTarget))
                     {
-                        // TODO: returns 0 units even though units are close?!
                         var unitsClose = EntityManager<Unit>.Entities.Where(
-                            x => x.IsVisible && x.IsAlive && x != CurrentTarget && x.Team != this.Owner.Team 
-                            && (x.IsIllusion || !(x is Hero)) && !(x is Building) && x.IsRealUnit() && x.Distance2D(this.CurrentTarget) <= omni.Radius).ToList();
+                                                                x => x.IsVisible
+                                                                     && x.IsAlive
+                                                                     && x != this.CurrentTarget
+                                                                     && this.Owner.IsEnemy(x)
+                                                                     && (x.IsIllusion || !(x is Hero))
+                                                                     && !(x is Building)
+                                                                     && x.IsRealUnit()
+                                                                     && x.Distance2D(this.CurrentTarget) <= omni.Radius)
+                                                            .ToList();
 
                         var abilityLevel = omni.Ability.Level - 1;
+
                         // Log.Debug($"unitsclose: {unitsClose.Count} ");
-                        Log.Debug($"{EntityManager<Entity>.Entities.Count()} - { EntityManager<Unit>.Entities.Count()} - { EntityManager<Hero>.Entities.Count()}");
+                        // Log.Debug($"{EntityManager<Entity>.Entities.Count()} - { EntityManager<Unit>.Entities.Count()} - { EntityManager<Hero>.Entities.Count()}");
                         if (unitsClose.Count > 0 && unitsClose.Count <= abilityLevel)
                         {
                             var close = unitsClose;
@@ -103,7 +107,7 @@ namespace Vaper.OrbwalkingModes
                                          && x.IsVisible
                                          && x.IsAlive
                                          && x != this.CurrentTarget
-                                         && x.Team != this.Owner.Team
+                                         && this.Owner.IsEnemy(x)
                                          && (x.IsIllusion || !(x is Hero))
                                          && !(x is Building)
                                          && x.IsRealUnit()
@@ -116,6 +120,7 @@ namespace Vaper.OrbwalkingModes
                                 }
                             }
                         }
+
                         useOmni = unitsClose.Count <= abilityLevel;
                         if (useOmni)
                         {
@@ -129,9 +134,17 @@ namespace Vaper.OrbwalkingModes
                     Unit omniTarget;
                     if (this.CurrentTarget.IsReflectingAbilities())
                     {
-                        omniTarget = EntityManager<Unit>.Entities.Where(
-                            x => x.IsVisible && x.IsAlive && x.Team != this.Owner.Team && !(x is Building) && x.IsRealUnit() && !x.IsReflectingAbilities() && x.Distance2D(this.Owner) < omni.CastRange)
-                            .OrderBy(x => x.Distance2D(this.CurrentTarget)).FirstOrDefault();    
+                        omniTarget = EntityManager<Unit>
+                            .Entities.Where(
+                                x => x.IsVisible
+                                     && x.IsAlive
+                                     && this.Owner.IsEnemy(x)
+                                     && !(x is Building)
+                                     && x.IsRealUnit()
+                                     && !x.IsReflectingAbilities()
+                                     && x.Distance2D(this.Owner) < omni.CastRange)
+                            .OrderBy(x => x.Distance2D(this.CurrentTarget))
+                            .FirstOrDefault();
                     }
                     else
                     {
@@ -155,10 +168,17 @@ namespace Vaper.OrbwalkingModes
                 {
                     if (targetDistance > 600)
                     {
-                        var enemyCount = EntityManager<Hero>.Entities.Count(x => x.IsAlive && x.IsVisible && x != this.CurrentTarget && x.Team != this.Owner.Team && !x.IsIllusion && x.Distance2D(this.CurrentTarget) < 800);
+                        var enemyCount = EntityManager<Hero>.Entities.Count(
+                            x => x.IsAlive
+                                 && x.IsVisible
+                                 && x != this.CurrentTarget
+                                 && this.Owner.IsEnemy(x)
+                                 && !x.IsIllusion
+                                 && x.Distance2D(this.CurrentTarget) < 800);
                         useBlink = enemyCount <= 1 || (bladeFury != null && bladeFury.CanBeCasted);
                     }
                 }
+
                 if (useBlink)
                 {
                     var blinkPos = this.CurrentTarget.IsMoving ? this.CurrentTarget.InFront(75) : this.CurrentTarget.Position;
@@ -171,6 +191,7 @@ namespace Vaper.OrbwalkingModes
             if (healingWard != null && healingWard.CanBeCasted)
             {
                 var recentDmgPercent = (float)this.hero.Owner.RecentDamage / this.hero.Owner.MaximumHealth;
+
                 // Log.Debug($"RecentDmgPercent: {recentDmgPercent}");
                 if (healthPercent < 0.2f || recentDmgPercent > 0.2)
                 {
@@ -214,9 +235,14 @@ namespace Vaper.OrbwalkingModes
             if (diffusal != null && diffusal.CanBeCasted && diffusal.CanHit(this.CurrentTarget))
             {
                 var useDiffu = this.CurrentTarget.IsEthereal() && !this.Owner.HasModifier(bladeFury.ModifierName);
+
                 // Log.Debug($"{targetDistance} > {attackRange * 1.2f} && {this.CurrentTarget.MovementSpeed} > {this.Owner.MovementSpeed * 1.1f}");
-                if (!useDiffu && !this.CurrentTarget.IsStunned() && this.CurrentTarget.IsMoving && !this.CurrentTarget.HasModifier(diffusal.TargetModifierName) 
-                    && targetDistance > attackRange * 1.4f && this.CurrentTarget.MovementSpeed > this.Owner.MovementSpeed)
+                if (!useDiffu
+                    && !this.CurrentTarget.IsStunned()
+                    && this.CurrentTarget.IsMoving
+                    && !this.CurrentTarget.HasModifier(diffusal.TargetModifierName)
+                    && targetDistance > (attackRange * 1.4f)
+                    && this.CurrentTarget.MovementSpeed > this.Owner.MovementSpeed)
                 {
                     useDiffu = true;
                 }
@@ -231,10 +257,16 @@ namespace Vaper.OrbwalkingModes
             if (bladeFury != null && bladeFury.CanBeCasted && bladeFury.CanHit(this.CurrentTarget))
             {
                 // Log.Debug($"bf dmg vs autoattack: {bladeFury.GetTickDamage(this.CurrentTarget)} > {this.Owner.GetAttackDamage(this.CurrentTarget) * bladeFury.TickRate}");
-                var enemyCount = EntityManager<Hero>.Entities.Count(x => x.IsAlive && x.IsVisible && x != this.CurrentTarget && x.Team != this.Owner.Team && !x.IsIllusion && x.Distance2D(this.CurrentTarget) < 800);
-                if (enemyCount > 1 || 
-                    (bladeFury.GetTickDamage(this.CurrentTarget) > this.Owner.GetAttackDamage(this.CurrentTarget) * bladeFury.TickRate 
-                    && bladeFury.GetTotalDamage(this.CurrentTarget) >= 0.5f * this.CurrentTarget.Health))
+                var enemyCount = EntityManager<Hero>.Entities.Count(
+                    x => x.IsAlive
+                         && x.IsVisible
+                         && x != this.CurrentTarget
+                         && this.Owner.IsEnemy(x)
+                         && !x.IsIllusion
+                         && x.Distance2D(this.CurrentTarget) < 800);
+                if (enemyCount > 1
+                    || (bladeFury.GetTickDamage(this.CurrentTarget) > (this.Owner.GetAttackDamage(this.CurrentTarget) * bladeFury.TickRate)
+                    && bladeFury.GetTotalDamage(this.CurrentTarget) >= (0.5f * this.CurrentTarget.Health)))
                 {
                     bladeFury.UseAbility();
                     await Task.Delay(bladeFury.GetCastDelay(), token);
@@ -249,7 +281,6 @@ namespace Vaper.OrbwalkingModes
             {
                 this.hero.Ensage.Orbwalker.Active.OrbwalkTo(this.CurrentTarget);
             }
-           
         }
     }
 }
