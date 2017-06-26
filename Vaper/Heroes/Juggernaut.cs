@@ -165,6 +165,7 @@ namespace Vaper.Heroes
             this.OmniBlink.PropertyChanged += this.OmniBlinkOnPropertyChanged;
             this.ControlWard = factory.Item("Control Healing Ward", true);
             this.ControlWard.PropertyChanged += this.ControlWardPropertyChanged;
+            this.BladeFuryMoveOnly = factory.Item("Bladefury move only", true);
 
             Entity.OnInt32PropertyChange += this.OnNetworkActivity;
             if (this.CritIndicator)
@@ -182,6 +183,8 @@ namespace Vaper.Heroes
                 ObjectManager.OnAddEntity += this.OnHealingWardAdded;
             }
         }
+
+        public MenuItem<bool> BladeFuryMoveOnly { get; private set; }
 
         protected override void OnDeactivate()
         {

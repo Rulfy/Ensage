@@ -58,8 +58,11 @@ namespace Vaper
 
                 this.Killsteal = this.Factory.Item("Killsteal", true);
                 this.DrawTargetLine = this.Factory.Item("Draw Target Line", true);
+                this.LockTarget = this.Factory.Item("Lock Target", true);
                 this.ComboKey = this.Factory.Item("Combo Key", new KeyBind(32));
             }
+
+            public MenuItem<bool> LockTarget { get; }
 
             public MenuItem<KeyBind> ComboKey { get; }
 
@@ -97,9 +100,7 @@ namespace Vaper
 
             public HeroMenu(MenuFactory factory, string heroName)
             {
-                this.Factory = factory.Menu("Hero");
-                this.Factory.Target.TextureName = heroName;
-                this.Factory.Target.ShowTextWithTexture = true;
+                this.Factory = factory.MenuWithTexture(Game.Localize(heroName), heroName);
             }
 
             public MenuFactory Factory { get; }

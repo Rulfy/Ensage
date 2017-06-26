@@ -25,10 +25,8 @@ namespace Vaper.OrbwalkingModes
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
-            if (!this.hero.Owner.IsAlive || this.hero.IsKillstealing)
+            if (!await this.ShouldExecute(token))
             {
-                this.CurrentTarget = null;
-                await Task.Delay(125, token);
                 return;
             }
 
@@ -36,69 +34,70 @@ namespace Vaper.OrbwalkingModes
             var forceStaffReady = forceStaff != null && forceStaff.CanBeCasted;
 
             var blink = this.hero.Blink;
-            var maxRange = blink?.CastRange * 1.5f ?? 1000.0f;
-
-            var target = this.hero.Ensage.TargetSelector.Active.GetTargets().FirstOrDefault(x => x.Distance2D(this.Owner) <= maxRange);
-            this.CurrentTarget = target;
-            if (target == null)
+            if (blink != null)
+            {
+                this.MaxTargetRange = blink.CastRange * 1.5f;
+            }
+           
+            if (this.CurrentTarget == null || !this.CurrentTarget.IsVisible)
             {
                 this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
                 return;
             }
 
             var cullingBlade = this.hero.CullingBlade;
-            var cullingBladeKill = cullingBlade != null && cullingBlade.CanBeCasted && cullingBlade.GetDamage(target) > target.Health && (!target.IsLinkensProtected() || forceStaffReady);
+            var cullingBladeKill = cullingBlade != null && cullingBlade.CanBeCasted && cullingBlade.GetDamage(this.CurrentTarget) > this.CurrentTarget.Health && (!this.CurrentTarget.IsLinkensProtected() || forceStaffReady);
 
             var call = this.hero.Call;
 
-            if (blink != null && blink.CanBeCasted && blink.CanHit(target))
+            if (blink != null && blink.CanBeCasted && blink.CanHit(this.CurrentTarget))
             {
                 // only blink when we can call or use ult to kill him
-                if ((call != null && call.CanBeCasted && !call.CanHit(target)) || (cullingBladeKill && !cullingBlade.CanHit(target)))
+                if ((call != null && call.CanBeCasted && !call.CanHit(this.CurrentTarget)) || (cullingBladeKill && !cullingBlade.CanHit(this.CurrentTarget)))
                 {
                     // TODO: get best blink location with prediction to hit target + max other targets
-                    var blinkPos = target.IsMoving ? target.InFront(75) : target.Position;
+                    var blinkPos = this.CurrentTarget.IsMoving ? this.CurrentTarget.InFront(75) : this.CurrentTarget.Position;
                     blink.UseAbility(blinkPos);
                     await Task.Delay(blink.GetCastDelay(blinkPos), token);
                 }
             }
 
-            if (cullingBladeKill && cullingBlade.CanHit(target))
+            if (cullingBladeKill && cullingBlade.CanHit(this.CurrentTarget))
             {
                 // break linkens with forcestaff
-                if (forceStaffReady && target.IsLinkensProtected())
+                if (forceStaffReady && this.CurrentTarget.IsLinkensProtected())
                 {
-                    forceStaff.UseAbility(target);
-                    await Task.Delay(forceStaff.GetCastDelay(target), token);
+                    forceStaff.UseAbility(this.CurrentTarget);
+                    await Task.Delay(forceStaff.GetCastDelay(this.CurrentTarget), token);
                 }
 
-                cullingBlade.UseAbility(target);
-                await Task.Delay(cullingBlade.GetCastDelay(target), token);
+                cullingBlade.UseAbility(this.CurrentTarget);
+                await Task.Delay(cullingBlade.GetCastDelay(this.CurrentTarget), token);
             }
             else
             {
                 if (call != null && call.CanBeCasted)
                 {
-                    var canHit = call.CanHit(target);
+                    var canHit = call.CanHit(this.CurrentTarget);
                     if (!canHit && forceStaffReady)
                     {
                         // check if we can move the enemy with forcestaff into our call
-                        if (!target.IsRotating() && !target.IsLinkensProtected() && this.Owner.Distance2D(target.InFront(forceStaff.PushLength)) < call.Radius)
+                        if (!this.CurrentTarget.IsRotating() && !this.CurrentTarget.IsLinkensProtected() && this.Owner.Distance2D(this.CurrentTarget.InFront(forceStaff.PushLength)) < call.Radius)
                         {
-                            forceStaff.UseAbility(target);
+                            forceStaff.UseAbility(this.CurrentTarget);
                             var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
-                            await Task.Delay(forceStaff.GetCastDelay(target) + travelTime, token);
+                            await Task.Delay(forceStaff.GetCastDelay(this.CurrentTarget) + travelTime, token);
                         }
 
                         // check if we can move us with forcestaff to the enemy to call
-                        else if (!this.Owner.IsRotating() && target.Distance2D(this.Owner.InFront(forceStaff.PushLength)) < call.Radius)
+                        else if (!this.Owner.IsRotating() && this.CurrentTarget.Distance2D(this.Owner.InFront(forceStaff.PushLength)) < call.Radius)
                         {
                             forceStaff.UseAbility(this.Owner);
                             var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
                             await Task.Delay(forceStaff.GetCastDelay() + travelTime, token);
                         }
 
-                        canHit = call.CanHit(target);
+                        canHit = call.CanHit(this.CurrentTarget);
                     }
 
                     if (canHit)
@@ -123,7 +122,7 @@ namespace Vaper.OrbwalkingModes
                 }
             }
 
-            this.hero.Ensage.Orbwalker.Active.OrbwalkTo(target);
+            this.hero.Ensage.Orbwalker.Active.OrbwalkTo(this.CurrentTarget);
         }
     }
 }
