@@ -241,6 +241,12 @@ namespace Vaper.Heroes
             var healingRadius = this.HealingWard.Radius;
             while ((this.healingWardUnit != null) && this.healingWardUnit.IsValid && this.healingWardUnit.IsAlive)
             {
+                if (Game.IsPaused)
+                {
+                    await Task.Delay(125, token);
+                    continue;
+                }
+
                 var enemyHeroes = EntityManager<Hero>.Entities.Where(x => x.IsAlive && x.IsVisible && (x.Team != team) && (x.Distance2D(this.healingWardUnit) < 1000)).ToList();
                 var alliedHeroes = EntityManager<Hero>
                     .Entities.Where(x => x.IsAlive && x.IsVisible && (x.Team == team) && (x.HealthPercent() <= 0.9f) && (x.Distance2D(this.healingWardUnit) < 800))
