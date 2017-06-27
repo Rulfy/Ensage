@@ -57,7 +57,7 @@ namespace Vaper
                 this.Factory = factory.Menu("General");
 
                 this.Killsteal = this.Factory.Item("Killsteal", true);
-                this.DrawTargetLine.Item.Tooltip = "Enables killstealing.";
+                this.Killsteal.Item.Tooltip = "Enables killstealing.";
 
                 this.DrawTargetLine = this.Factory.Item("Draw Target Line", true);
                 this.DrawTargetLine.Item.Tooltip = "Draws a line to your target";
