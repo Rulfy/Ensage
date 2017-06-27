@@ -63,5 +63,17 @@ namespace Vaper
 
             return true;
         }
+
+        protected void OrbwalkToTarget()
+        {
+            if (!this.baseHero.Menu.General.KiteMode || this.Owner.Distance2D(this.CurrentTarget) <= this.Owner.AttackRange(this.CurrentTarget))
+            {
+                this.baseHero.Ensage.Orbwalker.Active.OrbwalkTo(this.CurrentTarget);
+            }
+            else
+            {
+                this.baseHero.Ensage.Orbwalker.Active.OrbwalkTo(null);
+            }
+        }
     }
 }

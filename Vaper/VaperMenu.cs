@@ -57,8 +57,17 @@ namespace Vaper
                 this.Factory = factory.Menu("General");
 
                 this.Killsteal = this.Factory.Item("Killsteal", true);
+                this.DrawTargetLine.Item.Tooltip = "Enables killstealing.";
+
                 this.DrawTargetLine = this.Factory.Item("Draw Target Line", true);
+                this.DrawTargetLine.Item.Tooltip = "Draws a line to your target";
+
                 this.LockTarget = this.Factory.Item("Lock Target", true);
+                this.LockTarget.Item.Tooltip = "Keep your target until it's dead or you release the key.";
+
+                this.KiteMode = this.Factory.Item("Kite mode", true);
+                this.KiteMode.Item.Tooltip = "Only attack when in attack range.";
+
                 this.ComboKey = this.Factory.Item("Combo Key", new KeyBind(32));
             }
 
@@ -69,6 +78,8 @@ namespace Vaper
             public MenuFactory Factory { get; }
 
             public MenuItem<bool> Killsteal { get; }
+
+            public MenuItem<bool> KiteMode { get; }
 
             public MenuItem<bool> LockTarget { get; }
 

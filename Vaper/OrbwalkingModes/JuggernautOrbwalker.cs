@@ -279,7 +279,7 @@ namespace Vaper.OrbwalkingModes
             }
             else
             {
-                this.hero.Ensage.Orbwalker.Active.OrbwalkTo(this.CurrentTarget);
+                this.OrbwalkToTarget();
             }
         }
     }
