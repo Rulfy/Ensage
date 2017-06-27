@@ -71,7 +71,7 @@ namespace Vaper.Heroes
 
         protected override async Task OnKillsteal(CancellationToken token)
         {
-            if (!this.Owner.IsAlive || !this.Nova.CanBeCasted)
+            if (!this.Owner.IsAlive || !this.Nova.CanBeCasted || this.Owner.IsChanneling())
             {
                 await Task.Delay(125, token);
                 return;
@@ -87,7 +87,7 @@ namespace Vaper.Heroes
 
             if (killstealTarget != null)
             {
-                if (this.Nova.UseAbility(killstealTarget.Position))
+                if (this.Nova.UseAbility(killstealTarget))
                 {
                     var castDelay = this.Nova.GetCastDelay(killstealTarget);
                     await this.AwaitKillstealDelay(castDelay, token);
