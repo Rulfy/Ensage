@@ -19,14 +19,13 @@ namespace Vaper.Heroes
 
     using Vaper.OrbwalkingModes;
 
+    [PublicAPI]
     [ExportHero(HeroId.npc_dota_hero_crystal_maiden)]
     public class CrystalMaiden : BaseHero
     {
-        [PublicAPI]
         [ItemBinding]
         public item_black_king_bar Bkb { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_blink Blink { get; private set; }
 
@@ -34,17 +33,14 @@ namespace Vaper.Heroes
 
         public crystal_maiden_frostbite Frostbite { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_glimmer_cape GlimmerCape { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_lotus_orb Lotus { get; private set; }
 
         public crystal_maiden_crystal_nova Nova { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_veil_of_discord Veil { get; private set; }
 

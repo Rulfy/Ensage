@@ -35,6 +35,7 @@ namespace Vaper.Heroes
 
     using Color = System.Drawing.Color;
 
+    [PublicAPI]
     [ExportHero(HeroId.npc_dota_hero_juggernaut)]
     public class Juggernaut : BaseHero
     {
@@ -44,7 +45,6 @@ namespace Vaper.Heroes
 
         private float lastAttackTime;
 
-        [PublicAPI]
         [ItemBinding]
         public item_abyssal_blade AbyssalBlade { get; private set; }
 
@@ -52,7 +52,6 @@ namespace Vaper.Heroes
 
         public MenuItem<bool> BladeFuryMoveOnly { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_blink Blink { get; private set; }
 
@@ -79,11 +78,9 @@ namespace Vaper.Heroes
 
         public juggernaut_healing_ward HealingWard { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_manta Manta { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_mjollnir Mjollnir { get; private set; }
 
@@ -91,11 +88,9 @@ namespace Vaper.Heroes
 
         public juggernaut_omni_slash OmniSlash { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         protected item_diffusal_blade Diffu1 { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         protected item_diffusal_blade_2 Diffu2 { get; private set; }
 

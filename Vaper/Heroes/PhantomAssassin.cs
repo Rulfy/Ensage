@@ -27,10 +27,10 @@ namespace Vaper.Heroes
 
     using Color = System.Drawing.Color;
 
+    [PublicAPI]
     [ExportHero(HeroId.npc_dota_hero_phantom_assassin)]
     public class PhantomAssassin : BaseHero
     {
-        [PublicAPI]
         [ItemBinding]
         public item_abyssal_blade AbyssalBlade { get; private set; }
 

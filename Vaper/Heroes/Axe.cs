@@ -19,14 +19,13 @@ namespace Vaper.Heroes
 
     using Vaper.OrbwalkingModes;
 
+    [PublicAPI]
     [ExportHero(HeroId.npc_dota_hero_axe)]
     public class Axe : BaseHero
     {
-        [PublicAPI]
         [ItemBinding]
         internal item_blade_mail BladeMail { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         internal item_blink Blink { get; private set; }
 
@@ -34,11 +33,9 @@ namespace Vaper.Heroes
 
         internal axe_culling_blade CullingBlade { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         internal item_force_staff ForceStaff { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         internal item_lotus_orb LotusOrb { get; private set; }
 

@@ -31,12 +31,12 @@ namespace Vaper.Heroes
 
     using Color = System.Drawing.Color;
 
+    [PublicAPI]
     [ExportHero(HeroId.npc_dota_hero_alchemist)]
     public class Alchemist : BaseHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        [PublicAPI]
         [ItemBinding]
         public item_abyssal_blade AbyssalBlade { get; private set; }
 
@@ -44,11 +44,9 @@ namespace Vaper.Heroes
 
         public TaskHandler AlchemistController { get; set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_armlet Armlet { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_silver_edge BreakBlade { get; private set; }
 
@@ -77,15 +75,12 @@ namespace Vaper.Heroes
 
         public float LastHitTime { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_manta Manta { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_medallion_of_courage Medallion { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_mjollnir Mjollnir { get; private set; }
 
@@ -93,11 +88,9 @@ namespace Vaper.Heroes
 
         public alchemist_chemical_rage Rage { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_invis_sword ShadowBlade { get; private set; }
 
-        [PublicAPI]
         [ItemBinding]
         public item_solar_crest SolarCrest { get; private set; }
 
