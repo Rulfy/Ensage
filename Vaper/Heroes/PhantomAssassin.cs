@@ -58,8 +58,6 @@ namespace Vaper.Heroes
         protected override void OnActivate()
         {
             base.OnActivate();
-            this.Ensage.Inventory.Attach(this);
-
             this.Dagger = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_stifling_dagger>();
             this.PhantomStrike = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_phantom_strike>();
             this.Blur = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_blur>();
@@ -89,7 +87,6 @@ namespace Vaper.Heroes
             Entity.OnInt32PropertyChange -= this.OnNetworkActivity;
             this.Ensage.Renderer.Draw -= this.OnDraw;
 
-            this.Ensage.Inventory.Detach(this);
             base.OnDeactivate();
         }
 

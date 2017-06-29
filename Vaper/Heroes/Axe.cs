@@ -47,16 +47,9 @@ namespace Vaper.Heroes
         protected override void OnActivate()
         {
             base.OnActivate();
-            this.Ensage.Inventory.Attach(this);
 
             this.Call = this.Ensage.AbilityFactory.GetAbility<axe_berserkers_call>();
             this.CullingBlade = this.Ensage.AbilityFactory.GetAbility<axe_culling_blade>();
-        }
-
-        protected override void OnDeactivate()
-        {
-            this.Ensage.Inventory.Detach(this);
-            base.OnDeactivate();
         }
 
         protected override async Task OnKillsteal(CancellationToken token)

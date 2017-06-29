@@ -102,7 +102,6 @@ namespace Vaper.Heroes
         protected override void OnActivate()
         {
             base.OnActivate();
-            this.Ensage.Inventory.Attach(this);
 
             this.Player = ObjectManager.LocalPlayer;
 
@@ -118,7 +117,7 @@ namespace Vaper.Heroes
             Unit.OnModifierAdded += this.OnConcoction;
             Entity.OnParticleEffectAdded += this.OnLastHit;
             this.AlchemistController = UpdateManager.Run(this.OnUpdate);
-            Player.OnExecuteOrder += this.Player_OnExecuteOrder;
+            Player.OnExecuteOrder += this.OnExecuteOrder;
 
             if (this.LastHitIndicator)
             {
@@ -128,7 +127,7 @@ namespace Vaper.Heroes
 
         protected override void OnDeactivate()
         {
-            Player.OnExecuteOrder -= this.Player_OnExecuteOrder;
+            Player.OnExecuteOrder -= this.OnExecuteOrder;
             this.Ensage.Renderer.Draw -= this.OnDraw;
             this.AlchemistController.Cancel();
             Entity.OnParticleEffectAdded -= this.OnLastHit;
@@ -136,7 +135,6 @@ namespace Vaper.Heroes
 
             this.LastHitIndicator.PropertyChanged -= this.LastHitIndicatorPropertyChanged;
 
-            this.Ensage.Inventory.Detach(this);
             base.OnDeactivate();
         }
 
@@ -277,7 +275,7 @@ namespace Vaper.Heroes
             await Task.Delay(125, token);
         }
 
-        private void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
+        private void OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
         {
             if ((this.Armlet != null) && args.IsPlayerInput && (args.OrderId == OrderId.ToggleAbility) && (args.Ability == this.Armlet.Ability))
             {

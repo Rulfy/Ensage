@@ -52,17 +52,10 @@ namespace Vaper.Heroes
         protected override void OnActivate()
         {
             base.OnActivate();
-            this.Ensage.Inventory.Attach(this);
 
             this.Nova = this.Ensage.AbilityFactory.GetAbility<crystal_maiden_crystal_nova>();
             this.Frostbite = this.Ensage.AbilityFactory.GetAbility<crystal_maiden_frostbite>();
             this.FreezingField = this.Ensage.AbilityFactory.GetAbility<crystal_maiden_freezing_field>();
-        }
-
-        protected override void OnDeactivate()
-        {
-            this.Ensage.Inventory.Detach(this);
-            base.OnDeactivate();
         }
 
         protected override async Task OnKillsteal(CancellationToken token)

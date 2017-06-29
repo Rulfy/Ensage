@@ -106,7 +106,6 @@ namespace Vaper.Heroes
         protected override void OnActivate()
         {
             base.OnActivate();
-            this.Ensage.Inventory.Attach(this);
 
             this.BladeFury = this.Ensage.AbilityFactory.GetAbility<juggernaut_blade_fury>();
             this.HealingWard = this.Ensage.AbilityFactory.GetAbility<juggernaut_healing_ward>();
@@ -155,7 +154,6 @@ namespace Vaper.Heroes
 
             this.OmniBlinkHandler.Cancel();
 
-            this.Ensage.Inventory.Detach(this);
             base.OnDeactivate();
         }
 

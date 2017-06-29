@@ -76,6 +76,7 @@ namespace Vaper
 
         protected override void OnActivate()
         {
+            this.Ensage.Inventory.Attach(this);
             this.Owner = (Hero)this.Ensage.Context.Owner;
             this.Menu = new VaperMenu(this.Owner.HeroId);
 
@@ -130,6 +131,8 @@ namespace Vaper
 
         protected override void OnDeactivate()
         {
+            this.Ensage.Inventory.Detach(this);
+
             this.Ensage.Inventory.CollectionChanged -= this.InventoryChanged;
             this.Menu.General.Killsteal.PropertyChanged -= this.KillstealPropertyChanged;
             this.Menu.General.DrawTargetLine.PropertyChanged -= this.DrawTargetLinePropertyChanged;
