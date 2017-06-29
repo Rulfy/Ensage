@@ -108,6 +108,7 @@ namespace Vaper.OrbwalkingModes
             }
 
             var hook = this.hero.Hook;
+            var urn = this.hero.Urn;
 
             if (hook.CanBeCasted && hook.CanHit(this.CurrentTarget))
             {
@@ -167,6 +168,12 @@ namespace Vaper.OrbwalkingModes
                                 }
                             }
 
+                            if (urn != null && urn.CanBeCasted && urn.CanHit(this.CurrentTarget) && !this.CurrentTarget.HasModifier(urn.TargetModifierName))
+                            {
+                                urn.UseAbility(this.CurrentTarget);
+                                await Task.Delay(urn.GetCastDelay(this.CurrentTarget), token);
+                            }
+
                             var canUltHit = await KeepTrying(
                                                 () =>
                                                     {
@@ -219,6 +226,12 @@ namespace Vaper.OrbwalkingModes
 
                     if (ult.CanHit(this.CurrentTarget))
                     {
+                        if (urn != null && urn.CanBeCasted && urn.CanHit(this.CurrentTarget) && !this.CurrentTarget.HasModifier(urn.TargetModifierName))
+                        {
+                            urn.UseAbility(this.CurrentTarget);
+                            await Task.Delay(urn.GetCastDelay(this.CurrentTarget), token);
+                        }
+
                         ult.UseAbility(this.CurrentTarget);
                         await Task.Delay(ult.GetCastDelay(this.CurrentTarget) + 500, token);
                         return;

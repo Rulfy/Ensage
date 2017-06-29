@@ -62,6 +62,9 @@ namespace Vaper.Heroes
         [ItemBinding]
         public item_soul_ring SoulRing { get; private set; }
 
+        [ItemBinding]
+        public item_urn_of_shadows Urn { get; private set; }
+
         protected override VaperOrbwalkingMode GetOrbwalkingMode()
         {
             return new PudgeOrbwalker(this);
