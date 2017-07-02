@@ -59,81 +59,84 @@ namespace Vaper.OrbwalkingModes
             var ult = this.hero.FreezingField;
             var veil = this.hero.Veil;
             var frostbite = this.hero.Frostbite;
-           
-            // blink ult combo
-            if ((blink != null) && blink.CanBeCasted && blink.CanHit(this.CurrentTarget))
+
+            if (!this.CurrentTarget.IsIllusion)
             {
-                var useBlink = false;
-                if ((ult != null) && ult.CanBeCasted)
+                // blink ult combo
+                if ((blink != null) && blink.CanBeCasted && blink.CanHit(this.CurrentTarget))
                 {
-                    var enemyCount = EntityManager<Hero>.Entities.Count(
-                        x => x.IsAlive
-                             && x.IsVisible
-                             && (x != this.CurrentTarget)
-                             && this.Owner.IsEnemy(x)
-                             && !x.IsIllusion
-                             && (x.Distance2D(this.CurrentTarget) <= ult.Radius));
-
-                    useBlink = ((this.CurrentTarget.Health * 3) > ult.GetDamage(this.CurrentTarget)) && (enemyCount == 0);
-
-                    // Log.Debug($"{useBlink} - {this.CurrentTarget.Health*3} > {ult.GetDamage(this.CurrentTarget)} && {enemyCount}");
-                    if (!useBlink)
+                    var useBlink = false;
+                    if ((ult != null) && ult.CanBeCasted)
                     {
-                        var allyCount = EntityManager<Hero>.Entities.Count(
+                        var enemyCount = EntityManager<Hero>.Entities.Count(
                             x => x.IsAlive
                                  && x.IsVisible
-                                 && (x != this.Owner)
-                                 && (this.Owner.Team == x.Team)
+                                 && (x != this.CurrentTarget)
+                                 && this.Owner.IsEnemy(x)
                                  && !x.IsIllusion
                                  && (x.Distance2D(this.CurrentTarget) <= ult.Radius));
 
-                        useBlink = (enemyCount >= 1) && (enemyCount <= allyCount);
-                    }
-                }
+                        useBlink = ((this.CurrentTarget.Health * 3) > ult.GetDamage(this.CurrentTarget)) && (enemyCount == 0);
 
-                if (useBlink)
-                {
-                    var bkb = this.hero.Bkb;
-                    if ((bkb != null) && bkb.CanBeCasted)
+                        // Log.Debug($"{useBlink} - {this.CurrentTarget.Health*3} > {ult.GetDamage(this.CurrentTarget)} && {enemyCount}");
+                        if (!useBlink)
+                        {
+                            var allyCount = EntityManager<Hero>.Entities.Count(
+                                x => x.IsAlive
+                                     && x.IsVisible
+                                     && (x != this.Owner)
+                                     && (this.Owner.Team == x.Team)
+                                     && !x.IsIllusion
+                                     && (x.Distance2D(this.CurrentTarget) <= ult.Radius));
+
+                            useBlink = (enemyCount >= 1) && (enemyCount <= allyCount);
+                        }
+                    }
+
+                    if (useBlink)
                     {
-                        bkb.UseAbility();
-                        await Task.Delay(bkb.GetCastDelay(), token);
+                        var bkb = this.hero.Bkb;
+                        if ((bkb != null) && bkb.CanBeCasted)
+                        {
+                            bkb.UseAbility();
+                            await Task.Delay(bkb.GetCastDelay(), token);
+                        }
+
+                        var glimmer = this.hero.GlimmerCape;
+                        if ((glimmer != null) && this.Owner.CanCastAbilities(glimmer, ult))
+                        {
+                            glimmer.UseAbility(this.Owner);
+                            await Task.Delay(glimmer.GetCastDelay(), token);
+                        }
+
+                        var blinkPos = (this.Owner.Position - this.CurrentTarget.Position).Normalized();
+                        blinkPos = this.CurrentTarget.Position + (blinkPos * ult.MinimumExplosionDistance * 2.0f);
+                        blink.UseAbility(blinkPos);
+                        await Task.Delay(blink.GetCastDelay(blinkPos), token);
+
+                        if ((veil != null) && this.Owner.CanCastAbilities(veil, ult) && veil.CanHit(this.CurrentTarget))
+                        {
+                            veil.UseAbility(this.CurrentTarget.Position);
+                            await Task.Delay(veil.GetCastDelay(this.CurrentTarget.Position), token);
+                        }
+
+                        var lotus = this.hero.Lotus;
+                        if ((lotus != null) && this.Owner.CanCastAbilities(lotus, ult) && lotus.CanHit(this.CurrentTarget))
+                        {
+                            lotus.UseAbility(this.Owner);
+                            await Task.Delay(lotus.GetCastDelay(), token);
+                        }
+
+                        if ((frostbite != null) && this.Owner.CanCastAbilities(frostbite, ult) && frostbite.CanHit(this.CurrentTarget))
+                        {
+                            frostbite.UseAbility(this.CurrentTarget);
+                            await Task.Delay(frostbite.GetCastDelay(this.CurrentTarget) + 500, token); // bro science
+                        }
+
+                        ult.UseAbility();
+                        await Task.Delay(ult.GetCastDelay() + 500, token);
+                        return;
                     }
-
-                    var glimmer = this.hero.GlimmerCape;
-                    if ((glimmer != null) && this.Owner.CanCastAbilities(glimmer, ult))
-                    {
-                        glimmer.UseAbility(this.Owner);
-                        await Task.Delay(glimmer.GetCastDelay(), token);
-                    }
-
-                    var blinkPos = (this.Owner.Position - this.CurrentTarget.Position).Normalized();
-                    blinkPos = this.CurrentTarget.Position + (blinkPos * ult.MinimumExplosionDistance * 2.0f);
-                    blink.UseAbility(blinkPos);
-                    await Task.Delay(blink.GetCastDelay(blinkPos), token);
-
-                    if ((veil != null) && this.Owner.CanCastAbilities(veil, ult) && veil.CanHit(this.CurrentTarget))
-                    {
-                        veil.UseAbility(this.CurrentTarget.Position);
-                        await Task.Delay(veil.GetCastDelay(this.CurrentTarget.Position), token);
-                    }
-
-                    var lotus = this.hero.Lotus;
-                    if ((lotus != null) && this.Owner.CanCastAbilities(lotus, ult) && lotus.CanHit(this.CurrentTarget))
-                    {
-                        lotus.UseAbility(this.Owner);
-                        await Task.Delay(lotus.GetCastDelay(), token);
-                    }
-
-                    if ((frostbite != null) && this.Owner.CanCastAbilities(frostbite, ult) && frostbite.CanHit(this.CurrentTarget))
-                    {
-                        frostbite.UseAbility(this.CurrentTarget);
-                        await Task.Delay(frostbite.GetCastDelay(this.CurrentTarget) + 500, token); // bro science
-                    }
-
-                    ult.UseAbility();
-                    await Task.Delay(ult.GetCastDelay() + 500, token);
-                    return;
                 }
             }
 
@@ -163,55 +166,58 @@ namespace Vaper.OrbwalkingModes
                 }
             }
 
-            // Log.Debug($"disabled {ult != null} && {ult.CanBeCasted} && {ult.CanHit(this.CurrentTarget)}");
-            if ((ult != null) && ult.CanBeCasted && ult.CanHit(this.CurrentTarget))
+            if (!this.CurrentTarget.IsIllusion)
             {
-                var enemyCount = EntityManager<Hero>.Entities.Count(
-                    x => x.IsAlive
-                            && x.IsVisible
-                            && (x != this.CurrentTarget)
-                            && this.Owner.IsEnemy(x)
-                            && !x.IsIllusion
-                            && (x.Distance2D(this.Owner) <= ult.Radius));
-
-                if (enemyCount >= 1 || (!notDisabled && (this.CurrentTarget.Health * 3) > ult.GetDamage(this.CurrentTarget)))
+                // Log.Debug($"disabled {ult != null} && {ult.CanBeCasted} && {ult.CanHit(this.CurrentTarget)}");
+                if ((ult != null) && ult.CanBeCasted && ult.CanHit(this.CurrentTarget))
                 {
-                    var bkb = this.hero.Bkb;
-                    if ((bkb != null) && bkb.CanBeCasted)
-                    {
-                        bkb.UseAbility();
-                        await Task.Delay(bkb.GetCastDelay(), token);
-                    }
+                    var enemyCount = EntityManager<Hero>.Entities.Count(
+                        x => x.IsAlive
+                             && x.IsVisible
+                             && (x != this.CurrentTarget)
+                             && this.Owner.IsEnemy(x)
+                             && !x.IsIllusion
+                             && (x.Distance2D(this.Owner) <= ult.Radius));
 
-                    var glimmer = this.hero.GlimmerCape;
-                    if ((glimmer != null) && this.Owner.CanCastAbilities(glimmer, ult))
+                    if (enemyCount >= 1 || (!notDisabled && (this.CurrentTarget.Health * 3) > ult.GetDamage(this.CurrentTarget)))
                     {
-                        glimmer.UseAbility(this.Owner);
-                        await Task.Delay(glimmer.GetCastDelay(), token);
-                    }
+                        var bkb = this.hero.Bkb;
+                        if ((bkb != null) && bkb.CanBeCasted)
+                        {
+                            bkb.UseAbility();
+                            await Task.Delay(bkb.GetCastDelay(), token);
+                        }
 
-                    if ((veil != null) && this.Owner.CanCastAbilities(veil, ult) && veil.CanHit(this.CurrentTarget))
-                    {
-                        veil.UseAbility(this.CurrentTarget.Position);
-                        await Task.Delay(veil.GetCastDelay(this.CurrentTarget.Position), token);
-                    }
+                        var glimmer = this.hero.GlimmerCape;
+                        if ((glimmer != null) && this.Owner.CanCastAbilities(glimmer, ult))
+                        {
+                            glimmer.UseAbility(this.Owner);
+                            await Task.Delay(glimmer.GetCastDelay(), token);
+                        }
 
-                    var lotus = this.hero.Lotus;
-                    if ((lotus != null) && this.Owner.CanCastAbilities(lotus, ult) && lotus.CanHit(this.CurrentTarget))
-                    {
-                        lotus.UseAbility(this.Owner);
-                        await Task.Delay(lotus.GetCastDelay(), token);
-                    }
+                        if ((veil != null) && this.Owner.CanCastAbilities(veil, ult) && veil.CanHit(this.CurrentTarget))
+                        {
+                            veil.UseAbility(this.CurrentTarget.Position);
+                            await Task.Delay(veil.GetCastDelay(this.CurrentTarget.Position), token);
+                        }
 
-                    if ((frostbite != null) && this.Owner.CanCastAbilities(frostbite, ult) && frostbite.CanHit(this.CurrentTarget))
-                    {
-                        frostbite.UseAbility(this.CurrentTarget);
-                        await Task.Delay(frostbite.GetCastDelay(this.CurrentTarget) + 500, token); // bro science
-                    }
+                        var lotus = this.hero.Lotus;
+                        if ((lotus != null) && this.Owner.CanCastAbilities(lotus, ult) && lotus.CanHit(this.CurrentTarget))
+                        {
+                            lotus.UseAbility(this.Owner);
+                            await Task.Delay(lotus.GetCastDelay(), token);
+                        }
 
-                    ult.UseAbility();
-                    await Task.Delay(ult.GetCastDelay() + 500, token);
-                    return;
+                        if ((frostbite != null) && this.Owner.CanCastAbilities(frostbite, ult) && frostbite.CanHit(this.CurrentTarget))
+                        {
+                            frostbite.UseAbility(this.CurrentTarget);
+                            await Task.Delay(frostbite.GetCastDelay(this.CurrentTarget) + 500, token); // bro science
+                        }
+
+                        ult.UseAbility();
+                        await Task.Delay(ult.GetCastDelay() + 500, token);
+                        return;
+                    }
                 }
             }
 

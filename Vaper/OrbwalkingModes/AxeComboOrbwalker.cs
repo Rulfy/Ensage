@@ -4,15 +4,22 @@
 
 namespace Vaper.OrbwalkingModes
 {
+    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
 
     using Ensage.SDK.Extensions;
 
+    using log4net;
+
+    using PlaySharp.Toolkit.Logging;
+
     using Vaper.Heroes;
 
     public class AxeComboOrbwalker : VaperOrbwalkingMode
     {
+        private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         private readonly Axe hero;
 
         public AxeComboOrbwalker(Axe hero)
@@ -51,8 +58,11 @@ namespace Vaper.OrbwalkingModes
 
             var call = this.hero.Call;
 
-            if ((blink != null) && blink.CanBeCasted && blink.CanHit(this.CurrentTarget))
+           // Log.Debug($"{blink != null} && {blink?.CanBeCasted} && {blink?.CanHit(this.CurrentTarget)}");
+           // Log.Debug($"{call != null} && {call.CanBeCasted} && {!call.CanHit(this.CurrentTarget)} || {cullingBlade}");
+            if ((blink != null) && blink.CanBeCasted && blink.CanHit(this.CurrentTarget) && !this.CurrentTarget.IsIllusion)
             {
+               
                 // only blink when we can call or use ult to kill him
                 if (((call != null) && call.CanBeCasted && !call.CanHit(this.CurrentTarget)) || (cullingBladeKill && !cullingBlade.CanHit(this.CurrentTarget)))
                 {

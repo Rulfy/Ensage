@@ -68,6 +68,7 @@
     <Compile Include="Heroes\CrystalMaiden.cs" />
     <Compile Include="Heroes\PhantomAssassin.cs" />
     <Compile Include="Heroes\Pudge.cs" />
+    <Compile Include="Heroes\Undying.cs" />
     <Compile Include="OrbwalkingModes\AlchemistComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\JuggernautOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\CrystalMaidenOrbwalker.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="IHeroMetadata.cs" />
     <Compile Include="IEnsageWorkUnit.cs" />
     <Compile Include="OrbwalkingModes\PudgeOrbwalker.cs" />
+    <Compile Include="OrbwalkingModes\UndyingOrbwalker.cs" />
     <Compile Include="VaperOrbwalkingMode.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

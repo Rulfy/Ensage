@@ -66,6 +66,12 @@ namespace Vaper.OrbwalkingModes
                 return;
             }
 
+            if (this.CurrentTarget.IsIllusion)
+            {
+                this.OrbwalkToTarget();
+                return;
+            }
+
             var omni = this.hero.OmniSlash;
             var healthPercent = this.Owner.HealthPercent();
             var targetDistance = this.Owner.Distance2D(this.CurrentTarget);

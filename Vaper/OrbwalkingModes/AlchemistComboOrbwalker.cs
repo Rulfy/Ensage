@@ -90,7 +90,7 @@ namespace Vaper.OrbwalkingModes
             var channeling = false;
             var concoction = this.hero.Concoction;
             var acid = this.hero.Acid;
-            if (concoction != null)
+            if (concoction != null && !this.CurrentTarget.IsIllusion)
             {
                 var targetDistance = this.Owner.Distance2D(this.CurrentTarget);
                 if (concoction.CanBeCasted)

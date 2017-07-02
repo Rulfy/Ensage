@@ -62,7 +62,7 @@ namespace Vaper.OrbwalkingModes
             var rot = this.hero.Rot;
             if (this.Owner.IsChanneling())
             {
-                if ((rot != null) && !rot.Enabled && rot.CanBeCasted && rot.CanHit(this.CurrentTarget))
+                if ((rot != null) && !rot.Enabled && this.CurrentTarget != null && rot.CanBeCasted && rot.CanHit(this.CurrentTarget))
                 {
                     rot.Enabled = true;
                     await Task.Delay(rot.GetCastDelay(), token);
@@ -72,15 +72,33 @@ namespace Vaper.OrbwalkingModes
                 return;
             }
 
+            var hook = this.hero.Hook;
             var blink = this.hero.Blink;
+            var atos = this.hero.Atos;
             if (blink != null)
             {
-                this.MaxTargetRange = blink.CastRange * 1.3f;
+                this.MaxTargetRange = Math.Max(this.MaxTargetRange, blink.CastRange * 1.3f);
+            }
+
+            if (atos != null)
+            {
+                this.MaxTargetRange = Math.Max(this.MaxTargetRange, atos.CastRange * 1.1f);
+            }
+
+            if (hook != null)
+            {
+                this.MaxTargetRange = Math.Max(this.MaxTargetRange, hook.CastRange * 1.1f);
             }
 
             if ((this.CurrentTarget == null) || !this.CurrentTarget.IsVisible)
             {
                 this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
+                return;
+            }
+
+            if (this.CurrentTarget.IsIllusion)
+            {
+                this.OrbwalkToTarget();
                 return;
             }
 
@@ -107,12 +125,9 @@ namespace Vaper.OrbwalkingModes
                 return;
             }
 
-            var hook = this.hero.Hook;
             var urn = this.hero.Urn;
-
             if (hook.CanBeCasted && hook.CanHit(this.CurrentTarget))
             {
-                var atos = this.hero.Atos;
                 if (atos != null && atos.CanBeCasted && atos.CanHit(this.CurrentTarget) && !this.CurrentTarget.IsStunned() && !this.CurrentTarget.IsRooted())
                 {
                     var input = hook.GetPredictionInput(this.CurrentTarget);

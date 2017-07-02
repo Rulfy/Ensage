@@ -24,20 +24,20 @@ namespace Vaper.Heroes
     public class Axe : BaseHero
     {
         [ItemBinding]
-        internal item_blade_mail BladeMail { get; private set; }
+        public item_blade_mail BladeMail { get; private set; }
 
         [ItemBinding]
-        internal item_blink Blink { get; private set; }
+        public item_blink Blink { get; private set; }
 
-        internal axe_berserkers_call Call { get; private set; }
+        public axe_berserkers_call Call { get; private set; }
 
-        internal axe_culling_blade CullingBlade { get; private set; }
-
-        [ItemBinding]
-        internal item_force_staff ForceStaff { get; private set; }
+        public axe_culling_blade CullingBlade { get; private set; }
 
         [ItemBinding]
-        internal item_lotus_orb LotusOrb { get; private set; }
+        public item_force_staff ForceStaff { get; private set; }
+
+        [ItemBinding]
+        public item_lotus_orb LotusOrb { get; private set; }
 
         protected override VaperOrbwalkingMode GetOrbwalkingMode()
         {

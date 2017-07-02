@@ -66,7 +66,8 @@ namespace Vaper
 
         protected void OrbwalkToTarget()
         {
-            if (!this.baseHero.Menu.General.KiteMode || this.Owner.Distance2D(this.CurrentTarget) <= this.Owner.AttackRange(this.CurrentTarget))
+            if (this.CurrentTarget != null &&
+                (!this.baseHero.Menu.General.KiteMode || this.Owner.Distance2D(this.CurrentTarget) <= this.Owner.AttackRange(this.CurrentTarget)))
             {
                 this.baseHero.Ensage.Orbwalker.Active.OrbwalkTo(this.CurrentTarget);
             }
