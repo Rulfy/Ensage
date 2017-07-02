@@ -54,7 +54,7 @@ namespace Vaper.Heroes
 
         protected override async Task OnKillsteal(CancellationToken token)
         {
-            if (!this.Owner.IsAlive || !this.CullingBlade.CanBeCasted)
+            if (Game.IsPaused || !this.Owner.IsAlive || !this.CullingBlade.CanBeCasted)
             {
                 await Task.Delay(125, token);
                 return;
