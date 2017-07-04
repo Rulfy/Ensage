@@ -60,7 +60,6 @@ namespace ControllerSharp
             this.config = new ControllerConfig();
 
             this.controller = new Controller((UserIndex)this.config.ControllerIndex);
-
             this.orbwalkerFarm = this.orbwalker.Value.OrbwalkingModes.First(x => x.Value.ToString().EndsWith("Farm")).Value;
             this.orbwalkerPush = this.orbwalker.Value.OrbwalkingModes.First(x => x.Value.ToString().EndsWith("Push")).Value;
             this.orbwalkerSupport = this.orbwalker.Value.OrbwalkingModes.First(x => x.Value.ToString().EndsWith("Support")).Value;
@@ -90,6 +89,11 @@ namespace ControllerSharp
 
         private void ControllerIndexChanged(object sender, int e)
         {
+            if (this.controller != null)
+            {
+                this.StopVibration();
+            }
+
             this.controller = new Controller((UserIndex)e);
         }
 
@@ -272,6 +276,11 @@ namespace ControllerSharp
 
         private void StartVibration(float duration)
         {
+            if (!this.controller.IsConnected)
+            {
+                return;
+            }
+
             var intensity = this.config.VibrationIntensity;
             if (intensity <= 0)
             {
@@ -294,6 +303,11 @@ namespace ControllerSharp
         {
             this.vibrationStartTime = 0;
             this.vibrationDuration = 0;
+
+            if (!this.controller.IsConnected)
+            {
+                return;
+            }
 
             this.controller.SetVibration(
                 new Vibration
