@@ -4,6 +4,7 @@
 
 namespace Vaper.Heroes
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -35,6 +36,11 @@ namespace Vaper.Heroes
             this.AbilityId = ability.Id;
             this.GameTime = Game.GameTime;
             this.Cooldown = ability.Cooldown;
+
+            if (this.Cooldown <= 0)
+            {
+                this.Cooldown = ability.CooldownLength;
+            }
         }
 
         public AbilityId AbilityId { get; private set; }
@@ -48,6 +54,11 @@ namespace Vaper.Heroes
             this.AbilityId = ability.Id;
             this.GameTime = Game.GameTime;
             this.Cooldown = ability.Cooldown;
+
+            if (this.Cooldown <= 0)
+            {
+                this.Cooldown = ability.CooldownLength;
+            }
         }
     }
 
@@ -122,13 +133,13 @@ namespace Vaper.Heroes
                 // others
                 AbilityId.spirit_breaker_charge_of_darkness,
                 AbilityId.spirit_breaker_nether_strike,
-               
-
             };
 
         private readonly Dictionary<Hero, Ability> castedAbilities = new Dictionary<Hero, Ability>(5);
 
         private readonly HashSet<AbilityStolenInfo> stolenInfos = new HashSet<AbilityStolenInfo>();
+
+        private Tuple<Ability, float> nextStealAbility;
 
         [ItemBinding]
         public item_blink Blink { get; private set; }
@@ -180,12 +191,14 @@ namespace Vaper.Heroes
             this.CliffItem = factory.Item("Put on cliff", true);
 
             AbilityDetector.AbilityCasted += this.AbilityCasted;
+            Drawing.OnDraw += this.OnDraw;
 
             this.UpdateHandler = UpdateManager.Run(this.OnUpdate);
         }
 
         protected override void OnDeactivate()
         {
+            Drawing.OnDraw -= this.OnDraw;
             AbilityDetector.AbilityCasted -= this.AbilityCasted;
             this.UpdateHandler.Cancel();
 
@@ -259,6 +272,36 @@ namespace Vaper.Heroes
             return this.GetAbilityPriority(ability) > this.GetAbilityPriority(testAbility);
         }
 
+        private void OnDraw(EventArgs args)
+        {
+            if (this.nextStealAbility == null)
+            {
+                return;
+            }
+
+            var time = Game.GameTime;
+            if ((time - this.nextStealAbility.Item2) > 2.0f)
+            {
+                this.nextStealAbility = null;
+                return;
+            }
+
+            Vector2 screenPos;
+            if (Drawing.WorldToScreen(this.Owner.Position + new Vector3(0, 0, this.Owner.HealthBarOffset), out screenPos))
+            {
+                screenPos += new Vector2(0, -65);
+                try
+                {
+                    var texture = Drawing.GetTexture($"materials/ensage_ui/spellicons/{this.nextStealAbility.Item1.Name}.vmat");
+                    Drawing.DrawRect(screenPos, new Vector2(32, 32), texture);
+                }
+                catch (DotaTextureNotFoundException e)
+                {
+                    Drawing.DrawText($"Stealing {this.nextStealAbility.Item1.Name}", screenPos, Color.Yellow, FontFlags.DropShadow | FontFlags.AntiAlias);
+                }
+            }
+        }
+
         private async Task OnUpdate(CancellationToken token)
         {
             var heroesToRemove = this.castedAbilities.Keys.Where(hero => !hero.IsValid || !hero.IsVisible || !hero.IsAlive).ToList();
@@ -284,7 +327,7 @@ namespace Vaper.Heroes
                         }
 
                         var ability = castedAbility.Value;
-                        if (ability.Id != this.StolenAbility.Id && (bestSteal == null || this.HasHigherPriority(bestSteal, ability)))
+                        if ((ability.Id != this.StolenAbility.Id) && ((bestSteal == null) || this.HasHigherPriority(bestSteal, ability)))
                         {
                             // test if ability was already stolen and is still on cd
                             var info = this.stolenInfos.FirstOrDefault(x => x.AbilityId == ability.Id);
@@ -304,7 +347,7 @@ namespace Vaper.Heroes
                     {
                         if (this.GetAbilityPriority(bestSteal) != int.MaxValue)
                         {
-                            if (this.StolenAbility != null && !this.StolenAbility.AbilityBehavior.HasFlag(AbilityBehavior.Passive))
+                            if ((this.StolenAbility != null) && !this.StolenAbility.AbilityBehavior.HasFlag(AbilityBehavior.Passive))
                             {
                                 var info = this.stolenInfos.FirstOrDefault(x => x.AbilityId == this.StolenAbility.Id);
                                 if (info != null)
@@ -318,6 +361,8 @@ namespace Vaper.Heroes
                                     Log.Debug($"adding info for {this.StolenAbility.Name}");
                                 }
                             }
+
+                            this.nextStealAbility = new Tuple<Ability, float>(bestSteal, time);
 
                             var target = (Unit)bestSteal.Owner;
                             Log.Debug($"stealing {bestSteal} from {target.Name}!");
