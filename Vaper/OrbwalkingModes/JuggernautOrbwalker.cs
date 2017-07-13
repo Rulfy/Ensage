@@ -76,7 +76,7 @@ namespace Vaper.OrbwalkingModes
             var healthPercent = this.Owner.HealthPercent();
             var targetDistance = this.Owner.Distance2D(this.CurrentTarget);
             var attackRange = this.Owner.AttackRange(this.CurrentTarget);
-            if ((omni != null) && omni.CanBeCasted && omni.CanHit(this.CurrentTarget))
+            if ((omni != null) && !this.CurrentTarget.IsIllusion && omni.CanBeCasted && omni.CanHit(this.CurrentTarget))
             {
                 // if we're low on health, always try to get ult of
                 var useOmni = healthPercent < 0.10;
@@ -166,7 +166,7 @@ namespace Vaper.OrbwalkingModes
             }
 
             var bladeFury = this.hero.BladeFury;
-            if ((blink != null) && blink.CanBeCasted && blink.CanHit(this.CurrentTarget))
+            if ((blink != null) && !this.CurrentTarget.IsIllusion && blink.CanBeCasted && blink.CanHit(this.CurrentTarget))
             {
                 // only blink when we can call or use ult to kill him
                 var useBlink = (omni != null) && omni.CanBeCasted && !omni.CanHit(this.CurrentTarget);
@@ -206,7 +206,7 @@ namespace Vaper.OrbwalkingModes
                 }
             }
 
-            if (!this.CurrentTarget.IsStunned())
+            if (!this.CurrentTarget.IsStunned() && !this.CurrentTarget.IsIllusion)
             {
                 var abysal = this.hero.AbyssalBlade;
                 if ((abysal != null) && abysal.CanBeCasted && abysal.CanHit(this.CurrentTarget))
@@ -238,7 +238,7 @@ namespace Vaper.OrbwalkingModes
                 await Task.Delay(mjollnir.GetCastDelay(), token);
             }
 
-            if ((diffusal != null) && diffusal.CanBeCasted && diffusal.CanHit(this.CurrentTarget))
+            if ((diffusal != null) && !this.CurrentTarget.IsIllusion && diffusal.CanBeCasted && diffusal.CanHit(this.CurrentTarget))
             {
                 var useDiffu = this.CurrentTarget.IsEthereal() && !this.Owner.HasModifier(bladeFury.ModifierName);
 
@@ -271,7 +271,7 @@ namespace Vaper.OrbwalkingModes
                          && !x.IsIllusion
                          && (x.Distance2D(this.CurrentTarget) < 800));
                 if ((enemyCount > 1)
-                    || ((bladeFury.GetTickDamage(this.CurrentTarget) > (this.Owner.GetAttackDamage(this.CurrentTarget) * bladeFury.TickRate))
+                    || (!this.CurrentTarget.IsIllusion && (bladeFury.GetTickDamage(this.CurrentTarget) > (this.Owner.GetAttackDamage(this.CurrentTarget) * bladeFury.TickRate))
                         && (bladeFury.GetTotalDamage(this.CurrentTarget) >= (0.5f * this.CurrentTarget.Health))))
                 {
                     bladeFury.UseAbility();

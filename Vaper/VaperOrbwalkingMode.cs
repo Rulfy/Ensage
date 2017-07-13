@@ -58,7 +58,7 @@ namespace Vaper
 
             if (!this.baseHero.Menu.General.LockTarget || (this.CurrentTarget == null) || !this.CurrentTarget.IsAlive)
             {
-                this.CurrentTarget = this.baseHero.Ensage.TargetSelector.Active.GetTargets().FirstOrDefault(x => x.Distance2D(this.Owner) <= this.MaxTargetRange);
+                this.CurrentTarget = this.baseHero.Ensage.TargetSelector.Active.GetTargets().Where(x => x.Distance2D(this.Owner) <= this.MaxTargetRange).OrderByDescending(x => !x.IsIllusion).FirstOrDefault();
             }
 
             return true;

@@ -52,6 +52,7 @@ namespace Vaper.OrbwalkingModes
 
             var cullingBlade = this.hero.CullingBlade;
             var cullingBladeKill = (cullingBlade != null)
+                                   && !this.CurrentTarget.IsIllusion
                                    && cullingBlade.CanBeCasted
                                    && (cullingBlade.GetDamage(this.CurrentTarget) > this.CurrentTarget.Health)
                                    && (!this.CurrentTarget.IsLinkensProtected() || forceStaffReady);
@@ -87,7 +88,7 @@ namespace Vaper.OrbwalkingModes
             }
             else
             {
-                if ((call != null) && call.CanBeCasted)
+                if ((call != null) && call.CanBeCasted && !this.CurrentTarget.IsIllusion)
                 {
                     var canHit = call.CanHit(this.CurrentTarget);
                     if (!canHit && forceStaffReady)

@@ -73,7 +73,7 @@ namespace Vaper.OrbwalkingModes
                 }
             }
 
-            if (!this.CurrentTarget.IsStunned())
+            if (!this.CurrentTarget.IsStunned() && !this.CurrentTarget.IsIllusion)
             {
                 var abysal = this.hero.AbyssalBlade;
                 if ((abysal != null) && abysal.CanBeCasted && abysal.CanHit(this.CurrentTarget))
@@ -179,7 +179,10 @@ namespace Vaper.OrbwalkingModes
                             {
                                 var waitTime = (int)(((concoction.ExplosionDuration - channelingDuration) * 1000.0f) - Game.Ping)
                                                - (throwAbility.GetCastDelay(this.CurrentTarget) * 2);
-                                await Task.Delay(waitTime, token);
+                                if (waitTime > 0)
+                                {
+                                    await Task.Delay(waitTime, token);
+                                }
 
                                 throwAbility.UseAbility(this.CurrentTarget);
                                 await Task.Delay(throwAbility.GetCastDelay(this.CurrentTarget), token);
@@ -206,7 +209,7 @@ namespace Vaper.OrbwalkingModes
                     await Task.Delay(solar.GetCastDelay(this.CurrentTarget), token);
                 }
 
-                if (!channeling)
+                if (!channeling && !this.CurrentTarget.IsIllusion)
                 {
                     if ((acid != null) && acid.CanBeCasted && acid.CanHit(this.CurrentTarget))
                     {
