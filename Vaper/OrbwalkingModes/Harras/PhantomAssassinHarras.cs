@@ -48,7 +48,7 @@ namespace Vaper.OrbwalkingModes.Harras
                     }
                 }
 
-                var target = harrasTarget.Where(x => this.Owner.IsInAttackRange(x)).OrderBy(x => x.Health).FirstOrDefault();
+                var target = harrasTarget.Where(x => this.Owner.IsInAttackRange(x, this.BonusAttackRange)).OrderBy(x => x.Health).FirstOrDefault();
                 if (target != null)
                 {
                     this.Orbwalker.OrbwalkTo(target);

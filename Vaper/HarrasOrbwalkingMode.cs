@@ -23,6 +23,14 @@ namespace Vaper
             this.baseHero = hero;
         }
 
+        protected float BonusAttackRange
+        {
+            get
+            {
+                return this.Selector?.BonusRange ?? 0.0f;
+            }
+        }
+
         public override async Task ExecuteAsync(CancellationToken token)
         {
             var unitTarget = this.GetTarget();
@@ -32,7 +40,7 @@ namespace Vaper
                 return;
             }
 
-            var harrasTarget = EntityManager<Hero>.Entities.Where(x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.IsEnemy(this.Owner) && this.Owner.IsInAttackRange(x))
+            var harrasTarget = EntityManager<Hero>.Entities.Where(x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.IsEnemy(this.Owner) && this.Owner.IsInAttackRange(x, this.BonusAttackRange))
                                                   .OrderBy(x => x.Health)
                                                   .FirstOrDefault();
             if (harrasTarget != null)
