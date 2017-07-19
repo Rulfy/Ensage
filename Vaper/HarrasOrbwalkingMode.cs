@@ -32,7 +32,7 @@ namespace Vaper
                 return;
             }
 
-            var harrasTarget = EntityManager<Hero>.Entities.Where(x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.IsEnemy(this.Owner) && this.Owner.CanHit(x))
+            var harrasTarget = EntityManager<Hero>.Entities.Where(x => x.IsVisible && x.IsAlive && !x.IsIllusion && x.IsEnemy(this.Owner) && this.Owner.IsInAttackRange(x))
                                                   .OrderBy(x => x.Health)
                                                   .FirstOrDefault();
             if (harrasTarget != null)
