@@ -2,7 +2,7 @@
 //    Copyright (c) 2017 Ensage.
 // </copyright>
 
-namespace Vaper.OrbwalkingModes
+namespace Vaper.OrbwalkingModes.Combo
 {
     using System.Reflection;
     using System.Threading;
@@ -16,7 +16,7 @@ namespace Vaper.OrbwalkingModes
 
     using Vaper.Heroes;
 
-    public class AxeComboOrbwalker : VaperOrbwalkingMode
+    public class AxeComboOrbwalker : ComboOrbwalkingMode
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -59,11 +59,10 @@ namespace Vaper.OrbwalkingModes
 
             var call = this.hero.Call;
 
-           // Log.Debug($"{blink != null} && {blink?.CanBeCasted} && {blink?.CanHit(this.CurrentTarget)}");
-           // Log.Debug($"{call != null} && {call.CanBeCasted} && {!call.CanHit(this.CurrentTarget)} || {cullingBlade}");
+            // Log.Debug($"{blink != null} && {blink?.CanBeCasted} && {blink?.CanHit(this.CurrentTarget)}");
+            // Log.Debug($"{call != null} && {call.CanBeCasted} && {!call.CanHit(this.CurrentTarget)} || {cullingBlade}");
             if ((blink != null) && blink.CanBeCasted && blink.CanHit(this.CurrentTarget) && !this.CurrentTarget.IsIllusion)
             {
-               
                 // only blink when we can call or use ult to kill him
                 if (((call != null) && call.CanBeCasted && !call.CanHit(this.CurrentTarget)) || (cullingBladeKill && !cullingBlade.CanHit(this.CurrentTarget)))
                 {

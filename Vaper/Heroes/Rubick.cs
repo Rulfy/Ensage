@@ -28,6 +28,7 @@ namespace Vaper.Heroes
     using SharpDX;
 
     using Vaper.OrbwalkingModes;
+    using Vaper.OrbwalkingModes.Combo;
 
     public class AbilityStolenInfo
     {
@@ -171,7 +172,7 @@ namespace Vaper.Heroes
 
         public TaskHandler UpdateHandler { get; private set; }
 
-        protected override VaperOrbwalkingMode GetOrbwalkingMode()
+        protected override ComboOrbwalkingMode GetComboOrbwalkingMode()
         {
             return new RubickOrbwalker(this);
         }

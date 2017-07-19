@@ -24,6 +24,8 @@ namespace Vaper.Heroes
     using SharpDX;
 
     using Vaper.OrbwalkingModes;
+    using Vaper.OrbwalkingModes.Combo;
+    using Vaper.OrbwalkingModes.Harras;
 
     using Color = System.Drawing.Color;
 
@@ -50,7 +52,7 @@ namespace Vaper.Heroes
 
         public phantom_assassin_phantom_strike PhantomStrike { get; private set; }
 
-        protected override VaperOrbwalkingMode GetOrbwalkingMode()
+        protected override ComboOrbwalkingMode GetComboOrbwalkingMode()
         {
             return new PhantomAssassinOrbwalker(this);
         }
@@ -116,6 +118,11 @@ namespace Vaper.Heroes
             }
 
             await Task.Delay(125, token);
+        }
+
+        protected override HarrasOrbwalkingMode GetHarrasOrbwalkingMode()
+        {
+            return new PhantomAssassinHarras(this);
         }
 
         protected override void OnUpdateParticles()

@@ -12,11 +12,11 @@ namespace Vaper
     using Ensage.SDK.Extensions;
     using Ensage.SDK.Orbwalker.Modes;
 
-    public abstract class VaperOrbwalkingMode : KeyPressOrbwalkingModeAsync
+    public abstract class ComboOrbwalkingMode : KeyPressOrbwalkingModeAsync
     {
         private readonly BaseHero baseHero;
 
-        protected VaperOrbwalkingMode(BaseHero hero, float maxTargetRange = 1000.0f)
+        protected ComboOrbwalkingMode(BaseHero hero, float maxTargetRange = 1000.0f)
             : base(hero.Ensage.Orbwalker, hero.Ensage.Input, hero.Menu.General.ComboKey)
         {
             this.baseHero = hero;

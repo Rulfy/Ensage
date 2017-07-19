@@ -1,8 +1,8 @@
-﻿// <copyright file="UndyingOrbwalker.cs" company="Ensage">
+﻿// <copyright file="UndyingComboOrbwalker.cs" company="Ensage">
 //    Copyright (c) 2017 Ensage.
 // </copyright>
 
-namespace Vaper.OrbwalkingModes
+namespace Vaper.OrbwalkingModes.Combo
 {
     using System;
     using System.Linq;
@@ -15,7 +15,7 @@ namespace Vaper.OrbwalkingModes
 
     using Vaper.Heroes;
 
-    public class UndyingOrbwalker : VaperOrbwalkingMode
+    public class UndyingOrbwalker : ComboOrbwalkingMode
     {
         private readonly Undying hero;
 

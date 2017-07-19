@@ -18,6 +18,7 @@ namespace Vaper.Heroes
     using PlaySharp.Toolkit.Helper.Annotations;
 
     using Vaper.OrbwalkingModes;
+    using Vaper.OrbwalkingModes.Combo;
 
     [PublicAPI]
     [ExportHero(HeroId.npc_dota_hero_crystal_maiden)]
@@ -44,7 +45,7 @@ namespace Vaper.Heroes
         [ItemBinding]
         public item_veil_of_discord Veil { get; private set; }
 
-        protected override VaperOrbwalkingMode GetOrbwalkingMode()
+        protected override ComboOrbwalkingMode GetComboOrbwalkingMode()
         {
             return new CrystalMaidenOrbwalker(this);
         }

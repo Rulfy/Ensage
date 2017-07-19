@@ -41,7 +41,11 @@ namespace Vaper
 
         protected TaskHandler KillstealHandler { get; set; }
 
-        protected VaperOrbwalkingMode OrbwalkingMode { get; private set; }
+        protected ComboOrbwalkingMode ComboOrbwalkingMode { get; private set; }
+
+        protected HarrasOrbwalkingMode HarrasOrbwalkingMode { get; private set; }
+
+        
 
         protected async Task AwaitKillstealDelay(int castDelay, CancellationToken token = default(CancellationToken))
         {
@@ -56,7 +60,12 @@ namespace Vaper
             }
         }
 
-        protected abstract VaperOrbwalkingMode GetOrbwalkingMode();
+        protected abstract ComboOrbwalkingMode GetComboOrbwalkingMode();
+
+        protected virtual HarrasOrbwalkingMode GetHarrasOrbwalkingMode()
+        {
+            return new HarrasOrbwalkingMode(this);
+        }
 
         protected virtual void InventoryChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
@@ -80,8 +89,11 @@ namespace Vaper
             this.Owner = (Hero)this.Ensage.Context.Owner;
             this.Menu = new VaperMenu(this.Owner.HeroId);
 
-            this.OrbwalkingMode = this.GetOrbwalkingMode();
-            this.Ensage.Orbwalker.RegisterMode(this.OrbwalkingMode);
+            this.ComboOrbwalkingMode = this.GetComboOrbwalkingMode();
+            this.Ensage.Orbwalker.RegisterMode(this.ComboOrbwalkingMode);
+
+            this.HarrasOrbwalkingMode = this.GetHarrasOrbwalkingMode();
+            this.Ensage.Orbwalker.RegisterMode(this.HarrasOrbwalkingMode);
 
             this.KillstealHandler = UpdateManager.Run(this.OnKillsteal, true, this.Menu.General.Killsteal);
             UpdateManager.Subscribe(this.OnUpdateParticles);
@@ -140,7 +152,8 @@ namespace Vaper
             UpdateManager.Unsubscribe(this.OnUpdateParticles);
             this.KillstealHandler.Cancel();
 
-            this.Ensage.Orbwalker.UnregisterMode(this.OrbwalkingMode);
+            this.Ensage.Orbwalker.UnregisterMode(this.HarrasOrbwalkingMode);
+            this.Ensage.Orbwalker.UnregisterMode(this.ComboOrbwalkingMode);
 
             this.Menu.Dispose();
         }
@@ -151,14 +164,14 @@ namespace Vaper
 
         protected virtual void OnUpdateParticles()
         {
-            if ((this.OrbwalkingMode == null) || !this.Menu.General.DrawTargetLine)
+            if ((this.ComboOrbwalkingMode == null) || !this.Menu.General.DrawTargetLine)
             {
                 return;
             }
 
-            if (this.OrbwalkingMode.CanExecute && (this.OrbwalkingMode.CurrentTarget != null))
+            if (this.ComboOrbwalkingMode.CanExecute && (this.ComboOrbwalkingMode.CurrentTarget != null))
             {
-                this.Ensage.Particle.DrawTargetLine(this.Owner, "vaper_targetLine", this.OrbwalkingMode.CurrentTarget.Position);
+                this.Ensage.Particle.DrawTargetLine(this.Owner, "vaper_targetLine", this.ComboOrbwalkingMode.CurrentTarget.Position);
             }
             else
             {

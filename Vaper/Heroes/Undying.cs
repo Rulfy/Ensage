@@ -24,6 +24,7 @@ namespace Vaper.Heroes
     using SharpDX;
 
     using Vaper.OrbwalkingModes;
+    using Vaper.OrbwalkingModes.Combo;
 
     using Color = System.Drawing.Color;
 
@@ -42,7 +43,7 @@ namespace Vaper.Heroes
 
         public undying_tombstone Tombstone { get; private set; }
 
-        protected override VaperOrbwalkingMode GetOrbwalkingMode()
+        protected override ComboOrbwalkingMode GetComboOrbwalkingMode()
         {
             return new UndyingOrbwalker(this);
         }

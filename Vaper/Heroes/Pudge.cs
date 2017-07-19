@@ -27,6 +27,7 @@ namespace Vaper.Heroes
     using PlaySharp.Toolkit.Logging;
 
     using Vaper.OrbwalkingModes;
+    using Vaper.OrbwalkingModes.Combo;
 
     [PublicAPI]
     [ExportHero(HeroId.npc_dota_hero_pudge)]
@@ -65,7 +66,7 @@ namespace Vaper.Heroes
         [ItemBinding]
         public item_urn_of_shadows Urn { get; private set; }
 
-        protected override VaperOrbwalkingMode GetOrbwalkingMode()
+        protected override ComboOrbwalkingMode GetComboOrbwalkingMode()
         {
             return new PudgeOrbwalker(this);
         }

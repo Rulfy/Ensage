@@ -1,8 +1,8 @@
-// <copyright file="JuggernautOrbwalker.cs" company="Ensage">
+// <copyright file="JuggernautComboOrbwalker.cs" company="Ensage">
 //    Copyright (c) 2017 Ensage.
 // </copyright>
 
-namespace Vaper.OrbwalkingModes
+namespace Vaper.OrbwalkingModes.Combo
 {
     using System.Linq;
     using System.Reflection;
@@ -19,7 +19,7 @@ namespace Vaper.OrbwalkingModes
 
     using Vaper.Heroes;
 
-    public class JuggernautOrbwalker : VaperOrbwalkingMode
+    public class JuggernautOrbwalker : ComboOrbwalkingMode
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -271,7 +271,8 @@ namespace Vaper.OrbwalkingModes
                          && !x.IsIllusion
                          && (x.Distance2D(this.CurrentTarget) < 800));
                 if ((enemyCount > 1)
-                    || (!this.CurrentTarget.IsIllusion && (bladeFury.GetTickDamage(this.CurrentTarget) > (this.Owner.GetAttackDamage(this.CurrentTarget) * bladeFury.TickRate))
+                    || (!this.CurrentTarget.IsIllusion
+                        && (bladeFury.GetTickDamage(this.CurrentTarget) > (this.Owner.GetAttackDamage(this.CurrentTarget) * bladeFury.TickRate))
                         && (bladeFury.GetTotalDamage(this.CurrentTarget) >= (0.5f * this.CurrentTarget.Health))))
                 {
                     bladeFury.UseAbility();

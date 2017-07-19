@@ -1,8 +1,8 @@
-﻿// <copyright file="PudgeOrbwalker.cs" company="Ensage">
+﻿// <copyright file="PudgeComboOrbwalker.cs" company="Ensage">
 //    Copyright (c) 2017 Ensage.
 // </copyright>
 
-namespace Vaper.OrbwalkingModes
+namespace Vaper.OrbwalkingModes.Combo
 {
     using System;
     using System.Diagnostics;
@@ -19,7 +19,7 @@ namespace Vaper.OrbwalkingModes
 
     using Vaper.Heroes;
 
-    internal class PudgeOrbwalker : VaperOrbwalkingMode
+    internal class PudgeOrbwalker : ComboOrbwalkingMode
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -62,7 +62,7 @@ namespace Vaper.OrbwalkingModes
             var rot = this.hero.Rot;
             if (this.Owner.IsChanneling())
             {
-                if ((rot != null) && !rot.Enabled && this.CurrentTarget != null && rot.CanBeCasted && rot.CanHit(this.CurrentTarget))
+                if ((rot != null) && !rot.Enabled && (this.CurrentTarget != null) && rot.CanBeCasted && rot.CanHit(this.CurrentTarget))
                 {
                     rot.Enabled = true;
                     await Task.Delay(rot.GetCastDelay(), token);
@@ -112,7 +112,7 @@ namespace Vaper.OrbwalkingModes
             var forceStaffReady = (forceStaff != null) && forceStaff.CanBeCasted;
 
             var ult = this.hero.Dismember;
-            if (ult != null && ult.CanBeCasted && ult.CanHit(this.CurrentTarget))
+            if ((ult != null) && ult.CanBeCasted && ult.CanHit(this.CurrentTarget))
             {
                 if (this.CurrentTarget.IsLinkensProtected() && forceStaffReady)
                 {
@@ -128,17 +128,16 @@ namespace Vaper.OrbwalkingModes
             var urn = this.hero.Urn;
             if (hook.CanBeCasted && hook.CanHit(this.CurrentTarget))
             {
-                if (atos != null && atos.CanBeCasted && atos.CanHit(this.CurrentTarget) && !this.CurrentTarget.IsStunned() && !this.CurrentTarget.IsRooted())
+                if ((atos != null) && atos.CanBeCasted && atos.CanHit(this.CurrentTarget) && !this.CurrentTarget.IsStunned() && !this.CurrentTarget.IsRooted())
                 {
                     var input = hook.GetPredictionInput(this.CurrentTarget);
                     var output = hook.GetPredictionOutput(input);
-                    if (output.HitChance != HitChance.OutOfRange && output.HitChance != HitChance.Collision)
+                    if ((output.HitChance != HitChance.OutOfRange) && (output.HitChance != HitChance.Collision))
                     {
                         atos.UseAbility(this.CurrentTarget);
                         await Task.Delay(atos.GetCastDelay(this.CurrentTarget) + atos.GetHitTime(this.CurrentTarget), token);
                     }
                 }
-
 
                 if (hook.UseAbility(this.CurrentTarget, this.hero.MinimumHookChance))
                 {
@@ -151,7 +150,7 @@ namespace Vaper.OrbwalkingModes
                         var hasHit = await KeepTrying(
                                          () =>
                                              {
-                                                  this.Owner.Stop();
+                                                 this.Owner.Stop();
                                                  return this.hero.HookModifierDetected;
                                              },
                                          hittime,
@@ -166,14 +165,14 @@ namespace Vaper.OrbwalkingModes
                             if (this.CurrentTarget.IsLinkensProtected() && forceStaffReady)
                             {
                                 var canBreakLinkens = await KeepTrying(
-                                                    () =>
-                                                        {
-                                                            this.Owner.Stop();
-                                                            return this.Owner.Distance2D(this.CurrentTarget) < forceStaff.CastRange;
-                                                        },
-                                                    hittime,
-                                                    50,
-                                                    token);
+                                                          () =>
+                                                              {
+                                                                  this.Owner.Stop();
+                                                                  return this.Owner.Distance2D(this.CurrentTarget) < forceStaff.CastRange;
+                                                              },
+                                                          hittime,
+                                                          50,
+                                                          token);
 
                                 if (canBreakLinkens)
                                 {
@@ -183,7 +182,7 @@ namespace Vaper.OrbwalkingModes
                                 }
                             }
 
-                            if (urn != null && urn.CanBeCasted && urn.CanHit(this.CurrentTarget) && !this.CurrentTarget.HasModifier(urn.TargetModifierName))
+                            if ((urn != null) && urn.CanBeCasted && urn.CanHit(this.CurrentTarget) && !this.CurrentTarget.HasModifier(urn.TargetModifierName))
                             {
                                 urn.UseAbility(this.CurrentTarget);
                                 await Task.Delay(urn.GetCastDelay(this.CurrentTarget), token);
@@ -241,7 +240,7 @@ namespace Vaper.OrbwalkingModes
 
                     if (ult.CanHit(this.CurrentTarget))
                     {
-                        if (urn != null && urn.CanBeCasted && urn.CanHit(this.CurrentTarget) && !this.CurrentTarget.HasModifier(urn.TargetModifierName))
+                        if ((urn != null) && urn.CanBeCasted && urn.CanHit(this.CurrentTarget) && !this.CurrentTarget.HasModifier(urn.TargetModifierName))
                         {
                             urn.UseAbility(this.CurrentTarget);
                             await Task.Delay(urn.GetCastDelay(this.CurrentTarget), token);

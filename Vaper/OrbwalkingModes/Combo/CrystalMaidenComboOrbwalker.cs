@@ -1,8 +1,8 @@
-// <copyright file="CrystalMaidenOrbwalker.cs" company="Ensage">
+// <copyright file="CrystalMaidenComboOrbwalker.cs" company="Ensage">
 //    Copyright (c) 2017 Ensage.
 // </copyright>
 
-namespace Vaper.OrbwalkingModes
+namespace Vaper.OrbwalkingModes.Combo
 {
     using System.Linq;
     using System.Reflection;
@@ -19,7 +19,7 @@ namespace Vaper.OrbwalkingModes
 
     using Vaper.Heroes;
 
-    public class CrystalMaidenOrbwalker : VaperOrbwalkingMode
+    public class CrystalMaidenOrbwalker : ComboOrbwalkingMode
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -179,7 +179,7 @@ namespace Vaper.OrbwalkingModes
                              && !x.IsIllusion
                              && (x.Distance2D(this.Owner) <= ult.Radius));
 
-                    if (enemyCount >= 1 || (!notDisabled && (this.CurrentTarget.Health * 3) > ult.GetDamage(this.CurrentTarget)))
+                    if ((enemyCount >= 1) || (!notDisabled && ((this.CurrentTarget.Health * 3) > ult.GetDamage(this.CurrentTarget))))
                     {
                         var bkb = this.hero.Bkb;
                         if ((bkb != null) && bkb.CanBeCasted)

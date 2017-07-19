@@ -18,6 +18,7 @@ namespace Vaper.Heroes
     using PlaySharp.Toolkit.Helper.Annotations;
 
     using Vaper.OrbwalkingModes;
+    using Vaper.OrbwalkingModes.Combo;
 
     [PublicAPI]
     [ExportHero(HeroId.npc_dota_hero_axe)]
@@ -39,7 +40,7 @@ namespace Vaper.Heroes
         [ItemBinding]
         public item_lotus_orb LotusOrb { get; private set; }
 
-        protected override VaperOrbwalkingMode GetOrbwalkingMode()
+        protected override ComboOrbwalkingMode GetComboOrbwalkingMode()
         {
             return new AxeComboOrbwalker(this);
         }

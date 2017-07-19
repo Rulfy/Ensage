@@ -1,8 +1,8 @@
-// <copyright file="PhantomAssassinOrbwalker.cs" company="Ensage">
+// <copyright file="PhantomAssassinComboOrbwalker.cs" company="Ensage">
 //    Copyright (c) 2017 Ensage.
 // </copyright>
 
-namespace Vaper.OrbwalkingModes
+namespace Vaper.OrbwalkingModes.Combo
 {
     using System.Threading;
     using System.Threading.Tasks;
@@ -11,7 +11,7 @@ namespace Vaper.OrbwalkingModes
 
     using Vaper.Heroes;
 
-    public class PhantomAssassinOrbwalker : VaperOrbwalkingMode
+    public class PhantomAssassinOrbwalker : ComboOrbwalkingMode
     {
         private readonly PhantomAssassin hero;
 

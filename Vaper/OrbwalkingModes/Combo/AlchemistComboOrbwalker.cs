@@ -2,7 +2,7 @@
 //    Copyright (c) 2017 Ensage.
 // </copyright>
 
-namespace Vaper.OrbwalkingModes
+namespace Vaper.OrbwalkingModes.Combo
 {
     using System.Linq;
     using System.Reflection;
@@ -19,7 +19,7 @@ namespace Vaper.OrbwalkingModes
 
     using Vaper.Heroes;
 
-    public class AlchemistComboOrbwalker : VaperOrbwalkingMode
+    public class AlchemistComboOrbwalker : ComboOrbwalkingMode
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -90,7 +90,7 @@ namespace Vaper.OrbwalkingModes
             var channeling = false;
             var concoction = this.hero.Concoction;
             var acid = this.hero.Acid;
-            if (concoction != null && !this.CurrentTarget.IsIllusion)
+            if ((concoction != null) && !this.CurrentTarget.IsIllusion)
             {
                 var targetDistance = this.Owner.Distance2D(this.CurrentTarget);
                 if (concoction.CanBeCasted)

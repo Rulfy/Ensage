@@ -28,6 +28,7 @@ namespace Vaper.Heroes
     using SharpDX;
 
     using Vaper.OrbwalkingModes;
+    using Vaper.OrbwalkingModes.Combo;
 
     using Color = System.Drawing.Color;
 
@@ -94,7 +95,7 @@ namespace Vaper.Heroes
         [ItemBinding]
         public item_solar_crest SolarCrest { get; private set; }
 
-        protected override VaperOrbwalkingMode GetOrbwalkingMode()
+        protected override ComboOrbwalkingMode GetComboOrbwalkingMode()
         {
             return new AlchemistComboOrbwalker(this);
         }
@@ -191,7 +192,7 @@ namespace Vaper.Heroes
         {
             var gameTime = Game.GameTime;
             if ((this.ConcoctionStartTime > 0)
-                && !((AlchemistComboOrbwalker)this.OrbwalkingMode).HasValidThrowTarget
+                && !((AlchemistComboOrbwalker)this.ComboOrbwalkingMode).HasValidThrowTarget
                 && ((gameTime - this.ConcoctionStartTime) > (this.Concoction.Duration * 0.85f))
                 && this.Owner.HasModifier(this.Concoction.ModifierName))
             {

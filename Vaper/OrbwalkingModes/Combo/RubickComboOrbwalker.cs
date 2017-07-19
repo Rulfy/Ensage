@@ -1,14 +1,15 @@
-﻿// <copyright file="RubickOrbwalker.cs" company="Ensage">
+﻿// <copyright file="RubickComboOrbwalker.cs" company="Ensage">
 //    Copyright (c) 2017 Ensage.
 // </copyright>
-namespace Vaper.OrbwalkingModes
+
+namespace Vaper.OrbwalkingModes.Combo
 {
     using System.Threading;
     using System.Threading.Tasks;
 
     using Vaper.Heroes;
 
-    public class RubickOrbwalker : VaperOrbwalkingMode
+    public class RubickOrbwalker : ComboOrbwalkingMode
     {
         private readonly Rubick hero;
 
@@ -32,7 +33,6 @@ namespace Vaper.OrbwalkingModes
             }
 
             // TODO ...
-
             this.OrbwalkToTarget();
         }
     }
