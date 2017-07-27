@@ -69,6 +69,7 @@
     <Compile Include="Heroes\CrystalMaiden.cs" />
     <Compile Include="Heroes\PhantomAssassin.cs" />
     <Compile Include="Heroes\Pudge.cs" />
+    <Compile Include="Heroes\Venomancer.cs" />
     <Compile Include="Heroes\Rubick.cs" />
     <Compile Include="Heroes\Undying.cs" />
     <Compile Include="OrbwalkingModes\Combo\AlchemistComboOrbwalker.cs" />
@@ -85,6 +86,7 @@
     <Compile Include="OrbwalkingModes\Combo\PudgeComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\Combo\RubickComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\Combo\UndyingComboOrbwalker.cs" />
+    <Compile Include="OrbwalkingModes\Combo\VenoComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\Harras\PhantomAssassinHarras.cs" />
     <Compile Include="ComboOrbwalkingMode.cs" />
     <Compile Include="Program.cs" />

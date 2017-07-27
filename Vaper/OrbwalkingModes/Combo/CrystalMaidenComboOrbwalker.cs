@@ -169,7 +169,7 @@ namespace Vaper.OrbwalkingModes.Combo
             if (!this.CurrentTarget.IsIllusion)
             {
                 // Log.Debug($"disabled {ult != null} && {ult.CanBeCasted} && {ult.CanHit(this.CurrentTarget)}");
-                if ((ult != null) && ult.CanBeCasted && ult.CanHit(this.CurrentTarget))
+                if ((ult != null) && ult.CanBeCasted && ult.CanHit(this.CurrentTarget) && this.Owner.Distance2D(this.CurrentTarget) <= (ult.Radius / 2.0f))
                 {
                     var enemyCount = EntityManager<Hero>.Entities.Count(
                         x => x.IsAlive
@@ -177,7 +177,7 @@ namespace Vaper.OrbwalkingModes.Combo
                              && (x != this.CurrentTarget)
                              && this.Owner.IsEnemy(x)
                              && !x.IsIllusion
-                             && (x.Distance2D(this.Owner) <= ult.Radius));
+                             && (x.Distance2D(this.Owner) <= (ult.Radius / 2.0f)));
 
                     if ((enemyCount >= 1) || (!notDisabled && ((this.CurrentTarget.Health * 3) > ult.GetDamage(this.CurrentTarget))))
                     {
