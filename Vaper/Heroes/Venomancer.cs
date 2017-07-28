@@ -131,7 +131,6 @@ namespace Vaper.Heroes
             if (wards.Any())
             {
                 var attackRange = (float)wards.First().AttackRange;
-                var damage = (float)wards.First().MaximumDamage;
 
                 var allies = EntityManager<Hero>.Entities.Where(x => x.IsVisible && x.IsAlive && (x.Team == this.Owner.Team) && !x.IsIllusion).ToList();
                 var enemies = EntityManager<Hero>.Entities.Where(x => x.IsVisible && x.IsAlive && this.Owner.IsEnemy(x) && !x.IsIllusion).ToList();
@@ -142,7 +141,7 @@ namespace Vaper.Heroes
                 if (items.Any())
                 {
                     // try to destroy enemy physical items
-                    foreach (var physicalItem in items.Where(x => (x.Item.Owner != null) && this.Owner.IsEnemy(x.Item.Owner)))
+                    foreach (var physicalItem in items.Where(x => (x.Item.Owner != null) && this.Owner.IsEnemy(x.Item.Owner) && (x.Item.Id != AbilityId.item_aegis) && (x.Item.Id != AbilityId.item_cheese)))
                     {
                         if (!physicalItem.IsValid)
                         {
@@ -162,7 +161,7 @@ namespace Vaper.Heroes
                     // try to destroy aegis and cheese if enemy too close and none of our allies is close enough to grab it
                     foreach (var physicalItem in items.Where(x => x.IsValid && (x.Item != null) && ((x.Item.Id == AbilityId.item_aegis) || (x.Item.Id == AbilityId.item_cheese))))
                     {
-                        if (physicalItem.IsValid && allies.All(x => x.Distance2D(physicalItem) > 150.0f) && enemies.Any(x => x.Distance2D(physicalItem) <= 150.0f))
+                        if (physicalItem.IsValid && allies.All(x => x.Distance2D(physicalItem) > 250.0f) && enemies.Any(x => !x.IsStunned() && x.Distance2D(physicalItem) <= 200.0f))
                         {
                             var ward = wards.FirstOrDefault(x => x.Distance2D(physicalItem.NetworkPosition) <= attackRange);
                             if (ward != null)
@@ -227,15 +226,29 @@ namespace Vaper.Heroes
                 // todo: lasthit
 
                 // deny own wards
-                foreach (var ward in wards.Where(x => x.IsValid && (x.Health <= damage) && this.wardCommandList.All(y => y.TargetEntity != x)).ToList())
+                foreach (var ward in wards.Where(x => x.IsValid && (x.HealthPercent() <= 0.5f) && this.wardCommandList.All(y => y.TargetEntity != x)).OrderBy(x => x.Health).ToList())
                 {
-                    var attacker = wards.FirstOrDefault(x => (x != ward) && x.IsInAttackRange(ward));
-                    if (attacker != null)
+                    // find enough wards to deny
+                    List<Unit> attacker = new List<Unit>();
+                    foreach (var attackUnit in wards.Where(x => (x != ward) && x.IsInAttackRange(ward)))
                     {
-                        wards.Remove(attacker);
+                        attacker.Add(attackUnit);
+                        if (attacker.Sum(x => x.DamageAverage) >= ward.Health)
+                        {
+                            break;
+                        }
+                    }
 
-                        attacker.Attack(ward);
-                        this.wardCommandList.Add(new WardCommand(attacker, ward, time));
+                   // Log.Debug($"{attacker.Sum(x => x.DamageAverage)} >= {ward.Health} with cout {attacker.Count}");
+                    // issue attack command if we have enough damage
+                    if (attacker.Sum(x => x.DamageAverage) >= ward.Health)
+                    {
+                        foreach (var w in attacker)
+                        {
+                            wards.Remove(w);
+                            this.wardCommandList.Add(new WardCommand(w, ward, time));
+                        }
+                        Player.EntitiesAttack(attacker, ward);
                         await Task.Delay(50, token);
                     }
                 }
