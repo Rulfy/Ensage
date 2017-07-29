@@ -226,7 +226,7 @@ namespace Vaper.Heroes
                 // todo: lasthit
 
                 // deny own wards
-                foreach (var ward in wards.Where(x => x.IsValid && (x.HealthPercent() <= 0.5f) && this.wardCommandList.All(y => y.TargetEntity != x)).OrderBy(x => x.Health).ToList())
+                foreach (var ward in wards.Where(x => x.IsValid && (x.HealthPercent() <= 0.5f) && enemies.Any(y => y.IsInAttackRange(x, 200.0f)) && this.wardCommandList.All(y => y.TargetEntity != x)).OrderBy(x => x.Health).ToList())
                 {
                     // find enough wards to deny
                     List<Unit> attacker = new List<Unit>();
