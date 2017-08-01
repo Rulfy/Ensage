@@ -75,9 +75,9 @@ namespace Vaper.Heroes
         {
             base.OnActivate();
 
-            this.Hook = this.Ensage.AbilityFactory.GetAbility<pudge_meat_hook>();
-            this.Rot = this.Ensage.AbilityFactory.GetAbility<pudge_rot>();
-            this.Dismember = this.Ensage.AbilityFactory.GetAbility<pudge_dismember>();
+            this.Hook = this.Context.AbilityFactory.GetAbility<pudge_meat_hook>();
+            this.Rot = this.Context.AbilityFactory.GetAbility<pudge_rot>();
+            this.Dismember = this.Context.AbilityFactory.GetAbility<pudge_dismember>();
 
             var factory = this.Menu.Hero.Factory;
             this.MinimumHookChanceItem = factory.Item("Minimum Hook Chance", new StringList(new[] { "Low", "Medium", "High" }, 1));

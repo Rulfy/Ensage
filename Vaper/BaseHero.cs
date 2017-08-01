@@ -32,8 +32,8 @@ namespace Vaper
 
         public VaperMenu Menu { get; private set; }
 
-        [Import(typeof(IEnsageWorkUnit))]
-        internal IEnsageWorkUnit Ensage { get; private set; }
+        [Import(typeof(IServiceContext))]
+        internal IServiceContext Context { get; private set; }
 
         internal bool IsKillstealing { get; private set; }
 
@@ -44,8 +44,6 @@ namespace Vaper
         protected ComboOrbwalkingMode ComboOrbwalkingMode { get; private set; }
 
         protected HarrasOrbwalkingMode HarrasOrbwalkingMode { get; private set; }
-
-        
 
         protected async Task AwaitKillstealDelay(int castDelay, CancellationToken token = default(CancellationToken))
         {
@@ -85,25 +83,25 @@ namespace Vaper
 
         protected override void OnActivate()
         {
-            this.Ensage.Inventory.Attach(this);
-            this.Owner = (Hero)this.Ensage.Context.Owner;
+            this.Context.Inventory.Attach(this);
+            this.Owner = (Hero)this.Context.Owner;
             this.Menu = new VaperMenu(this.Owner.HeroId);
 
             this.ComboOrbwalkingMode = this.GetComboOrbwalkingMode();
-            this.Ensage.Orbwalker.RegisterMode(this.ComboOrbwalkingMode);
+            this.Context.Orbwalker.RegisterMode(this.ComboOrbwalkingMode);
 
             this.HarrasOrbwalkingMode = this.GetHarrasOrbwalkingMode();
-            this.Ensage.Orbwalker.RegisterMode(this.HarrasOrbwalkingMode);
+            this.Context.Orbwalker.RegisterMode(this.HarrasOrbwalkingMode);
 
             this.KillstealHandler = UpdateManager.Run(this.OnKillsteal, true, this.Menu.General.Killsteal);
             UpdateManager.Subscribe(this.OnUpdateParticles);
 
             this.Menu.General.DrawTargetLine.PropertyChanged += this.DrawTargetLinePropertyChanged;
             this.Menu.General.Killsteal.PropertyChanged += this.KillstealPropertyChanged;
-            this.Ensage.Inventory.CollectionChanged += this.InventoryChanged;
+            this.Context.Inventory.CollectionChanged += this.InventoryChanged;
 
             // Intro
-            this.Ensage.Renderer.Draw += this.IntroDraw;
+            this.Context.Renderer.Draw += this.IntroDraw;
             UpdateManager.Run(
                 async token =>
                     {
@@ -116,7 +114,7 @@ namespace Vaper
                         {
                             for (var i = 0; i < particleCount; ++i)
                             {
-                                this.Ensage.Particle.AddOrUpdate(
+                                this.Context.Particle.AddOrUpdate(
                                     this.Owner,
                                     $"vaper_smoke_{i}",
                                     "particles/world_environmental_fx/rune_ambient_01_smoke.vpcf",
@@ -132,10 +130,10 @@ namespace Vaper
                         stopwatch.Stop();
 
                         Log.Debug($"deleting vape particles");
-                        this.Ensage.Renderer.Draw -= this.IntroDraw;
+                        this.Context.Renderer.Draw -= this.IntroDraw;
                         for (var i = 0; i < particleCount; ++i)
                         {
-                            this.Ensage.Particle.Remove($"vaper_smoke_{i}");
+                            this.Context.Particle.Remove($"vaper_smoke_{i}");
                         }
                     },
                 false);
@@ -143,17 +141,17 @@ namespace Vaper
 
         protected override void OnDeactivate()
         {
-            this.Ensage.Inventory.Detach(this);
+            this.Context.Inventory.Detach(this);
 
-            this.Ensage.Inventory.CollectionChanged -= this.InventoryChanged;
+            this.Context.Inventory.CollectionChanged -= this.InventoryChanged;
             this.Menu.General.Killsteal.PropertyChanged -= this.KillstealPropertyChanged;
             this.Menu.General.DrawTargetLine.PropertyChanged -= this.DrawTargetLinePropertyChanged;
 
             UpdateManager.Unsubscribe(this.OnUpdateParticles);
             this.KillstealHandler.Cancel();
 
-            this.Ensage.Orbwalker.UnregisterMode(this.HarrasOrbwalkingMode);
-            this.Ensage.Orbwalker.UnregisterMode(this.ComboOrbwalkingMode);
+            this.Context.Orbwalker.UnregisterMode(this.HarrasOrbwalkingMode);
+            this.Context.Orbwalker.UnregisterMode(this.ComboOrbwalkingMode);
 
             this.Menu.Dispose();
         }
@@ -171,11 +169,11 @@ namespace Vaper
 
             if (this.ComboOrbwalkingMode.CanExecute && (this.ComboOrbwalkingMode.CurrentTarget != null))
             {
-                this.Ensage.Particle.DrawTargetLine(this.Owner, "vaper_targetLine", this.ComboOrbwalkingMode.CurrentTarget.Position);
+                this.Context.Particle.DrawTargetLine(this.Owner, "vaper_targetLine", this.ComboOrbwalkingMode.CurrentTarget.Position);
             }
             else
             {
-                this.Ensage.Particle.Remove("vaper_targetLine");
+                this.Context.Particle.Remove("vaper_targetLine");
             }
         }
 
@@ -183,7 +181,7 @@ namespace Vaper
         {
             if (!this.Menu.General.DrawTargetLine)
             {
-                this.Ensage.Particle.Remove("vaper_targetLine");
+                this.Context.Particle.Remove("vaper_targetLine");
             }
         }
 
@@ -192,7 +190,7 @@ namespace Vaper
             Vector2 screenPos;
             if (Drawing.WorldToScreen(this.Owner.Position + new Vector3(-140, -50, 0), out screenPos))
             {
-                this.Ensage.Renderer.DrawText(screenPos, "Vaper loaded", Color.Gold, "Calibri", 35);
+                this.Context.Renderer.DrawText(screenPos, "Vaper loaded", Color.Gold, 35);
             }
         }
     }

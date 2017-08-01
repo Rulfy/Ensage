@@ -54,9 +54,9 @@ namespace Vaper.Heroes
         {
             base.OnActivate();
 
-            this.Nova = this.Ensage.AbilityFactory.GetAbility<crystal_maiden_crystal_nova>();
-            this.Frostbite = this.Ensage.AbilityFactory.GetAbility<crystal_maiden_frostbite>();
-            this.FreezingField = this.Ensage.AbilityFactory.GetAbility<crystal_maiden_freezing_field>();
+            this.Nova = this.Context.AbilityFactory.GetAbility<crystal_maiden_crystal_nova>();
+            this.Frostbite = this.Context.AbilityFactory.GetAbility<crystal_maiden_frostbite>();
+            this.FreezingField = this.Context.AbilityFactory.GetAbility<crystal_maiden_freezing_field>();
         }
 
         protected override async Task OnKillsteal(CancellationToken token)

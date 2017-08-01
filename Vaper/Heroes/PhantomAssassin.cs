@@ -60,10 +60,10 @@ namespace Vaper.Heroes
         protected override void OnActivate()
         {
             base.OnActivate();
-            this.Dagger = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_stifling_dagger>();
-            this.PhantomStrike = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_phantom_strike>();
-            this.Blur = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_blur>();
-            this.Crit = this.Ensage.AbilityFactory.GetAbility<phantom_assassin_coup_de_grace>();
+            this.Dagger = this.Context.AbilityFactory.GetAbility<phantom_assassin_stifling_dagger>();
+            this.PhantomStrike = this.Context.AbilityFactory.GetAbility<phantom_assassin_phantom_strike>();
+            this.Blur = this.Context.AbilityFactory.GetAbility<phantom_assassin_blur>();
+            this.Crit = this.Context.AbilityFactory.GetAbility<phantom_assassin_coup_de_grace>();
 
             this.CritPrd = Utils.GetPseudoChance(this.Crit.ProcChance);
 
@@ -75,7 +75,7 @@ namespace Vaper.Heroes
 
             if (this.CritIndicator)
             {
-                this.Ensage.Renderer.Draw += this.OnDraw;
+                this.Context.Renderer.Draw += this.OnDraw;
             }
 
             Entity.OnInt32PropertyChange += this.OnNetworkActivity;
@@ -87,7 +87,7 @@ namespace Vaper.Heroes
             this.BlurIndicator.PropertyChanged -= this.BlurIndicatorPropertyChanged;
 
             Entity.OnInt32PropertyChange -= this.OnNetworkActivity;
-            this.Ensage.Renderer.Draw -= this.OnDraw;
+            this.Context.Renderer.Draw -= this.OnDraw;
 
             base.OnDeactivate();
         }
@@ -131,11 +131,11 @@ namespace Vaper.Heroes
             {
                 if (!this.Owner.HasModifier(this.Blur.ModifierName))
                 {
-                    this.Ensage.Particle.AddOrUpdate(this.Owner, "vaper_blurIndicator", @"particles/dire_fx/tower_bad_lamp_f.vpcf", ParticleAttachment.AbsOriginFollow);
+                    this.Context.Particle.AddOrUpdate(this.Owner, "vaper_blurIndicator", @"particles/dire_fx/tower_bad_lamp_f.vpcf", ParticleAttachment.AbsOriginFollow);
                 }
                 else
                 {
-                    this.Ensage.Particle.Remove("vaper_blurIndicator");
+                    this.Context.Particle.Remove("vaper_blurIndicator");
                 }
             }
 
@@ -146,7 +146,7 @@ namespace Vaper.Heroes
         {
             if (!this.BlurIndicator)
             {
-                this.Ensage.Particle.Remove("vaper_blurIndicator");
+                this.Context.Particle.Remove("vaper_blurIndicator");
             }
         }
 
@@ -154,11 +154,11 @@ namespace Vaper.Heroes
         {
             if (this.CritIndicator)
             {
-                this.Ensage.Renderer.Draw += this.OnDraw;
+                this.Context.Renderer.Draw += this.OnDraw;
             }
             else
             {
-                this.Ensage.Renderer.Draw -= this.OnDraw;
+                this.Context.Renderer.Draw -= this.OnDraw;
             }
         }
 
@@ -173,10 +173,10 @@ namespace Vaper.Heroes
             var barPos = this.Owner.Position + new Vector3(0, 0, this.Owner.HealthBarOffset);
             if (Drawing.WorldToScreen(barPos, out screenPos))
             {
-                this.Ensage.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 15, 80, 7), Color.Red);
+                this.Context.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 15, 80, 7), Color.Red);
 
                 var critWidth = 80.0f * this.CurrentCritChance;
-                this.Ensage.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 11), new Vector2((screenPos.X - 40) + critWidth, screenPos.Y - 11), Color.Red, 7);
+                this.Context.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 11), new Vector2((screenPos.X - 40) + critWidth, screenPos.Y - 11), Color.Red, 7);
             }
         }
 

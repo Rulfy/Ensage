@@ -18,7 +18,7 @@ namespace Vaper
         private readonly BaseHero baseHero;
 
         public HarrasOrbwalkingMode(BaseHero hero)
-            : base(hero.Ensage.Orbwalker, hero.Ensage.TargetSelector, "Vaper Harras", 'X', false, false, false, false, true, true)
+            : base(hero.Context, "Vaper Harras", 'X', false, false, false, false, true, true)
         {
             this.baseHero = hero;
         }

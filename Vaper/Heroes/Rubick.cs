@@ -184,14 +184,13 @@ namespace Vaper.Heroes
             this.castedAbilities.Clear();
             this.stolenInfos.Clear();
 
-            this.Telekinesis = this.Ensage.AbilityFactory.GetAbility<rubick_telekinesis>();
-            this.FadeBolt = this.Ensage.AbilityFactory.GetAbility<rubick_fade_bolt>();
-            this.Steal = this.Ensage.AbilityFactory.GetAbility<rubick_spell_steal>();
+            this.Telekinesis = this.Context.AbilityFactory.GetAbility<rubick_telekinesis>();
+            this.FadeBolt = this.Context.AbilityFactory.GetAbility<rubick_fade_bolt>();
+            this.Steal = this.Context.AbilityFactory.GetAbility<rubick_spell_steal>();
 
             var factory = this.Menu.Hero.Factory;
             this.CliffItem = factory.Item("Put on cliff", true);
-
-            AbilityDetector.AbilityCasted += this.AbilityCasted;
+            this.Context.AbilityDetector.AbilityCasted += this.AbilityCasted;
             Drawing.OnDraw += this.OnDraw;
 
             this.UpdateHandler = UpdateManager.Run(this.OnUpdate);
@@ -200,7 +199,7 @@ namespace Vaper.Heroes
         protected override void OnDeactivate()
         {
             Drawing.OnDraw -= this.OnDraw;
-            AbilityDetector.AbilityCasted -= this.AbilityCasted;
+            this.Context.AbilityDetector.AbilityCasted -= this.AbilityCasted;
             this.UpdateHandler.Cancel();
 
             base.OnDeactivate();
@@ -234,13 +233,13 @@ namespace Vaper.Heroes
             await Task.Delay(125, token);
         }
 
-        private void AbilityCasted(Unit sender, AbilityEventArgs e)
+        private void AbilityCasted(object sender, AbilityEventArgs e)
         {
             var hero = sender as Hero;
-            if ((hero != null) && sender.IsEnemy(this.Owner) && !sender.IsIllusion)
+            if ((hero != null) && e.Caster.IsEnemy(this.Owner) && !e.Caster.IsIllusion)
             {
-                Log.Debug($"{sender.Name} casted {e.Ability.Name}");
-                this.castedAbilities[hero] = e.Ability;
+                Log.Debug($"{e.Caster.Name} casted {e.Ability.Ability.Name}");
+                this.castedAbilities[hero] = e.Ability.Ability;
             }
         }
 
@@ -296,7 +295,7 @@ namespace Vaper.Heroes
                     var texture = Drawing.GetTexture($"materials/ensage_ui/spellicons/{this.nextStealAbility.Item1.Name}.vmat");
                     Drawing.DrawRect(screenPos, new Vector2(32, 32), texture);
                 }
-                catch (DotaTextureNotFoundException e)
+                catch (DotaTextureNotFoundException)
                 {
                     Drawing.DrawText($"Stealing {this.nextStealAbility.Item1.Name}", screenPos, Color.Yellow, FontFlags.DropShadow | FontFlags.AntiAlias);
                 }

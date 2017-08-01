@@ -15,7 +15,7 @@ namespace Vaper
     using Ensage.SDK.Service.Metadata;
 
     [ExportPlugin("Vaper", HeroId.npc_dota_hero_axe, HeroId.npc_dota_hero_phantom_assassin, HeroId.npc_dota_hero_juggernaut, HeroId.npc_dota_hero_alchemist,
-        HeroId.npc_dota_hero_crystal_maiden, HeroId.npc_dota_hero_pudge, HeroId.npc_dota_hero_undying, HeroId.npc_dota_hero_rubick, HeroId.npc_dota_hero_venomancer)]
+        HeroId.npc_dota_hero_crystal_maiden, HeroId.npc_dota_hero_pudge, HeroId.npc_dota_hero_undying, HeroId.npc_dota_hero_rubick, HeroId.npc_dota_hero_venomancer, HeroId.npc_dota_hero_drow_ranger)]
     public class Program : Plugin
     {
         private readonly Hero owner;

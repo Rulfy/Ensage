@@ -62,7 +62,7 @@ namespace Vaper.OrbwalkingModes.Combo
 
             if ((this.CurrentTarget == null) || !this.CurrentTarget.IsVisible)
             {
-                this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
+                this.hero.Context.Orbwalker.Active.OrbwalkTo(null);
                 return;
             }
 
@@ -282,7 +282,7 @@ namespace Vaper.OrbwalkingModes.Combo
 
             if (this.hero.BladeFuryMoveOnly && this.Owner.HasModifier(bladeFury.ModifierName))
             {
-                this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
+                this.hero.Context.Orbwalker.Active.OrbwalkTo(null);
             }
             else
             {

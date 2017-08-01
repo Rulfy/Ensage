@@ -98,10 +98,10 @@ namespace Vaper.Heroes
         {
             base.OnActivate();
 
-            this.Gale = this.Ensage.AbilityFactory.GetAbility<venomancer_venomous_gale>();
-            this.Sting = this.Ensage.AbilityFactory.GetAbility<venomancer_poison_sting>();
-            this.Ward = this.Ensage.AbilityFactory.GetAbility<venomancer_plague_ward>();
-            this.Nova = this.Ensage.AbilityFactory.GetAbility<venomancer_poison_nova>();
+            this.Gale = this.Context.AbilityFactory.GetAbility<venomancer_venomous_gale>();
+            this.Sting = this.Context.AbilityFactory.GetAbility<venomancer_poison_sting>();
+            this.Ward = this.Context.AbilityFactory.GetAbility<venomancer_plague_ward>();
+            this.Nova = this.Context.AbilityFactory.GetAbility<venomancer_poison_nova>();
 
             this.wardCommandList.Clear();
             this.UpdateHandler = UpdateManager.Run(this.OnUpdate);

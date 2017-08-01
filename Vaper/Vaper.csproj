@@ -65,6 +65,7 @@
     <Compile Include="HarrasOrbwalkingMode.cs" />
     <Compile Include="Heroes\Alchemist.cs" />
     <Compile Include="Heroes\Axe.cs" />
+    <Compile Include="Heroes\Drow.cs" />
     <Compile Include="Heroes\Juggernaut.cs" />
     <Compile Include="Heroes\CrystalMaiden.cs" />
     <Compile Include="Heroes\PhantomAssassin.cs" />
@@ -78,15 +79,15 @@
     <Compile Include="OrbwalkingModes\Combo\PhantomAssassinComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\Combo\AxeComboOrbwalker.cs" />
     <Compile Include="BaseHero.cs" />
-    <Compile Include="EnsageWorkUnit.cs" />
     <Compile Include="ExportHeroAttribute.cs" />
     <Compile Include="IHero.cs" />
     <Compile Include="IHeroMetadata.cs" />
-    <Compile Include="IEnsageWorkUnit.cs" />
     <Compile Include="OrbwalkingModes\Combo\PudgeComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\Combo\RubickComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\Combo\UndyingComboOrbwalker.cs" />
+    <Compile Include="OrbwalkingModes\Combo\DrowComboOrbwalker.cs" />
     <Compile Include="OrbwalkingModes\Combo\VenoComboOrbwalker.cs" />
+    <Compile Include="OrbwalkingModes\Harras\DrowHarras.cs" />
     <Compile Include="OrbwalkingModes\Harras\PhantomAssassinHarras.cs" />
     <Compile Include="ComboOrbwalkingMode.cs" />
     <Compile Include="Program.cs" />

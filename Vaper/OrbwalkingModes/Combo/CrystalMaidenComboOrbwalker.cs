@@ -52,7 +52,7 @@ namespace Vaper.OrbwalkingModes.Combo
 
             if ((this.CurrentTarget == null) || !this.CurrentTarget.IsVisible)
             {
-                this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
+                this.hero.Context.Orbwalker.Active.OrbwalkTo(null);
                 return;
             }
 

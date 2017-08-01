@@ -108,10 +108,10 @@ namespace Vaper.Heroes
         {
             base.OnActivate();
 
-            this.BladeFury = this.Ensage.AbilityFactory.GetAbility<juggernaut_blade_fury>();
-            this.HealingWard = this.Ensage.AbilityFactory.GetAbility<juggernaut_healing_ward>();
-            this.Crit = this.Ensage.AbilityFactory.GetAbility<juggernaut_blade_dance>();
-            this.OmniSlash = this.Ensage.AbilityFactory.GetAbility<juggernaut_omni_slash>();
+            this.BladeFury = this.Context.AbilityFactory.GetAbility<juggernaut_blade_fury>();
+            this.HealingWard = this.Context.AbilityFactory.GetAbility<juggernaut_healing_ward>();
+            this.Crit = this.Context.AbilityFactory.GetAbility<juggernaut_blade_dance>();
+            this.OmniSlash = this.Context.AbilityFactory.GetAbility<juggernaut_omni_slash>();
 
             this.OmniBlinkHandler = UpdateManager.Run(this.OnOmniBlink, false, false);
             this.HealingWardControlHandler = UpdateManager.Run(this.OnHealingWardControl, false, false);
@@ -128,7 +128,7 @@ namespace Vaper.Heroes
             Entity.OnInt32PropertyChange += this.OnNetworkActivity;
             if (this.CritIndicator)
             {
-                this.Ensage.Renderer.Draw += this.OnDraw;
+                this.Context.Renderer.Draw += this.OnDraw;
             }
 
             if (this.OmniBlink)
@@ -151,7 +151,7 @@ namespace Vaper.Heroes
             ObjectManager.OnAddEntity -= this.OnHealingWardAdded;
             Unit.OnModifierAdded -= this.OnOmniUsage;
             Entity.OnInt32PropertyChange -= this.OnNetworkActivity;
-            this.Ensage.Renderer.Draw -= this.OnDraw;
+            this.Context.Renderer.Draw -= this.OnDraw;
 
             this.OmniBlinkHandler.Cancel();
 
@@ -175,11 +175,11 @@ namespace Vaper.Heroes
         {
             if (this.CritIndicator)
             {
-                this.Ensage.Renderer.Draw += this.OnDraw;
+                this.Context.Renderer.Draw += this.OnDraw;
             }
             else
             {
-                this.Ensage.Renderer.Draw -= this.OnDraw;
+                this.Context.Renderer.Draw -= this.OnDraw;
             }
         }
 
@@ -207,10 +207,10 @@ namespace Vaper.Heroes
             var barPos = this.Owner.Position + new Vector3(0, 0, this.Owner.HealthBarOffset);
             if (Drawing.WorldToScreen(barPos, out screenPos))
             {
-                this.Ensage.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 12, 80, 7), Color.Red);
+                this.Context.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 12, 80, 7), Color.Red);
 
                 var critWidth = 80.0f * this.CurrentCritChance;
-                this.Ensage.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 8), new Vector2((screenPos.X - 40) + critWidth, screenPos.Y - 8), Color.Red, 7);
+                this.Context.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 8), new Vector2((screenPos.X - 40) + critWidth, screenPos.Y - 8), Color.Red, 7);
             }
         }
 

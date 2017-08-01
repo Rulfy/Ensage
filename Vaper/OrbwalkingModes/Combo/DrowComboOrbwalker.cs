@@ -1,7 +1,6 @@
-﻿// <copyright file="RubickComboOrbwalker.cs" company="Ensage">
+﻿// <copyright file="VenoComboOrbwalker.cs" company="Ensage">
 //    Copyright (c) 2017 Ensage.
 // </copyright>
-
 namespace Vaper.OrbwalkingModes.Combo
 {
     using System.Threading;
@@ -9,11 +8,11 @@ namespace Vaper.OrbwalkingModes.Combo
 
     using Vaper.Heroes;
 
-    public class RubickOrbwalker : ComboOrbwalkingMode
+    public class DrowComboOrbwalker : ComboOrbwalkingMode
     {
-        private readonly Rubick hero;
+        private readonly Drow hero;
 
-        public RubickOrbwalker(Rubick hero)
+        public DrowComboOrbwalker(Drow hero)
             : base(hero)
         {
             this.hero = hero;
@@ -31,9 +30,6 @@ namespace Vaper.OrbwalkingModes.Combo
                 this.hero.Context.Orbwalker.Active.OrbwalkTo(null);
                 return;
             }
-
-            // TODO ...
-            this.OrbwalkToTarget();
         }
     }
 }

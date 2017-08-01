@@ -52,10 +52,10 @@ namespace Vaper.Heroes
         {
             base.OnActivate();
 
-            this.Decay = this.Ensage.AbilityFactory.GetAbility<undying_decay>();
-            this.SoulRip = this.Ensage.AbilityFactory.GetAbility<undying_soul_rip>();
-            this.Tombstone = this.Ensage.AbilityFactory.GetAbility<undying_tombstone>();
-            this.Golem = this.Ensage.AbilityFactory.GetAbility<undying_flesh_golem>();
+            this.Decay = this.Context.AbilityFactory.GetAbility<undying_decay>();
+            this.SoulRip = this.Context.AbilityFactory.GetAbility<undying_soul_rip>();
+            this.Tombstone = this.Context.AbilityFactory.GetAbility<undying_tombstone>();
+            this.Golem = this.Context.AbilityFactory.GetAbility<undying_flesh_golem>();
 
             var factory = this.Menu.Hero.Factory;
             this.SoulRipIndicator = factory.Item("Affected Unit Count by SoulRip", true);
@@ -63,13 +63,13 @@ namespace Vaper.Heroes
 
             if (this.SoulRipIndicator)
             {
-                this.Ensage.Renderer.Draw += this.OnDraw;
+                this.Context.Renderer.Draw += this.OnDraw;
             }
         }
 
         protected override void OnDeactivate()
         {
-            this.Ensage.Renderer.Draw -= this.OnDraw;
+            this.Context.Renderer.Draw -= this.OnDraw;
 
             base.OnDeactivate();
         }
@@ -137,7 +137,7 @@ namespace Vaper.Heroes
             var barPos = this.Owner.Position + new Vector3(0, 0, this.Owner.HealthBarOffset);
             if (Drawing.WorldToScreen(barPos, out screenPos))
             {
-                this.Ensage.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 12, 80, 7), Color.Red);
+                this.Context.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 12, 80, 7), Color.Red);
 
                 var affected = this.SoulRip.GetAffectedUnitCount(null);
                 var maxAffected = this.SoulRip.MaxUnits;
@@ -145,7 +145,7 @@ namespace Vaper.Heroes
                 var percentage = (float)affected / maxAffected;
 
                 var width = 80.0f * percentage;
-                this.Ensage.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 8), new Vector2((screenPos.X - 40) + width, screenPos.Y - 8), Color.Red, 7);
+                this.Context.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 8), new Vector2((screenPos.X - 40) + width, screenPos.Y - 8), Color.Red, 7);
             }
         }
 
@@ -153,11 +153,11 @@ namespace Vaper.Heroes
         {
             if (this.SoulRipIndicator)
             {
-                this.Ensage.Renderer.Draw += this.OnDraw;
+                this.Context.Renderer.Draw += this.OnDraw;
             }
             else
             {
-                this.Ensage.Renderer.Draw -= this.OnDraw;
+                this.Context.Renderer.Draw -= this.OnDraw;
             }
         }
     }

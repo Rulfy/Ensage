@@ -17,7 +17,7 @@ namespace Vaper
         private readonly BaseHero baseHero;
 
         protected ComboOrbwalkingMode(BaseHero hero, float maxTargetRange = 1000.0f)
-            : base(hero.Ensage.Orbwalker, hero.Ensage.Input, hero.Menu.General.ComboKey)
+            : base(hero.Context, hero.Menu.General.ComboKey)
         {
             this.baseHero = hero;
             this.MaxTargetRange = maxTargetRange;
@@ -58,7 +58,7 @@ namespace Vaper
 
             if (!this.baseHero.Menu.General.LockTarget || (this.CurrentTarget == null) || !this.CurrentTarget.IsAlive)
             {
-                this.CurrentTarget = this.baseHero.Ensage.TargetSelector.Active.GetTargets().Where(x => x.Distance2D(this.Owner) <= this.MaxTargetRange).OrderByDescending(x => !x.IsIllusion).FirstOrDefault();
+                this.CurrentTarget = this.baseHero.Context.TargetSelector.Active.GetTargets().Where(x => x.Distance2D(this.Owner) <= this.MaxTargetRange).OrderByDescending(x => !x.IsIllusion).FirstOrDefault();
             }
 
             return true;
@@ -69,11 +69,11 @@ namespace Vaper
             if (this.CurrentTarget != null &&
                 (!this.baseHero.Menu.General.KiteMode || this.Owner.Distance2D(this.CurrentTarget) <= this.Owner.AttackRange(this.CurrentTarget)))
             {
-                this.baseHero.Ensage.Orbwalker.Active.OrbwalkTo(this.CurrentTarget);
+                this.baseHero.Context.Orbwalker.Active.OrbwalkTo(this.CurrentTarget);
             }
             else
             {
-                this.baseHero.Ensage.Orbwalker.Active.OrbwalkTo(null);
+                this.baseHero.Context.Orbwalker.Active.OrbwalkTo(null);
             }
         }
     }

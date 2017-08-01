@@ -42,7 +42,7 @@ namespace Vaper.OrbwalkingModes.Combo
 
             if ((this.CurrentTarget == null) || !this.CurrentTarget.IsVisible)
             {
-                this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
+                this.hero.Context.Orbwalker.Active.OrbwalkTo(null);
                 return;
             }
 
@@ -160,7 +160,7 @@ namespace Vaper.OrbwalkingModes.Combo
                             {
                                 if (isInvisible && (targetDistance <= this.Owner.AttackRange(this.CurrentTarget)))
                                 {
-                                    this.hero.Ensage.Orbwalker.Active.Attack(this.CurrentTarget);
+                                    this.hero.Context.Orbwalker.Active.Attack(this.CurrentTarget);
                                     await Task.Delay((int)(this.Owner.GetAutoAttackArrivalTime(this.CurrentTarget) * 1000.0f * 2f), token);
                                 }
 
@@ -231,7 +231,7 @@ namespace Vaper.OrbwalkingModes.Combo
             {
                 if (channeling && ((this.hero.ConcoctionChannelingDuration / concoction.Duration) < 0.8f))
                 {
-                    this.hero.Ensage.Orbwalker.Active.OrbwalkTo(null);
+                    this.hero.Context.Orbwalker.Active.OrbwalkTo(null);
                     return;
                 }
             }
