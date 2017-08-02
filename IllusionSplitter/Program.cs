@@ -4,14 +4,10 @@
 
 namespace IllusionSplitter
 {
-    using System;
     using System.ComponentModel.Composition;
     using System.Windows.Input;
 
     using Ensage.Common.Menu;
-    using Ensage.SDK.Input;
-    using Ensage.SDK.Inventory;
-    using Ensage.SDK.Orbwalker;
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
@@ -29,14 +25,6 @@ namespace IllusionSplitter
         }
 
         public IllusionSplitterMode OrbwalkerMode { get; private set; }
-
-        private IOrbwalker Orbwalker
-        {
-            get
-            {
-                return this.context.Orbwalker.Active;
-            }
-        }
 
         protected override void OnActivate()
         {

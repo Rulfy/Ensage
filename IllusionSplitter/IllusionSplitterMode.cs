@@ -167,8 +167,9 @@ namespace IllusionSplitter
 
         private async Task MoveIllusionsAsync(CancellationToken arg)
         {
-            var illusions = EntityManager<Hero>.Entities.Where(x => x.IsIllusion && x.IsAlive && x.IsControllable && (x.Distance2D(this.context.Owner) < this.config.IlluRange.Value))
-                                               .ToList();
+            var illusions = EntityManager<Hero>
+                .Entities.Where(x => x.IsIllusion && x.IsAlive && x.IsControllable && (x.Distance2D(this.context.Owner) < this.config.IlluRange.Value))
+                .ToList();
             if (!illusions.Any())
             {
                 return;
