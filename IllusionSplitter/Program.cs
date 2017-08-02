@@ -18,41 +18,41 @@ namespace IllusionSplitter
     [ExportPlugin("IllusionSplitter")]
     public class Program : Plugin
     {
-        private readonly Lazy<IInputManager> input;
-
-        private readonly Lazy<IInventoryManager> inventoryMgr;
-
-        private readonly Lazy<IOrbwalkerManager> orbwalkerManager;
+        private readonly IServiceContext context;
 
         private IllusionSplitterConfig config;
 
         [ImportingConstructor]
-        public Program([Import] Lazy<IInventoryManager> inventoryMgr, [Import] Lazy<IInputManager> input, [Import] Lazy<IOrbwalkerManager> orbwalkerManager)
+        public Program([Import] IServiceContext context)
         {
-            this.inventoryMgr = inventoryMgr;
-            this.input = input;
-            this.orbwalkerManager = orbwalkerManager;
+            this.context = context;
         }
 
         public IllusionSplitterMode OrbwalkerMode { get; private set; }
 
-        private IOrbwalker Orbwalker => this.orbwalkerManager.Value.Active;
+        private IOrbwalker Orbwalker
+        {
+            get
+            {
+                return this.context.Orbwalker.Active;
+            }
+        }
 
         protected override void OnActivate()
         {
             this.config = new IllusionSplitterConfig();
 
             var key = KeyInterop.KeyFromVirtualKey((int)this.config.SplitterHotkey.Value.Key);
-            this.OrbwalkerMode = new IllusionSplitterMode(this.Orbwalker, this.input.Value, key, this.config, this.inventoryMgr.Value);
+            this.OrbwalkerMode = new IllusionSplitterMode(this.context, key, this.config);
 
             this.config.SplitterHotkey.Item.ValueChanged += this.HotkeyChanged;
 
-            this.orbwalkerManager.Value.RegisterMode(this.OrbwalkerMode);
+            this.context.Orbwalker.RegisterMode(this.OrbwalkerMode);
         }
 
         protected override void OnDeactivate()
         {
-            this.orbwalkerManager.Value.UnregisterMode(this.OrbwalkerMode);
+            this.context.Orbwalker.UnregisterMode(this.OrbwalkerMode);
 
             this.config.SplitterHotkey.Item.ValueChanged -= this.HotkeyChanged;
 
