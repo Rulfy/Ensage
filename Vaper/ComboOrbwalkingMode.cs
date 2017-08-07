@@ -56,7 +56,7 @@ namespace Vaper
                 return false;
             }
 
-            if (!this.baseHero.Menu.General.LockTarget || (this.CurrentTarget == null) || !this.CurrentTarget.IsAlive)
+            if (!this.baseHero.Menu.General.LockTarget || (this.CurrentTarget == null) || !this.CurrentTarget.IsValid || !this.CurrentTarget.IsAlive)
             {
                 this.CurrentTarget = this.baseHero.Context.TargetSelector.Active.GetTargets().Where(x => x.Distance2D(this.Owner) <= this.MaxTargetRange).OrderByDescending(x => !x.IsIllusion).FirstOrDefault();
             }
@@ -66,7 +66,7 @@ namespace Vaper
 
         protected void OrbwalkToTarget()
         {
-            if (this.CurrentTarget != null &&
+            if (this.CurrentTarget != null && this.CurrentTarget.IsValid &&
                 (!this.baseHero.Menu.General.KiteMode || this.Owner.Distance2D(this.CurrentTarget) <= this.Owner.AttackRange(this.CurrentTarget)))
             {
                 this.baseHero.Context.Orbwalker.Active.OrbwalkTo(this.CurrentTarget);
