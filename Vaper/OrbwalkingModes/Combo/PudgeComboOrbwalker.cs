@@ -75,6 +75,8 @@ namespace Vaper.OrbwalkingModes.Combo
             var hook = this.hero.Hook;
             var blink = this.hero.Blink;
             var atos = this.hero.Atos;
+
+            this.MaxTargetRange = Math.Max(this.MaxTargetRange, hook.CastRange * 1.1f);
             if (blink != null)
             {
                 this.MaxTargetRange = Math.Max(this.MaxTargetRange, blink.CastRange * 1.3f);
@@ -83,11 +85,6 @@ namespace Vaper.OrbwalkingModes.Combo
             if (atos != null)
             {
                 this.MaxTargetRange = Math.Max(this.MaxTargetRange, atos.CastRange * 1.1f);
-            }
-
-            if (hook != null)
-            {
-                this.MaxTargetRange = Math.Max(this.MaxTargetRange, hook.CastRange * 1.1f);
             }
 
             if ((this.CurrentTarget == null) || !this.CurrentTarget.IsVisible)
@@ -102,7 +99,7 @@ namespace Vaper.OrbwalkingModes.Combo
                 return;
             }
 
-            if ((rot != null) && !rot.Enabled && rot.CanBeCasted && rot.CanHit(this.CurrentTarget))
+            if (!rot.Enabled && rot.CanBeCasted && rot.CanHit(this.CurrentTarget))
             {
                 rot.Enabled = true;
                 await Task.Delay(rot.GetCastDelay(), token);
@@ -112,7 +109,7 @@ namespace Vaper.OrbwalkingModes.Combo
             var forceStaffReady = (forceStaff != null) && forceStaff.CanBeCasted;
 
             var ult = this.hero.Dismember;
-            if ((ult != null) && ult.CanBeCasted && ult.CanHit(this.CurrentTarget))
+            if (ult.CanBeCasted && ult.CanHit(this.CurrentTarget))
             {
                 if (this.CurrentTarget.IsLinkensProtected() && forceStaffReady)
                 {
@@ -143,10 +140,11 @@ namespace Vaper.OrbwalkingModes.Combo
                 {
                     var castDelay = hook.GetCastDelay(this.CurrentTarget) + 100;
                     await Task.Delay(castDelay, token);
-                    if (ult.CanBeCasted)
+
+                    if ((ult.Ability.Level > 0) && (ult.Ability.ManaCost <= this.Owner.Mana) && (ult.Ability.Cooldown <= 0.0f))
                     {
                         // wait till hook hits/comes back or we hit the target
-                        var hittime = (int)(hook.GetHitTime(this.CurrentTarget) * 1.1f);
+                        var hittime = (int)((hook.GetCastDelay(this.CurrentTarget) * 1.1f) + ((hook.Range / hook.Speed) * 1000.0f));
                         var hasHit = await KeepTrying(
                                          () =>
                                              {
@@ -160,8 +158,6 @@ namespace Vaper.OrbwalkingModes.Combo
                         // we hit the target
                         if (hasHit)
                         {
-                            Log.Debug($"we hit the target!");
-
                             if (this.CurrentTarget.IsLinkensProtected() && forceStaffReady)
                             {
                                 var canBreakLinkens = await KeepTrying(
@@ -197,7 +193,6 @@ namespace Vaper.OrbwalkingModes.Combo
                                                 hittime,
                                                 50,
                                                 token);
-
                             if (rot.CanBeCasted && !rot.Enabled)
                             {
                                 rot.Enabled = true;

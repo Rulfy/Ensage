@@ -127,7 +127,7 @@ namespace Vaper.Heroes
 
         protected override void OnUpdateParticles()
         {
-            if (this.BlurIndicator)
+            if (this.BlurIndicator && this.Blur.CanBeCasted)
             {
                 if (!this.Owner.HasModifier(this.Blur.ModifierName))
                 {
