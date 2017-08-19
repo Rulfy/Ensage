@@ -235,10 +235,10 @@ namespace Vaper.Heroes
 
         private void AbilityCasted(object sender, AbilityEventArgs e)
         {
-            var hero = sender as Hero;
-            if ((hero != null) && e.Caster.IsEnemy(this.Owner) && !e.Caster.IsIllusion)
+            var hero = e.Caster as Hero;
+            if ((hero != null) && hero.IsEnemy(this.Owner) && !hero.IsIllusion)
             {
-                Log.Debug($"{e.Caster.Name} casted {e.Ability.Ability.Name}");
+                Log.Debug($"{hero.Name} casted {e.Ability.Ability.Name}");
                 this.castedAbilities[hero] = e.Ability.Ability;
             }
         }
