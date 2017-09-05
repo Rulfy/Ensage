@@ -16,6 +16,7 @@ namespace Vaper
     using Ensage;
     using Ensage.SDK.Handlers;
     using Ensage.SDK.Helpers;
+    using Ensage.SDK.Renderer.Particle;
     using Ensage.SDK.Service;
 
     using log4net;
@@ -119,7 +120,7 @@ namespace Vaper
                                     $"vaper_smoke_{i}",
                                     "particles/world_environmental_fx/rune_ambient_01_smoke.vpcf",
                                     ParticleAttachment.AbsOrigin,
-                                    false,
+                                    RestartType.None,
                                     0,
                                     this.Owner.Position + new Vector3(rnd.NextFloat(-500, 500), rnd.NextFloat(-500, 500), 0));
                             }
