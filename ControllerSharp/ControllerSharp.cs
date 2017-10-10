@@ -142,7 +142,7 @@ namespace ControllerSharp
                     }
                 }
 
-                var tickRate = this.orbwalker.Value.Config.TickRate.Value;
+                var tickRate = Math.Max(25, this.orbwalker.Value.Config.TickRate.Value);
                 if (Game.IsPaused || !this.owner.IsAlive)
                 {
                     await Task.Delay(tickRate);

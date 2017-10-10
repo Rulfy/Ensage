@@ -56,7 +56,7 @@ namespace CampInformer
 
         private void Drawing_OnDraw(EventArgs args)
         {
-            foreach (var creep in this.creepList)
+            foreach (var creep in this.creepList.Where(x => x.IsValid))
             {
                 Vector2 screenPos;
                 if (Drawing.WorldToScreen(creep.Position, out screenPos))
@@ -71,9 +71,6 @@ namespace CampInformer
         private void OnUpdate()
         {
             this.creepList = EntityManager<Creep>.Entities.Where(x => x.IsWaitingToSpawn && x.Team == Team.Neutral && this.creepNames.Contains(x.Name.Substring(17))).ToList();
-
-            var dormantList = ObjectManager.GetDormantEntities<Creep>().Where(x => x.IsWaitingToSpawn && x.Team == Team.Neutral && this.creepNames.Contains(x.Name.Substring(17)));
-            this.creepList.AddRange(dormantList);
         }
     }
 }
