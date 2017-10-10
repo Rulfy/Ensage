@@ -14,6 +14,7 @@ namespace Vaper.Heroes
 
     using Ensage;
     using Ensage.SDK.Abilities;
+    using Ensage.SDK.Abilities.Aggregation;
     using Ensage.SDK.Abilities.Items;
     using Ensage.SDK.Abilities.npc_dota_hero_juggernaut;
     using Ensage.SDK.Extensions;
