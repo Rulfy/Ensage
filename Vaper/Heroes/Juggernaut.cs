@@ -65,19 +65,6 @@ namespace Vaper.Heroes
 
         public float CurrentCritChance { get; private set; }
 
-        public DiffusalBlade Diffusal
-        {
-            get
-            {
-                if (this.Diffu2 != null)
-                {
-                    return this.Diffu2;
-                }
-
-                return this.Diffu1;
-            }
-        }
-
         public juggernaut_healing_ward HealingWard { get; private set; }
 
         [ItemBinding]
@@ -91,10 +78,7 @@ namespace Vaper.Heroes
         public juggernaut_omni_slash OmniSlash { get; private set; }
 
         [ItemBinding]
-        protected item_diffusal_blade Diffu1 { get; private set; }
-
-        [ItemBinding]
-        protected item_diffusal_blade_2 Diffu2 { get; private set; }
+        public item_diffusal_blade Diffusal { get; private set; }
 
         protected TaskHandler HealingWardControlHandler { get; private set; }
 
