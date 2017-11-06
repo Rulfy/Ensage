@@ -376,7 +376,7 @@ namespace Vaper.Heroes
         private async Task OnOmniBlink(CancellationToken token)
         {
             var startTime = Game.GameTime;
-            var duration = this.OmniSlash.Duration;
+            var duration = this.OmniSlash.DamageDuration;
             var radius = this.OmniSlash.Radius;
             var myTeam = this.Owner.Team;
 
