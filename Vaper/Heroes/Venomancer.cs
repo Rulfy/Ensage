@@ -199,7 +199,7 @@ namespace Vaper.Heroes
                     }
                 }
 
-                if (this.Sting.Enabled)
+                if (this.Sting.IsReady)
                 {
                     // apply poisen buff to as many enemy heroes as possible  
                     var tmp = enemies.Where(x => !x.HasModifier(this.Sting.TargetModifierName)).ToList();
