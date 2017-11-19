@@ -5,17 +5,22 @@
 namespace Vaper.OrbwalkingModes.Combo
 {
     using System;
-    using System.Diagnostics;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
 
+    using Ensage;
     using Ensage.SDK.Extensions;
+    using Ensage.SDK.Geometry;
+    using Ensage.SDK.Handlers;
+    using Ensage.SDK.Helpers;
     using Ensage.SDK.Prediction;
 
     using log4net;
 
     using PlaySharp.Toolkit.Logging;
+
+    using SharpDX;
 
     using Vaper.Heroes;
 
@@ -25,50 +30,25 @@ namespace Vaper.OrbwalkingModes.Combo
 
         private readonly Pudge hero;
 
+        private readonly IUpdateHandler hookUpdateHandler;
+
+        private Vector3 hookCastPosition;
+
+        private float hookStartCastTime;
+
         public PudgeOrbwalker(Pudge hero)
             : base(hero)
         {
             this.hero = hero;
-        }
 
-        public static async Task<bool> KeepTrying(Func<bool> operation, int timeout, int delay = 50, CancellationToken token = default(CancellationToken))
-        {
-            var success = false;
-
-            var watch = new Stopwatch();
-            watch.Start();
-            while (watch.ElapsedMilliseconds <= timeout)
-            {
-                success = operation();
-                if (success)
-                {
-                    break;
-                }
-
-                await Task.Delay(delay, token);
-            }
-
-            watch.Stop();
-            return success;
+            Entity.OnBoolPropertyChange += this.OnHookCast;
+            this.hookUpdateHandler = UpdateManager.Subscribe(this.HookHitCheck, 0, false);
         }
 
         public override async Task ExecuteAsync(CancellationToken token)
         {
             if (!await this.ShouldExecute(token))
             {
-                return;
-            }
-
-            var rot = this.hero.Rot;
-            if (this.Owner.IsChanneling())
-            {
-                if ((rot != null) && !rot.Enabled && (this.CurrentTarget != null) && rot.CanBeCasted && rot.CanHit(this.CurrentTarget))
-                {
-                    rot.Enabled = true;
-                    await Task.Delay(rot.GetCastDelay(), token);
-                }
-
-                await Task.Delay(125, token);
                 return;
             }
 
@@ -99,156 +79,177 @@ namespace Vaper.OrbwalkingModes.Combo
                 return;
             }
 
-            if (!rot.Enabled && rot.CanBeCasted && rot.CanHit(this.CurrentTarget))
+            var rot = this.hero.Rot;
+            var ult = this.hero.Dismember;
+
+            var forceStaff = this.hero.ForceStaff;
+            var forceStaffReady = (forceStaff != null) && forceStaff.CanBeCasted;
+
+            if (blink?.CanBeCasted == true && this.Owner.Distance2D(this.CurrentTarget) > 600 && !this.hero.HookModifierDetected)
+            {
+                var distance = this.Owner.Distance2D(this.CurrentTarget);
+                var blinkPosition = this.CurrentTarget.NetworkPosition.Extend(this.Owner.NetworkPosition, Math.Max(100, distance - blink.CastRange));
+                blink.UseAbility(blinkPosition);
+
+                if (ult.CanBeCasted && blinkPosition.Distance2D(this.CurrentTarget.NetworkPosition) <= ult.CastRange)
+                {
+                    rot.Enabled = true;
+
+                    var linkens = this.CurrentTarget.IsLinkensProtected();
+                    if (forceStaffReady && linkens)
+                    {
+                        forceStaff.UseAbility(this.CurrentTarget);
+                        linkens = false;
+                    }
+
+                    if (!linkens)
+                    {
+                        ult.UseAbility(this.CurrentTarget);
+                        await Task.Delay(ult.GetCastDelay(this.CurrentTarget) + 500, token);
+                    }
+                }
+                else
+                {
+                    await Task.Delay(blink.GetCastDelay(this.CurrentTarget), token);
+                }
+            }
+
+            if (forceStaffReady && this.Owner.Distance2D(this.CurrentTarget) > 500 && !this.CurrentTarget.IsLinkensProtected())
+            {
+                if (this.Owner.FindRotationAngle(this.CurrentTarget.Position) > 0.3f)
+                {
+                    var turnPosition = this.Owner.NetworkPosition.Extend(this.CurrentTarget.NetworkPosition, 100);
+                    this.Owner.Move(turnPosition);
+                    await Task.Delay((int)(this.Owner.TurnTime(turnPosition) * 1000) + 200, token);
+                }
+
+                forceStaff.UseAbility(this.Owner);
+                await Task.Delay((int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000), token);
+            }
+
+            var vessel = this.hero.Vessel;
+            var urn = this.hero.Urn;
+            if ((urn?.CanBeCasted == true || vessel?.CanBeCasted == true)
+                && (this.hero.HookModifierDetected || this.Owner.Distance2D(this.CurrentTarget) < 300)
+                && !ult.IsChanneling)
+            {
+                urn?.UseAbility(this.CurrentTarget);
+                vessel?.UseAbility(this.CurrentTarget);
+            }
+
+            if (rot.CanBeCasted && !rot.Enabled && (this.hero.HookModifierDetected || rot.CanHit(this.CurrentTarget)))
             {
                 rot.Enabled = true;
                 await Task.Delay(rot.GetCastDelay(), token);
             }
 
-            var forceStaff = this.hero.ForceStaff;
-            var forceStaffReady = (forceStaff != null) && forceStaff.CanBeCasted;
-
-            var ult = this.hero.Dismember;
-            if (ult.CanBeCasted && ult.CanHit(this.CurrentTarget))
+            if (ult.CanBeCasted && (ult.CanHit(this.CurrentTarget) || this.hero.HookModifierDetected))
             {
-                if (this.CurrentTarget.IsLinkensProtected() && forceStaffReady)
+                var linkens = this.CurrentTarget.IsLinkensProtected();
+                if (forceStaffReady && linkens)
                 {
                     forceStaff.UseAbility(this.CurrentTarget);
-                    await Task.Delay(forceStaff.GetCastDelay(this.CurrentTarget), token);
+                    linkens = false;
                 }
 
-                ult.UseAbility(this.CurrentTarget);
-                await Task.Delay(ult.GetCastDelay(this.CurrentTarget) + 500, token);
-                return;
+                if (!linkens)
+                {
+                    ult.UseAbility(this.CurrentTarget);
+                    await Task.Delay(ult.GetCastDelay(this.CurrentTarget) + 500, token);
+                }
             }
 
-            var urn = this.hero.Urn;
-            if (hook.CanBeCasted && hook.CanHit(this.CurrentTarget))
+            if (hook.CanBeCasted && hook.CanHit(this.CurrentTarget) && !ult.IsChanneling)
             {
-                if ((atos != null) && atos.CanBeCasted && atos.CanHit(this.CurrentTarget) && !this.CurrentTarget.IsStunned() && !this.CurrentTarget.IsRooted())
+                if (atos?.CanBeCasted == true && atos.CanHit(this.CurrentTarget) && !this.CurrentTarget.IsStunned() && !this.CurrentTarget.IsRooted())
                 {
-                    var input = hook.GetPredictionInput(this.CurrentTarget);
-                    var output = hook.GetPredictionOutput(input);
-                    if ((output.HitChance != HitChance.OutOfRange) && (output.HitChance != HitChance.Collision))
+                    var hookPreAtosInput = hook.GetPredictionInput(this.CurrentTarget);
+                    var hookPreAtosOutput = hook.GetPredictionOutput(hookPreAtosInput);
+
+                    if ((hookPreAtosOutput.HitChance != HitChance.OutOfRange) && (hookPreAtosOutput.HitChance != HitChance.Collision))
                     {
                         atos.UseAbility(this.CurrentTarget);
-                        await Task.Delay(atos.GetCastDelay(this.CurrentTarget) + atos.GetHitTime(this.CurrentTarget), token);
+                        await Task.Delay(atos.GetHitTime(this.CurrentTarget), token);
                     }
                 }
 
-                if (hook.UseAbility(this.CurrentTarget, this.hero.MinimumHookChance))
+                var hookInput = hook.GetPredictionInput(this.CurrentTarget);
+                var hookOutput = hook.GetPredictionOutput(hookInput);
+
+                if (this.ShouldCastHook(hookOutput))
                 {
-                    var castDelay = hook.GetCastDelay(this.CurrentTarget) + 100;
-                    await Task.Delay(castDelay, token);
-
-                    if ((ult.Ability.Level > 0) && (ult.Ability.ManaCost <= this.Owner.Mana) && (ult.Ability.Cooldown <= 0.0f))
-                    {
-                        // wait till hook hits/comes back or we hit the target
-                        var hittime = (int)((hook.GetCastDelay(this.CurrentTarget) * 1.1f) + ((hook.Range / hook.Speed) * 1000.0f));
-                        var hasHit = await KeepTrying(
-                                         () =>
-                                             {
-                                                 this.Owner.Stop();
-                                                 return this.hero.HookModifierDetected;
-                                             },
-                                         hittime,
-                                         50,
-                                         token);
-
-                        // we hit the target
-                        if (hasHit)
-                        {
-                            if (this.CurrentTarget.IsLinkensProtected() && forceStaffReady)
-                            {
-                                var canBreakLinkens = await KeepTrying(
-                                                          () =>
-                                                              {
-                                                                  this.Owner.Stop();
-                                                                  return this.Owner.Distance2D(this.CurrentTarget) < forceStaff.CastRange;
-                                                              },
-                                                          hittime,
-                                                          50,
-                                                          token);
-
-                                if (canBreakLinkens)
-                                {
-                                    forceStaff.UseAbility(this.CurrentTarget);
-                                    await Task.Delay(forceStaff.GetCastDelay(this.CurrentTarget), token);
-                                    forceStaffReady = false;
-                                }
-                            }
-
-                            if ((urn != null) && urn.CanBeCasted && urn.CanHit(this.CurrentTarget) && !this.CurrentTarget.HasModifier(urn.TargetModifierName))
-                            {
-                                urn.UseAbility(this.CurrentTarget);
-                                await Task.Delay(urn.GetCastDelay(this.CurrentTarget), token);
-                            }
-
-                            var canUltHit = await KeepTrying(
-                                                () =>
-                                                    {
-                                                        this.Owner.Stop();
-                                                        return this.Owner.Distance2D(this.CurrentTarget) < (ult.CastRange + 150);
-                                                    },
-                                                hittime,
-                                                50,
-                                                token);
-                            if (rot.CanBeCasted && !rot.Enabled)
-                            {
-                                rot.Enabled = true;
-                                await Task.Delay(rot.GetCastDelay(), token);
-                            }
-
-                            this.hero.HookModifierDetected = false;
-
-                            Log.Debug($"can ult {canUltHit}");
-                            if (canUltHit)
-                            {
-                                ult.UseAbility(this.CurrentTarget);
-                                await Task.Delay(ult.GetCastDelay(this.CurrentTarget) + 500, token);
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (forceStaffReady && !this.CurrentTarget.IsLinkensProtected())
-            {
-                if (!this.CurrentTarget.IsRotating() && (this.Owner.Distance2D(this.CurrentTarget.InFront(forceStaff.PushLength)) < rot.Radius))
-                {
-                    forceStaff.UseAbility(this.CurrentTarget);
-                    var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
-                    await Task.Delay(forceStaff.GetCastDelay(this.CurrentTarget) + travelTime, token);
-
-                    if (rot.CanBeCasted && !rot.Enabled)
-                    {
-                        rot.Enabled = true;
-                        await Task.Delay(rot.GetCastDelay(), token);
-                    }
-                }
-                else if (ult.CanBeCasted && !this.Owner.IsRotating() && (this.CurrentTarget.Distance2D(this.Owner.InFront(forceStaff.PushLength)) <= ult.CastRange))
-                {
-                    forceStaff.UseAbility(this.Owner);
-                    var travelTime = (int)((forceStaff.PushLength / forceStaff.PushSpeed) * 1000f);
-                    await Task.Delay(forceStaff.GetCastDelay() + travelTime, token);
-
-                    if (ult.CanHit(this.CurrentTarget))
-                    {
-                        if ((urn != null) && urn.CanBeCasted && urn.CanHit(this.CurrentTarget) && !this.CurrentTarget.HasModifier(urn.TargetModifierName))
-                        {
-                            urn.UseAbility(this.CurrentTarget);
-                            await Task.Delay(urn.GetCastDelay(this.CurrentTarget), token);
-                        }
-
-                        ult.UseAbility(this.CurrentTarget);
-                        await Task.Delay(ult.GetCastDelay(this.CurrentTarget) + 500, token);
-                        return;
-                    }
+                    this.hookCastPosition = hookOutput.UnitPosition;
+                    hook.UseAbility(this.hookCastPosition);
+                    await Task.Delay(hook.GetHitTime(this.hookCastPosition), token);
                 }
             }
 
             this.OrbwalkToTarget();
+        }
+
+        protected override void OnDeactivate()
+        {
+            UpdateManager.Unsubscribe(this.HookHitCheck);
+            Entity.OnBoolPropertyChange -= this.OnHookCast;
+            base.OnDeactivate();
+        }
+
+        private void HookHitCheck()
+        {
+            if (this.CurrentTarget == null || !this.CurrentTarget.IsVisible)
+            {
+                return;
+            }
+
+            var hook = this.hero.Hook;
+            var input = hook.GetPredictionInput(this.CurrentTarget);
+            input.Delay = Math.Max((this.hookStartCastTime - Game.RawGameTime) + hook.CastPoint, 0);
+            var output = hook.GetPredictionOutput(input);
+
+            if (this.hookCastPosition.Distance2D(output.UnitPosition) > hook.Radius || !this.ShouldCastHook(output))
+            {
+                this.Owner.Stop();
+                this.Cancel();
+                this.hookUpdateHandler.IsEnabled = false;
+            }
+        }
+
+        private void OnHookCast(Entity sender, BoolPropertyChangeEventArgs args)
+        {
+            if (args.NewValue == args.OldValue || sender != this.hero.Hook || args.PropertyName != "m_bInAbilityPhase")
+            {
+                return;
+            }
+
+            if (args.NewValue)
+            {
+                this.hookStartCastTime = Game.RawGameTime;
+                this.hookUpdateHandler.IsEnabled = true;
+            }
+            else
+            {
+                this.hookUpdateHandler.IsEnabled = false;
+            }
+        }
+
+        private bool ShouldCastHook(PredictionOutput output)
+        {
+            if (output.HitChance == HitChance.OutOfRange || output.HitChance == HitChance.Impossible)
+            {
+                return false;
+            }
+
+            if (output.HitChance == HitChance.Collision)
+            {
+                return false;
+            }
+
+            if (output.HitChance < this.hero.MinimumHookChance)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
