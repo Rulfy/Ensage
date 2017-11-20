@@ -79,13 +79,15 @@ namespace Vaper.OrbwalkingModes.Combo
                 return;
             }
 
+            var items = this.hero.Items.Value;
             var rot = this.hero.Rot;
             var ult = this.hero.Dismember;
 
             var forceStaff = this.hero.ForceStaff;
-            var forceStaffReady = (forceStaff != null) && forceStaff.CanBeCasted;
+            var forceStaffReady = (forceStaff != null) && forceStaff.CanBeCasted; // let it break linkens without menu check
+            var blinkReady = (blink != null) && items.IsEnabled(blink.Ability.Name) && blink.CanBeCasted;
 
-            if (blink?.CanBeCasted == true && this.Owner.Distance2D(this.CurrentTarget) > 600 && !this.hero.HookModifierDetected)
+            if (blinkReady && this.Owner.Distance2D(this.CurrentTarget) > 600 && !this.hero.HookModifierDetected)
             {
                 var distance = this.Owner.Distance2D(this.CurrentTarget);
                 var blinkPosition = this.CurrentTarget.NetworkPosition.Extend(this.Owner.NetworkPosition, Math.Max(100, distance - blink.CastRange));
@@ -114,7 +116,7 @@ namespace Vaper.OrbwalkingModes.Combo
                 }
             }
 
-            if (forceStaffReady && this.Owner.Distance2D(this.CurrentTarget) > 500 && !this.CurrentTarget.IsLinkensProtected())
+            if (forceStaffReady && items.IsEnabled(forceStaff.Ability.Name) && this.Owner.Distance2D(this.CurrentTarget) > 500 && !this.CurrentTarget.IsLinkensProtected())
             {
                 if (this.Owner.FindRotationAngle(this.CurrentTarget.Position) > 0.3f)
                 {
@@ -129,7 +131,7 @@ namespace Vaper.OrbwalkingModes.Combo
 
             var vessel = this.hero.Vessel;
             var urn = this.hero.Urn;
-            if ((urn?.CanBeCasted == true || vessel?.CanBeCasted == true)
+            if ((urn?.CanBeCasted == true && items.IsEnabled(urn.Ability.Name) || vessel?.CanBeCasted == true && items.IsEnabled(vessel.Ability.Name))
                 && (this.hero.HookModifierDetected || this.Owner.Distance2D(this.CurrentTarget) < 300)
                 && !ult.IsChanneling)
             {
@@ -161,7 +163,11 @@ namespace Vaper.OrbwalkingModes.Combo
 
             if (hook.CanBeCasted && hook.CanHit(this.CurrentTarget) && !ult.IsChanneling)
             {
-                if (atos?.CanBeCasted == true && atos.CanHit(this.CurrentTarget) && !this.CurrentTarget.IsStunned() && !this.CurrentTarget.IsRooted())
+                if (atos?.CanBeCasted == true
+                    && items.IsEnabled(atos.Ability.Name)
+                    && atos.CanHit(this.CurrentTarget)
+                    && !this.CurrentTarget.IsStunned()
+                    && !this.CurrentTarget.IsRooted())
                 {
                     var hookPreAtosInput = hook.GetPredictionInput(this.CurrentTarget);
                     var hookPreAtosOutput = hook.GetPredictionOutput(hookPreAtosInput);
