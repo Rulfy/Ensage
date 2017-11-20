@@ -4,6 +4,7 @@
 
 namespace Vaper.Heroes
 {
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
     using System.Reflection;
@@ -51,6 +52,8 @@ namespace Vaper.Heroes
 
         public bool HookModifierDetected { get; set; }
 
+        public MenuItem<AbilityToggler> Items { get; private set; }
+
         public HitChance MinimumHookChance { get; private set; }
 
         public MenuItem<StringList> MinimumHookChanceItem { get; private set; }
@@ -85,6 +88,16 @@ namespace Vaper.Heroes
             this.MinimumHookChanceItem = factory.Item("Minimum Hook Chance", new StringList(new[] { "Low", "Medium", "High" }, 1));
             this.MinimumHookChance = this.MinimumHookChanceItem.GetEnum<HitChance>();
             this.MinimumHookChanceItem.PropertyChanged += this.MinimumHookChancePropertyChanged;
+
+            var items = new List<AbilityId>
+            {
+                AbilityId.item_spirit_vessel,
+                AbilityId.item_urn_of_shadows,
+                AbilityId.item_rod_of_atos,
+                AbilityId.item_force_staff,
+                AbilityId.item_blink
+            };
+            this.Items = factory.Item("Items", new AbilityToggler(items.ToDictionary(x => x.ToString(), x => true)));
 
             this.OnUpdateHandler = UpdateManager.Run(this.OnUpdate);
             Unit.OnModifierAdded += this.OnHookAdded;
