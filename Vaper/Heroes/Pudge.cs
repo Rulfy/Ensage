@@ -4,6 +4,7 @@
 
 namespace Vaper.Heroes
 {
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Linq;
     using System.Reflection;
@@ -26,7 +27,6 @@ namespace Vaper.Heroes
     using PlaySharp.Toolkit.Helper.Annotations;
     using PlaySharp.Toolkit.Logging;
 
-    using Vaper.OrbwalkingModes;
     using Vaper.OrbwalkingModes.Combo;
 
     [PublicAPI]
@@ -52,6 +52,8 @@ namespace Vaper.Heroes
 
         public bool HookModifierDetected { get; set; }
 
+        public MenuItem<AbilityToggler> Items { get; private set; }
+
         public HitChance MinimumHookChance { get; private set; }
 
         public MenuItem<StringList> MinimumHookChanceItem { get; private set; }
@@ -65,6 +67,9 @@ namespace Vaper.Heroes
 
         [ItemBinding]
         public item_urn_of_shadows Urn { get; private set; }
+
+        [ItemBinding]
+        public item_spirit_vessel Vessel { get; private set; }
 
         protected override ComboOrbwalkingMode GetComboOrbwalkingMode()
         {
@@ -84,8 +89,19 @@ namespace Vaper.Heroes
             this.MinimumHookChance = this.MinimumHookChanceItem.GetEnum<HitChance>();
             this.MinimumHookChanceItem.PropertyChanged += this.MinimumHookChancePropertyChanged;
 
+            var items = new List<AbilityId>
+            {
+                AbilityId.item_spirit_vessel,
+                AbilityId.item_urn_of_shadows,
+                AbilityId.item_rod_of_atos,
+                AbilityId.item_force_staff,
+                AbilityId.item_blink
+            };
+            this.Items = factory.Item("Items", new AbilityToggler(items.ToDictionary(x => x.ToString(), x => true)));
+
             this.OnUpdateHandler = UpdateManager.Run(this.OnUpdate);
             Unit.OnModifierAdded += this.OnHookAdded;
+            Unit.OnModifierRemoved += this.OnHookRemoved;
             Player.OnExecuteOrder += this.OnExecuteOrder;
         }
 
@@ -95,6 +111,7 @@ namespace Vaper.Heroes
 
             Player.OnExecuteOrder -= this.OnExecuteOrder;
             Unit.OnModifierAdded -= this.OnHookAdded;
+            Unit.OnModifierRemoved -= this.OnHookRemoved;
             this.OnUpdateHandler.Cancel();
 
             base.OnDeactivate();
@@ -109,17 +126,25 @@ namespace Vaper.Heroes
         {
             if (args.IsPlayerInput && (args.OrderId == OrderId.ToggleAbility) && (args.Ability == this.Rot.Ability))
             {
-                Log.Debug($"user rot armlet");
+                Log.Debug($"user rot");
                 this.HasUserEnabledRot = !this.Rot.Enabled;
             }
         }
 
         private void OnHookAdded(Unit sender, ModifierChangedEventArgs args)
         {
-            if (this.Owner.IsEnemy(sender) && (args.Modifier.Name == this.Hook.TargetModifierName))
+            if ((sender is Hero) && this.Owner.IsEnemy(sender) && (args.Modifier.Name == this.Hook.TargetModifierName))
             {
                 Log.Debug($"Hook detected");
                 this.HookModifierDetected = true;
+            }
+        }
+
+        private void OnHookRemoved(Unit sender, ModifierChangedEventArgs args)
+        {
+            if (this.Owner.IsEnemy(sender) && (args.Modifier.Name == this.Hook.TargetModifierName))
+            {
+                this.HookModifierDetected = false;
             }
         }
 
@@ -132,7 +157,7 @@ namespace Vaper.Heroes
             }
 
             var rotEnabled = this.Rot.Enabled;
-            if (rotEnabled && !this.HasUserEnabledRot)
+            if (rotEnabled && !this.HasUserEnabledRot && !this.HookModifierDetected)
             {
                 var enemyNear = EntityManager<Hero>.Entities.Any(x => x.IsVisible && x.IsAlive && this.Owner.IsEnemy(x) && this.Rot.CanHit(x));
                 if (!enemyNear)
