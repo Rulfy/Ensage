@@ -5,6 +5,7 @@
 namespace Snatcher
 {
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Windows.Input;
 
     using Ensage.SDK.Menu;
@@ -30,6 +31,7 @@ namespace Snatcher
 
         [Item("Active")]
         [PermaShow]
+        [DefaultValue(true)]
         public bool IsActive { get; set; }
 
         [Item("Greed Mode")]
@@ -38,6 +40,7 @@ namespace Snatcher
 
         [Item("Swap Item")]
         [Tooltip("Swaps the lowest cost item to the backpack when inventory full.")]
+        [DefaultValue(true)]
         public bool SwapItem { get; set; }
 
         [Item("Scan Intervall")]
@@ -45,14 +48,14 @@ namespace Snatcher
         public Slider ScanIntervall { get; set; } = new Slider(125, 1, 1000);
 
         [Item("Snatch Options")]
-        public PicturePicker SnatchOptions { get; set; } = new PicturePicker(true, "item_aegis", "item_cheese", "rune_doubledamage", "item_gem", "item_rapier");
+        public ImageToggler SnatchOptions { get; set; } = new ImageToggler(true, "item_aegis", "item_cheese", "rune_doubledamage", "item_gem", "item_rapier");
 
         [Item("Check Range")]
         [Tooltip("How far to scan for items exceeding the pick-up range.")]
         public Slider CheckRange { get; set; } = new Slider(300, 0, 1000);
 
         [Item("Greed Options")]
-        public PicturePicker GreedOptions { get; set; } = new PicturePicker(
+        public ImageToggler GreedOptions { get; set; } = new ImageToggler(
             new KeyValuePair<string, bool>("item_aegis", true), 
             new KeyValuePair<string, bool>("item_cheese", false), 
             new KeyValuePair<string, bool>("rune_doubledamage", false), 

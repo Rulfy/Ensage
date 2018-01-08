@@ -45,15 +45,15 @@
     <Reference Include="Ensage.SDK">
       <HintPath>C:\EnsageSharp\References\Ensage.SDK.dll</HintPath>
     </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\..\..\..\..\..\EnsageSharp\References\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="PlaySharp.Toolkit">
       <HintPath>C:\EnsageSharp\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\EnsageSharp\References\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.DirectInput">
-      <HintPath>C:\EnsageSharp\References\SharpDX.DirectInput.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

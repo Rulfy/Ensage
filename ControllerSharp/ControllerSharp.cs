@@ -18,13 +18,16 @@ namespace ControllerSharp
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
+    using NLog;
+
     using SharpDX;
     using SharpDX.XInput;
 
     [ExportPlugin("ControllerSharp", priority: 1000)]
     public class ControllerSharp : Plugin
     {
-        // private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
         private readonly IServiceContext context;
 
         private readonly Lazy<IOrbwalkerManager> orbwalker;
@@ -54,7 +57,6 @@ namespace ControllerSharp
         [ImportingConstructor]
         public ControllerSharp([Import] IServiceContext context, [Import] Lazy<IOrbwalkerManager> orbwalker)
         {
-            // AssemblyLogs.ThresholdLocal = Level.Warn;
             this.owner = context.Owner;
             this.context = context;
             this.orbwalker = orbwalker;
@@ -265,7 +267,7 @@ namespace ControllerSharp
             }
         }
 
-        private void SelectedControllerChanged(object sender, ValueChangedEventArgs<string> args)
+        private void SelectedControllerChanged(object sender, ValueChangingEventArgs<string> args)
         {
             if (this.controller != null)
             {
@@ -279,8 +281,7 @@ namespace ControllerSharp
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                Log.Error(e);
             }
         }
 

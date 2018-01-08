@@ -47,7 +47,7 @@ namespace IllusionSplitter
             this.context.MenuManager.DeregisterMenu(this.config);
         }
 
-        private void HotkeyChanged(object sender, ValueChangedEventArgs<KeyOrMouseButton> e)
+        private void HotkeyChanged(object sender, ValueChangingEventArgs<KeyOrMouseButton> e)
         {
             this.OrbwalkerMode.Key = e.Value.Key;
         }

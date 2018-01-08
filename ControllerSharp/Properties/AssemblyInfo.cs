@@ -35,3 +35,5 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyMetadata("SentryKey", "e082631d29b7450784daa7b96e9c029a:ed2ea6138b4b43638910e9a8f054439d")]
+[assembly: AssemblyMetadata("SentryProject", "16")]

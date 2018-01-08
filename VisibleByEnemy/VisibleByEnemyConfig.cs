@@ -1,58 +1,34 @@
 // <copyright file="VisibleByEnemyConfig.cs" company="Ensage">
-//    Copyright (c) 2017 Ensage.
+//    Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace VisibleByEnemy
 {
-    using System;
+    using System.ComponentModel;
 
     using Ensage.SDK.Menu;
 
-    internal class VisibleByEnemyConfig : IDisposable
+    [Menu("VisibleByEnemy")]
+    public class VisibleByEnemyConfig
     {
-        public readonly MenuFactory Factory;
+        [Item("Allied Heroes")]
+        [DefaultValue(true)]
+        public bool AlliedHeroes { get; set; }
 
-        public MenuItem<bool> AlliedHeroes;
+        [Item("Buildings")]
+        [DefaultValue(true)]
+        public bool BuildingsItem { get; set; }
 
-        public MenuItem<bool> BuildingsItem;
+        [Item("Techies Mines")]
+        [DefaultValue(true)]
+        public bool MinesItem { get; set; }
 
-        public MenuItem<bool> MinesItem;
+        [Item("Units")]
+        [DefaultValue(true)]
+        public bool UnitsItem { get; set; }
 
-        public MenuItem<bool> UnitsItem;
-
-        public MenuItem<bool> WardsItem;
-
-        private bool disposed;
-
-        public VisibleByEnemyConfig()
-        {
-            this.Factory = MenuFactory.Create("VisibleByEnemy");
-            this.AlliedHeroes = this.Factory.Item("Allied Heroes", true);
-            this.WardsItem = this.Factory.Item("Wards", true);
-            this.MinesItem = this.Factory.Item("Techies Mines", true);
-            this.UnitsItem = this.Factory.Item("Units", true);
-            this.BuildingsItem = this.Factory.Item("Buildings", true);
-        }
-
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this.disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                this.Factory.Dispose();
-            }
-
-            this.disposed = true;
-        }
+        [Item("Wards")]
+        [DefaultValue(true)]
+        public bool WardsItem { get; set; }
     }
 }

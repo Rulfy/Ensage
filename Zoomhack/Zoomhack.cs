@@ -12,6 +12,7 @@ namespace Zoomhack
     using Ensage.SDK.Input;
     using Ensage.SDK.Menu;
     using Ensage.SDK.Menu.Items;
+    using Ensage.SDK.Menu.ValueBinding;
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
@@ -136,7 +137,7 @@ namespace Zoomhack
             this.keyDown = obj.Flag == HotkeyFlags.Down;
         }
 
-        private void ZoomSliderValueChanging(object sender, ValueChangedEventArgs<int> e)
+        private void ZoomSliderValueChanging(object sender, ValueChangingEventArgs<int> e)
         {
             this.ZoomValue = e.Value;
         }

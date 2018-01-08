@@ -46,7 +46,7 @@ namespace IllusionSplitter
 
         [Item("Use Abilities")]
         [Tooltip("Uses your spells and items to create illusions before splitting them.")]
-        public PicturePicker UseAbilities { get; set; } = new PicturePicker(
+        public ImageToggler UseAbilities { get; set; } = new ImageToggler(
             true,
             "bottle_illusion",
             "item_manta",
