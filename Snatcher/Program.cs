@@ -1,5 +1,5 @@
 ﻿// <copyright file="Program.cs" company="Ensage">
-//    Copyright (c) 2017 Ensage.
+//    Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace Snatcher
@@ -18,6 +18,7 @@ namespace Snatcher
     using Ensage.SDK.Extensions;
     using Ensage.SDK.Handlers;
     using Ensage.SDK.Helpers;
+    using Ensage.SDK.Inventory.Metadata;
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
@@ -42,6 +43,8 @@ namespace Snatcher
 
         private readonly Lazy<AbilityFactory> abilityFactory;
 
+        private readonly IServiceContext context;
+
         private readonly Unit owner;
 
         private RangedAbility blinkAbility;
@@ -53,13 +56,20 @@ namespace Snatcher
         [ImportingConstructor]
         public Program([Import] IServiceContext context, [Import] Lazy<AbilityFactory> abilityFactory)
         {
+            this.context = context;
             this.owner = context.Owner;
             this.abilityFactory = abilityFactory;
         }
 
+        [ItemBinding]
+        public item_blink Blink { get; set; }
+
         protected override void OnActivate()
         {
-            this.config = new SnatcherConfig();
+            this.context.Inventory.Attach(this);
+
+            this.config = new SnatcherConfig(this.context.Renderer);
+            this.context.MenuManager.RegisterMenu(this.config);
 
             foreach (var blinkAbilityId in BlinkAbilityIds)
             {
@@ -83,11 +93,13 @@ namespace Snatcher
 
         protected override void OnDeactivate()
         {
+            this.context.MenuManager.DeregisterMenu(this.config);
             this.onUpdateHandler?.Cancel();
-            this.config?.Dispose();
+
+            this.context.Inventory.Detach(this);
         }
 
-        private async Task ApproachEntity(RangedAbility blink, Entity entity, float checkRange, CancellationToken token = default(CancellationToken))
+        private async Task ApproachEntity(RangedAbility blink, Entity entity, CancellationToken token = default(CancellationToken))
         {
             if (blink != null)
             {
@@ -95,7 +107,7 @@ namespace Snatcher
                 if (distance >= PickUpDistance)
                 {
                     var dir = (entity.Position - this.owner.Position).Normalized();
-                    dir *= distance >= checkRange ? checkRange : distance;
+                    dir *= distance >= blink.CastRange ? blink.CastRange : distance;
                     var blinkPos = this.owner.Position + dir;
 
                     blink.UseAbility(blinkPos);
@@ -106,34 +118,30 @@ namespace Snatcher
 
         private async Task OnUpdate(CancellationToken token)
         {
-            if (!this.config.HoldHotkey.Value.Active && !this.config.ToggleHotkey.Value.Active)
+            if (!this.config.IsActive && !this.config.IsActiveHold)
             {
-                await Task.Delay(this.config.ScanIntervall, token);
+                await Task.Delay(this.config.ScanIntervall.Value, token);
                 return;
             }
 
             if (Game.IsPaused || !this.owner.IsAlive)
             {
-                await Task.Delay(this.config.ScanIntervall, token);
+                await Task.Delay(this.config.ScanIntervall.Value, token);
                 return;
             }
 
-            float checkRange = 300;
+            float checkRange = this.config.CheckRange.Value;
 
-            // if (this.config.GreedMode.Value.Dictionary.Any(x => x.Value))
             RangedAbility blink = null;
-            if (this.config.GreedMode)
+            if (this.config.GreedMode && this.config.GreedOptions.PictureStates.Any(x => x.Value))
             {
-                var blinkItem = this.abilityFactory.Value.GetItem<item_blink>();
-                if ((blinkItem != null) && blinkItem.CanBeCasted)
+                if (this.Blink != null && this.Blink.CanBeCasted)
                 {
-                    blink = blinkItem;
-                    checkRange = blinkItem.CastRange;
+                    blink = this.Blink;
                 }
-                else if ((this.blinkAbility != null) && this.blinkAbility.CanBeCasted)
+                else if (this.blinkAbility != null && this.blinkAbility.CanBeCasted)
                 {
                     blink = this.blinkAbility;
-                    checkRange = this.blinkAbility.CastRange;
                 }
             }
 
@@ -143,71 +151,69 @@ namespace Snatcher
             bool swapItem = this.config.SwapItem;
             if (hasFreeSlots || (swapItem && freeBackbackSlots.Any()))
             {
-                var grabAegis = this.config.SnatchOptions.Value.IsEnabled("item_aegis");
-                var grabRapier = this.config.SnatchOptions.Value.IsEnabled("item_rapier");
-                var grabCheese = this.config.SnatchOptions.Value.IsEnabled("item_cheese");
-                var grabGem = this.config.SnatchOptions.Value.IsEnabled("item_gem");
+                var items = EntityManager<PhysicalItem>.Entities.Where(
+                    x => x.IsVisible
+                         && (x.Item.Id == AbilityId.item_aegis
+                             || x.Item.Id == AbilityId.item_cheese
+                             || x.Item.Id == AbilityId.item_rapier
+                             || x.Item.Id == AbilityId.item_gem));
 
-                if (grabAegis || grabRapier || grabCheese || grabGem)
+                foreach (var physicalItem in items)
                 {
-                    var query = EntityManager<PhysicalItem>.Entities.Where(x => x.IsVisible && (x.Distance2D(this.owner) < (checkRange + PickUpDistance)));
-                    query = query.Where(
-                        x => (grabAegis && (x.Item.Id == AbilityId.item_aegis))
-                             || (grabCheese && (x.Item.Id == AbilityId.item_cheese))
-                             || (grabRapier && (x.Item.Id == AbilityId.item_rapier))
-                             || (grabGem && (x.Item.Id == AbilityId.item_gem)));
-
-                    var physicalItem = query.FirstOrDefault();
-                    if (physicalItem != null)
+                    var name = physicalItem.Item.Name;
+                    if (!this.config.SnatchOptions[name])
                     {
-                        if (!hasFreeSlots)
-                        {
-                            // check if hero already has a cheese
-                            if ((physicalItem.Item.Id != AbilityId.item_cheese) || (this.owner.GetItemById(AbilityId.item_cheese) != null))
-                            {
-                                // swap lowest cost item
-                                var item = this.owner.Inventory.Items.Where(x => x.IsKillable && (x.Id != AbilityId.item_aegis)).OrderBy(x => x.Cost).FirstOrDefault();
-                                if (item == null)
-                                {
-                                    await Task.Delay(this.config.ScanIntervall, token);
-                                    return;
-                                }
-
-                                item.MoveItem(freeBackbackSlots.First());
-                            }
-                        }
-
-                        // if (this.config.GreedMode.Value.IsEnabled(physicalItem.Item.Name))
-                        if (blink != null)
-                        {
-                            await this.ApproachEntity(blink, physicalItem, checkRange, token);
-                        }
-
-                        this.owner.PickUpItem(physicalItem);
-                        await Task.Delay(this.config.ScanIntervall, token);
-                        return;
+                        continue;
                     }
+
+                    var range = blink != null && this.config.GreedOptions[name] ? blink.CastRange : this.config.CheckRange.Value;
+                    if (physicalItem.Distance2D(this.owner) > (range + PickUpDistance))
+                    {
+                        continue;
+                    }
+
+                    if (!hasFreeSlots && !physicalItem.Item.IsStackable)
+                    {
+                        // swap lowest cost item
+                        var item = this.owner.Inventory.Items.Where(x => x.IsKillable && x.Id != AbilityId.item_aegis && x.Id != AbilityId.item_blink)
+                                       .OrderBy(x => x.Cost)
+                                       .FirstOrDefault();
+                        if (item == null)
+                        {
+                            await Task.Delay(this.config.ScanIntervall.Value, token);
+                            return;
+                        }
+
+                        item.MoveItem(freeBackbackSlots.First());
+                    }
+
+                    if (blink != null && this.config.GreedOptions[physicalItem.Item.Name])
+                    {
+                        await this.ApproachEntity(blink, physicalItem, token);
+                    }
+
+                    this.owner.PickUpItem(physicalItem);
+                    await Task.Delay(this.config.ScanIntervall.Value, token);
+                    return;
                 }
             }
 
-            if (this.config.SnatchOptions.Value.IsEnabled("rune_bounty"))
+            if (this.config.SnatchOptions["rune_doubledamage"])
             {
-                var runes = EntityManager<Rune>.Entities.Where(x => x.IsVisible && (x.Distance2D(this.owner) < (checkRange + PickUpDistance))).ToList();
-                if (runes.Any())
+                var range = blink != null && this.config.GreedOptions["rune_doubledamage"] ? blink.CastRange : this.config.CheckRange.Value;
+                var rune = EntityManager<Rune>.Entities.FirstOrDefault(x => x.IsVisible && x.Distance2D(this.owner) <= (range + PickUpDistance));
+                if (rune != null)
                 {
-                    var rune = runes.First();
-
-                    // if (this.config.GreedMode.Value.IsEnabled("rune_bounty"))
-                    if (blink != null)
+                    if (blink != null && this.config.GreedOptions["rune_doubledamage"])
                     {
-                        await this.ApproachEntity(blink, rune, checkRange, token);
+                        await this.ApproachEntity(blink, rune, token);
                     }
 
                     this.owner.PickUpRune(rune);
                 }
             }
 
-            await Task.Delay(this.config.ScanIntervall, token);
+            await Task.Delay(this.config.ScanIntervall.Value, token);
         }
     }
 }

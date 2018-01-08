@@ -1,13 +1,14 @@
 ﻿// <copyright file="Program.cs" company="Ensage">
-//    Copyright (c) 2017 Ensage.
+//    Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace IllusionSplitter
 {
+    using System;
     using System.ComponentModel.Composition;
-    using System.Windows.Input;
 
-    using Ensage.Common.Menu;
+    using Ensage.SDK.Menu.Items;
+    using Ensage.SDK.Menu.ValueBinding;
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
@@ -28,12 +29,12 @@ namespace IllusionSplitter
 
         protected override void OnActivate()
         {
-            this.config = new IllusionSplitterConfig();
+            this.config = new IllusionSplitterConfig(this.context.Renderer);
+            this.context.MenuManager.RegisterMenu(this.config);
 
-            var key = KeyInterop.KeyFromVirtualKey((int)this.config.SplitterHotkey.Value.Key);
-            this.OrbwalkerMode = new IllusionSplitterMode(this.context, key, this.config);
+            this.OrbwalkerMode = new IllusionSplitterMode(this.context, this.config.SplitterHotkey.Hotkey.Key, this.config);
 
-            this.config.SplitterHotkey.Item.ValueChanged += this.HotkeyChanged;
+            this.config.SplitterHotkey.Hotkey.ValueChanging += this.HotkeyChanged;
 
             this.context.Orbwalker.RegisterMode(this.OrbwalkerMode);
         }
@@ -42,21 +43,13 @@ namespace IllusionSplitter
         {
             this.context.Orbwalker.UnregisterMode(this.OrbwalkerMode);
 
-            this.config.SplitterHotkey.Item.ValueChanged -= this.HotkeyChanged;
-
-            this.config?.Dispose();
+            this.config.SplitterHotkey.Hotkey.ValueChanging -= this.HotkeyChanged;
+            this.context.MenuManager.DeregisterMenu(this.config);
         }
 
-        private void HotkeyChanged(object sender, OnValueChangeEventArgs e)
+        private void HotkeyChanged(object sender, ValueChangingEventArgs<KeyOrMouseButton> e)
         {
-            var keyCode = e.GetNewValue<KeyBind>().Key;
-            if (keyCode == e.GetOldValue<KeyBind>().Key)
-            {
-                return;
-            }
-
-            var key = KeyInterop.KeyFromVirtualKey((int)keyCode);
-            this.OrbwalkerMode.Key = key;
+            this.OrbwalkerMode.Key = e.Value.Key;
         }
     }
 }

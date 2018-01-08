@@ -1,82 +1,57 @@
 ﻿// <copyright file="IllusionSplitterConfig.cs" company="Ensage">
-//    Copyright (c) 2017 Ensage.
+//    Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace IllusionSplitter
 {
-    using System;
-    using System.Collections.Generic;
+    using System.ComponentModel;
+    using System.Windows.Input;
 
-    using Ensage.Common.Menu;
     using Ensage.SDK.Menu;
+    using Ensage.SDK.Menu.Items;
+    using Ensage.SDK.Renderer;
 
+    [Menu("Illusion Splitter")]
     public class IllusionSplitterConfig
     {
-        public readonly MenuFactory Factory;
-
-        private bool disposed;
-
-        public IllusionSplitterConfig()
+        public IllusionSplitterConfig(IRendererManager renderer)
         {
-            this.Factory = MenuFactory.Create("Illusion Splitter");
-
-            this.AngleRandomizer = this.Factory.Item("Randomize Split Angle", true);
-            this.AngleRandomizer.Item.Tooltip = "Randomizes the split angle for illusions.";
-
-            this.MoveHero = this.Factory.Item("Move Hero", true);
-            this.MoveHero.Item.Tooltip = "Moves your hero to your mouse position, while pressing the split hotkey.";
-
-            this.MinMoveRange = this.Factory.Item("Minimum Move Range", new Slider(800, 100, 2000));
-            this.MinMoveRange.Item.Tooltip = "Minimum range to move the illusions.";
-
-            var dict = new Dictionary<string, bool>
-                           {
-                               { "item_bottle", true },
-                               { "item_manta", true },
-                               { "naga_siren_mirror_image", true },
-                               { "terrorblade_conjure_image", true },
-                               { "phantom_lancer_doppelwalk", true },
-                           };
-            this.UseAbilities = this.Factory.Item("Use Abilities", new AbilityToggler(dict));
-            this.UseAbilities.Item.Tooltip = "Uses your spells and items to create illusions before splitting them.";
-
-            this.IlluRange = this.Factory.Item("Illusion Range", new Slider(600, 100, 2000));
-            this.IlluRange.Item.Tooltip = "The range to find illusions near your hero.";
-
-            this.SplitterHotkey = this.Factory.Item("Hotkey", new KeyBind(0));
+            renderer.TextureManager.LoadFromDota("bottle_illusion", @"resource\flash3\images\items\bottle_illusion.png");
+            renderer.TextureManager.LoadFromDota("item_manta", @"resource\flash3\images\items\manta.png");
+            renderer.TextureManager.LoadFromDota("naga_siren_mirror_image", @"resource\flash3\images\spellicons\naga_siren_mirror_image.png");
+            renderer.TextureManager.LoadFromDota("terrorblade_conjure_image", @"resource\flash3\images\spellicons\terrorblade_conjure_image.png");
+            renderer.TextureManager.LoadFromDota("phantom_lancer_doppelwalk", @"resource\flash3\images\spellicons\phantom_lancer_doppelwalk.png");
         }
 
-        public MenuItem<bool> AngleRandomizer { get; }
+        [Item("Randomize Split Angle")]
+        [Tooltip("Randomizes the split angle for illusions.")]
+        [DefaultValue(true)]
+        public bool AngleRandomizer { get; set; }
 
-        public MenuItem<Slider> IlluRange { get; }
+        [Item("Illusion Range")]
+        [Tooltip("The range to find illusions near your hero.")]
+        public Slider IlluRange { get; set; } = new Slider(600, 100, 2000);
 
-        public MenuItem<Slider> MinMoveRange { get; }
+        [Item("Minimum Move Range")]
+        [Tooltip("Minimum range to move the illusions.")]
+        public Slider MinMoveRange { get; set; } = new Slider(800, 100, 2000);
 
-        public MenuItem<bool> MoveHero { get; }
+        [Item("Move Hero")]
+        [Tooltip("Moves your hero to your mouse position, while pressing the split hotkey.")]
+        [DefaultValue(true)]
+        public bool MoveHero { get; set; }
 
-        public MenuItem<KeyBind> SplitterHotkey { get; }
+        [Item("Hotkey")]
+        public HotkeySelector SplitterHotkey { get; set; } = new HotkeySelector(Key.None);
 
-        public MenuItem<AbilityToggler> UseAbilities { get; }
-
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this.disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                this.Factory.Dispose();
-            }
-
-            this.disposed = true;
-        }
+        [Item("Use Abilities")]
+        [Tooltip("Uses your spells and items to create illusions before splitting them.")]
+        public ImageToggler UseAbilities { get; set; } = new ImageToggler(
+            true,
+            "bottle_illusion",
+            "item_manta",
+            "naga_siren_mirror_image",
+            "terrorblade_conjure_image",
+            "phantom_lancer_doppelwalk");
     }
 }

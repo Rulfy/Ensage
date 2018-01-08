@@ -1,5 +1,5 @@
 // <copyright file="Program.cs" company="Ensage">
-//    Copyright (c) 2017 Ensage.
+//    Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace VisibleByEnemy
@@ -17,6 +17,8 @@ namespace VisibleByEnemy
     [ExportPlugin("VisibleByEnemy", StartupMode.Auto)]
     public class Program : Plugin
     {
+        private readonly IServiceContext context;
+
         private readonly Unit owner;
 
         private readonly Lazy<IParticleManager> particleManager;
@@ -27,19 +29,21 @@ namespace VisibleByEnemy
         public Program([Import] IServiceContext context, [Import] Lazy<IParticleManager> particleManager)
         {
             this.owner = context.Owner;
+            this.context = context;
             this.particleManager = particleManager;
         }
 
         protected override void OnActivate()
         {
             this.config = new VisibleByEnemyConfig();
+            this.context.MenuManager.RegisterMenu(this.config);
             UpdateManager.Subscribe(this.LoopEntities, 250);
         }
 
         protected override void OnDeactivate()
         {
             UpdateManager.Unsubscribe(this.LoopEntities);
-            this.config?.Dispose();
+            this.context.MenuManager.DeregisterMenu(this.config);
         }
 
         private static bool IsMine(Entity sender)
@@ -49,9 +53,11 @@ namespace VisibleByEnemy
 
         private static bool IsUnit(Unit sender)
         {
-            return !(sender is Hero) && !(sender is Building)
+            return !(sender is Hero)
+                   && !(sender is Building)
                    && (sender.ClassId != ClassId.CDOTA_BaseNPC_Creep_Lane && sender.ClassId != ClassId.CDOTA_BaseNPC_Creep_Siege || sender.IsControllable)
-                   && sender.ClassId != ClassId.CDOTA_NPC_TechiesMines && sender.ClassId != ClassId.CDOTA_NPC_Observer_Ward
+                   && sender.ClassId != ClassId.CDOTA_NPC_TechiesMines
+                   && sender.ClassId != ClassId.CDOTA_NPC_Observer_Ward
                    && sender.ClassId != ClassId.CDOTA_NPC_Observer_Ward_TrueSight;
         }
 

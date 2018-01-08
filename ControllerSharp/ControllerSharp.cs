@@ -1,5 +1,5 @@
 ﻿// <copyright file="ControllerSharp.cs" company="Ensage">
-//    Copyright (c) 2017 Ensage.
+//    Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace ControllerSharp
@@ -8,13 +8,17 @@ namespace ControllerSharp
     using System.Collections.Generic;
     using System.ComponentModel.Composition;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using Ensage;
     using Ensage.SDK.Helpers;
+    using Ensage.SDK.Menu.ValueBinding;
     using Ensage.SDK.Orbwalker;
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
+
+    using NLog;
 
     using SharpDX;
     using SharpDX.XInput;
@@ -22,7 +26,10 @@ namespace ControllerSharp
     [ExportPlugin("ControllerSharp", priority: 1000)]
     public class ControllerSharp : Plugin
     {
-        // private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        private readonly IServiceContext context;
+
         private readonly Lazy<IOrbwalkerManager> orbwalker;
 
         private readonly Unit owner;
@@ -50,16 +57,17 @@ namespace ControllerSharp
         [ImportingConstructor]
         public ControllerSharp([Import] IServiceContext context, [Import] Lazy<IOrbwalkerManager> orbwalker)
         {
-            // AssemblyLogs.ThresholdLocal = Level.Warn;
             this.owner = context.Owner;
+            this.context = context;
             this.orbwalker = orbwalker;
         }
 
         protected override void OnActivate()
         {
             this.config = new ControllerConfig();
+            this.context.MenuManager.RegisterMenu(this.config);
 
-            this.controller = new Controller((UserIndex)this.config.ControllerIndex);
+            this.controller = new Controller((UserIndex)this.config.Controller.SelectedIndex);
             this.orbwalkerFarm = this.orbwalker.Value.OrbwalkingModes.First(x => x.Value.ToString().EndsWith("Farm")).Value;
             this.orbwalkerPush = this.orbwalker.Value.OrbwalkingModes.First(x => x.Value.ToString().EndsWith("Push")).Value;
             this.orbwalkerSupport = this.orbwalker.Value.OrbwalkingModes.First(x => x.Value.ToString().EndsWith("Support")).Value;
@@ -67,8 +75,8 @@ namespace ControllerSharp
 
             UpdateManager.Subscribe(this.OnVibrationUpdate, 125);
             UpdateManager.BeginInvoke(this.OnUpdate);
-            this.config.ControllerIndexChanged += this.ControllerIndexChanged;
 
+            this.config.Controller.ValueChanging += this.SelectedControllerChanged;
             Entity.OnInt32PropertyChange += this.OnVibrationCheck;
 
             Game.ExecuteCommand("dota_camera_lock 1");
@@ -81,20 +89,15 @@ namespace ControllerSharp
 
             Entity.OnInt32PropertyChange -= this.OnVibrationCheck;
 
-            this.config.ControllerIndexChanged -= this.ControllerIndexChanged;
-            this.config.Dispose();
-
             Game.ExecuteCommand("dota_camera_lock 0");
+
+            this.config.Controller.ValueChanging -= this.SelectedControllerChanged;
+            this.context.MenuManager.DeregisterMenu(this.config);
         }
 
-        private void ControllerIndexChanged(object sender, int e)
+        private int GetIndexByName(string name)
         {
-            if (this.controller != null)
-            {
-                this.StopVibration();
-            }
-
-            this.controller = new Controller((UserIndex)e);
+            return int.Parse(Regex.Match(name, @"\d+$").Value) - 1;
         }
 
         private async void OnUpdate()
@@ -109,8 +112,7 @@ namespace ControllerSharp
                     continue;
                 }
 
-                State state;
-                if (!this.controller.GetState(out state))
+                if (!this.controller.GetState(out var state))
                 {
                     this.orbwalker.Value.OrbwalkingPoint = Vector3.Zero;
                     await Task.Delay(250);
@@ -157,7 +159,7 @@ namespace ControllerSharp
                 var targetPosition = this.owner.NetworkPosition;
 
                 var leftStickPosition = new Vector3((float)state.Gamepad.LeftThumbX / short.MaxValue, (float)state.Gamepad.LeftThumbY / short.MaxValue, 0);
-                if (leftStickPosition.Length() > this.config.Deadzone)
+                if (leftStickPosition.Length() > this.config.DeadzonePercentage)
                 {
                     leftStickPosition.Normalize();
                     targetPosition += leftStickPosition * Math.Max(this.orbwalker.Value.Settings.HoldRange + 50.0f, 200.0f);
@@ -265,6 +267,24 @@ namespace ControllerSharp
             }
         }
 
+        private void SelectedControllerChanged(object sender, ValueChangingEventArgs<string> args)
+        {
+            if (this.controller != null)
+            {
+                this.StopVibration();
+            }
+
+            try
+            {
+                var index = (UserIndex)this.GetIndexByName(args.Value);
+                this.controller = new Controller(index);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e);
+            }
+        }
+
         private void SetActiveCustomOrbwalker(List<IOrbwalkingMode> orbwalkingModes)
         {
             this.orbwalkerCombo = orbwalkingModes.Skip(this.customOrbwalkerIndex).FirstOrDefault();
@@ -281,7 +301,7 @@ namespace ControllerSharp
                 return;
             }
 
-            var intensity = this.config.VibrationIntensity;
+            var intensity = this.config.VibrationPercentage;
             if (intensity <= 0)
             {
                 return;

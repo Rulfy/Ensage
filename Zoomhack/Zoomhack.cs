@@ -1,19 +1,22 @@
 ﻿// <copyright file="Zoomhack.cs" company="Ensage">
-//    Copyright (c) 2017 Ensage.
+//    Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace Zoomhack
 {
     using System;
     using System.ComponentModel.Composition;
+    using System.Windows.Input;
 
     using Ensage;
-    using Ensage.Common.Menu;
     using Ensage.SDK.Input;
     using Ensage.SDK.Menu;
+    using Ensage.SDK.Menu.Items;
+    using Ensage.SDK.Menu.ValueBinding;
     using Ensage.SDK.Service;
     using Ensage.SDK.Service.Metadata;
 
+    [Menu("ZoomHack")]
     [ExportPlugin("Zoomhack", StartupMode.Auto)]
     public class Zoomhack : Plugin
     {
@@ -25,22 +28,27 @@ namespace Zoomhack
 
         private readonly Lazy<IInputManager> inputManager;
 
+        private readonly Lazy<MenuManager> menuManager;
+
         private ConVar cameraDistanceConVar;
 
-        private MenuFactory factory;
-
-        private MenuItem<KeyBind> key;
+        private bool keyDown;
 
         // ReSharper disable once StyleCop.SA1305
         private ConVar rFarZConVar;
 
-        private MenuItem<Slider> zoomSlider;
-
         [ImportingConstructor]
-        public Zoomhack([Import] Lazy<IInputManager> inputManager)
+        public Zoomhack([Import] Lazy<IInputManager> inputManager, [Import] Lazy<MenuManager> menuManager)
         {
             this.inputManager = inputManager;
+            this.menuManager = menuManager;
         }
+
+        [Item("Hotkey")]
+        public HotkeySelector Hotkey { get; set; }
+
+        [Item("Zoom")]
+        public Slider ZoomSlider { get; set; } = new Slider(DefaultZoomValue, MinZoomValue, MaxZoomValue);
 
         private bool ZoomCheatFlagsActive
         {
@@ -73,25 +81,25 @@ namespace Zoomhack
 
         protected override void OnActivate()
         {
+            this.Hotkey = new HotkeySelector(Key.LeftCtrl, this.KeyPressed, HotkeyFlags.Down | HotkeyFlags.Up);
+
+            this.menuManager.Value.RegisterMenu(this);
+
             this.rFarZConVar = Game.GetConsoleVar("r_farz");
             this.cameraDistanceConVar = Game.GetConsoleVar("dota_camera_distance");
             this.ZoomCheatFlagsActive = false;
 
-            this.factory = MenuFactory.Create("ZoomHack");
-            this.key = this.factory.Item("Key", new KeyBind(0x11, KeyBindType.Press));
-            this.zoomSlider = this.factory.Item("Camera Distance", new Slider(DefaultZoomValue, MinZoomValue, MaxZoomValue));
-            this.zoomSlider.Item.ValueChanged += this.ItemValueChanged;
+            this.ZoomSlider.ValueChanging += this.ZoomSliderValueChanging;
             this.inputManager.Value.MouseWheel += this.InputManagerMouseWheel;
-
-            this.ZoomValue = this.zoomSlider;
+            this.ZoomValue = this.ZoomSlider.Value;
         }
 
         protected override void OnDeactivate()
         {
-            this.zoomSlider.Item.ValueChanged -= this.ItemValueChanged;
-            this.inputManager.Value.MouseWheel -= this.InputManagerMouseWheel;
+            this.menuManager.Value.DeregisterMenu(this);
 
-            this.factory.Dispose();
+            this.ZoomSlider.ValueChanging -= this.ZoomSliderValueChanging;
+            this.inputManager.Value.MouseWheel -= this.InputManagerMouseWheel;
 
             // reset zoom
             this.ZoomValue = DefaultZoomValue;
@@ -101,7 +109,7 @@ namespace Zoomhack
 
         private void InputManagerMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (!this.key.Value.Active)
+            if (!this.keyDown)
             {
                 return;
             }
@@ -119,14 +127,19 @@ namespace Zoomhack
             }
 
             this.ZoomValue = value;
+            this.ZoomSlider.Value = value;
 
-            // this.zoomSlider.Value.Value = value;
-            this.zoomSlider.Item.SetValue(new Slider(value, MinZoomValue, MaxZoomValue));
+            e.Process = false;
         }
 
-        private void ItemValueChanged(object sender, OnValueChangeEventArgs e)
+        private void KeyPressed(MenuInputEventArgs obj)
         {
-            this.ZoomValue = e.GetNewValue<Slider>().Value;
+            this.keyDown = obj.Flag == HotkeyFlags.Down;
+        }
+
+        private void ZoomSliderValueChanging(object sender, ValueChangingEventArgs<int> e)
+        {
+            this.ZoomValue = e.Value;
         }
     }
 }

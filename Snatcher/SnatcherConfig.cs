@@ -1,90 +1,83 @@
 // <copyright file="SnatcherConfig.cs" company="Ensage">
-//    Copyright (c) 2017 Ensage.
+//    Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace Snatcher
 {
-    using System;
     using System.Collections.Generic;
+    using System.ComponentModel;
     using System.Windows.Input;
 
-    using Ensage.Common.Menu;
     using Ensage.SDK.Menu;
+    using Ensage.SDK.Menu.Attributes;
+    using Ensage.SDK.Menu.Items;
+    using Ensage.SDK.Renderer;
 
-    public class SnatcherConfig : IDisposable
+    [Menu("Snatcher")]
+    public class SnatcherConfig
     {
-        private readonly MenuFactory factory;
-
-        //private readonly Dictionary<string, bool> greedDictionary = new Dictionary<string, bool>
-        //                                                                {
-        //                                                                    ["item_aegis"] = true,
-        //                                                                    ["item_cheese"] = true,
-        //                                                                    ["rune_bounty"] = false,
-        //                                                                    ["item_gem"] = true,
-        //                                                                    ["item_rapier"] = true,
-        //                                                                };
-
-        private readonly Dictionary<string, bool> snatchDictionary = new Dictionary<string, bool>
-                                                                         {
-                                                                             ["item_aegis"] = true,
-                                                                             ["item_cheese"] = true,
-                                                                             ["rune_bounty"] = true,
-                                                                             ["item_gem"] = true,
-                                                                             ["item_rapier"] = true,
-                                                                         };
-
-        private bool disposed;
-
-        public SnatcherConfig()
+        public SnatcherConfig(IRendererManager renderer)
         {
-            this.factory = MenuFactory.Create("Snatcher");
-
-            this.ToggleHotkey = this.factory.Item("Toggle Hotkey", new KeyBind((uint)KeyInterop.VirtualKeyFromKey(Key.P), KeyBindType.Toggle));
-            this.HoldHotkey = this.factory.Item("Hold Hotkey", new KeyBind(0));
-            this.SnatchOptions = this.factory.Item("Snatch Options", new AbilityToggler(this.snatchDictionary));
-
-            this.ScanIntervall = this.factory.Item("Scan Intervall", new Slider(125, 1, 1000));
-            this.ScanIntervall.Item.Tooltip = "How fast it scans for items to pickup.";
-
-            this.SwapItem = this.factory.Item("Swap Item", false);
-            this.SwapItem.Item.Tooltip = "Swaps the lowest cost item to the backpack when inventory full.";
+            renderer.TextureManager.LoadFromDota("item_aegis", @"resource\flash3\images\items\aegis.png");
+            renderer.TextureManager.LoadFromDota("item_cheese", @"resource\flash3\images\items\cheese.png");
+            renderer.TextureManager.LoadFromDota("rune_doubledamage", @"resource\flash3\images\spellicons\rune_doubledamage.png");
+            renderer.TextureManager.LoadFromDota("item_gem", @"resource\flash3\images\items\gem.png");
+            renderer.TextureManager.LoadFromDota("item_rapier", @"resource\flash3\images\items\rapier.png");
 
             // this.GreedMode = this.factory.Item("Greed Mode", new AbilityToggler(this.greedDictionary));
-            this.GreedMode = this.factory.Item("Greed Mode", false);
-            this.GreedMode.Item.Tooltip = "Uses blink dagger to reach items.";
+            this.ToggleHotkey = new HotkeySelector(Key.None, this.ToggleActive, HotkeyFlags.Press);
+            this.HoldHotkey = new HotkeySelector(Key.None, this.HoldActive, HotkeyFlags.Down | HotkeyFlags.Up);
         }
 
-        public MenuItem<bool> GreedMode { get; set; }
+        [Item("Active")]
+        [PermaShow]
+        [DefaultValue(true)]
+        public bool IsActive { get; set; }
 
-        public MenuItem<KeyBind> HoldHotkey { get; }
+        [Item("Greed Mode")]
+        [Tooltip("Uses blink dagger to reach items.")]
+        public bool GreedMode { get; set; }
 
-        public MenuItem<Slider> ScanIntervall { get; }
+        [Item("Swap Item")]
+        [Tooltip("Swaps the lowest cost item to the backpack when inventory full.")]
+        [DefaultValue(true)]
+        public bool SwapItem { get; set; }
 
-        public MenuItem<AbilityToggler> SnatchOptions { get; }
+        [Item("Scan Intervall")]
+        [Tooltip("How fast it scans for items to pickup.")]
+        public Slider ScanIntervall { get; set; } = new Slider(125, 1, 1000);
 
-        public MenuItem<bool> SwapItem { get; }
+        [Item("Snatch Options")]
+        public ImageToggler SnatchOptions { get; set; } = new ImageToggler(true, "item_aegis", "item_cheese", "rune_doubledamage", "item_gem", "item_rapier");
 
-        public MenuItem<KeyBind> ToggleHotkey { get; }
+        [Item("Check Range")]
+        [Tooltip("How far to scan for items exceeding the pick-up range.")]
+        public Slider CheckRange { get; set; } = new Slider(300, 0, 1000);
 
-        public void Dispose()
+        [Item("Greed Options")]
+        public ImageToggler GreedOptions { get; set; } = new ImageToggler(
+            new KeyValuePair<string, bool>("item_aegis", true), 
+            new KeyValuePair<string, bool>("item_cheese", false), 
+            new KeyValuePair<string, bool>("rune_doubledamage", false), 
+            new KeyValuePair<string, bool>("item_gem", false), 
+            new KeyValuePair<string, bool>("item_rapier", true));
+
+        [Item("Toggle Hotkey")]
+        public HotkeySelector ToggleHotkey { get; set; }
+
+        [Item("Hold Hotkey")]
+        public HotkeySelector HoldHotkey { get; set; }
+
+        public bool IsActiveHold { get; private set; }
+
+        private void ToggleActive(MenuInputEventArgs obj)
         {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
+            this.IsActive = !this.IsActive;
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void HoldActive(MenuInputEventArgs obj)
         {
-            if (this.disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                this.factory.Dispose();
-            }
-
-            this.disposed = true;
+            this.IsActiveHold = obj.Flag == HotkeyFlags.Down;
         }
     }
 }
