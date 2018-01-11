@@ -45,14 +45,14 @@ namespace Snatcher
 
         [Item("Scan Intervall")]
         [Tooltip("How fast it scans for items to pickup.")]
-        public Slider ScanIntervall { get; set; } = new Slider(125, 1, 1000);
+        public Slider<int> ScanIntervall { get; set; } = new Slider<int>(125, 1, 1000);
 
         [Item("Snatch Options")]
         public ImageToggler SnatchOptions { get; set; } = new ImageToggler(true, "item_aegis", "item_cheese", "rune_doubledamage", "item_gem", "item_rapier");
 
         [Item("Check Range")]
         [Tooltip("How far to scan for items exceeding the pick-up range.")]
-        public Slider CheckRange { get; set; } = new Slider(300, 0, 1000);
+        public Slider<float> CheckRange { get; set; } = new Slider<float>(300, 0, 1000);
 
         [Item("Greed Options")]
         public ImageToggler GreedOptions { get; set; } = new ImageToggler(

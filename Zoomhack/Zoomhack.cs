@@ -48,7 +48,7 @@ namespace Zoomhack
         public HotkeySelector Hotkey { get; set; }
 
         [Item("Zoom")]
-        public Slider ZoomSlider { get; set; } = new Slider(DefaultZoomValue, MinZoomValue, MaxZoomValue);
+        public Slider<int> ZoomSlider { get; set; } = new Slider<int>(DefaultZoomValue, MinZoomValue, MaxZoomValue);
 
         private bool ZoomCheatFlagsActive
         {

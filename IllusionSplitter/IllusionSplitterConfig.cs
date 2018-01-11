@@ -30,11 +30,11 @@ namespace IllusionSplitter
 
         [Item("Illusion Range")]
         [Tooltip("The range to find illusions near your hero.")]
-        public Slider IlluRange { get; set; } = new Slider(600, 100, 2000);
+        public Slider<float> IlluRange { get; set; } = new Slider<float>(600, 100, 2000);
 
         [Item("Minimum Move Range")]
         [Tooltip("Minimum range to move the illusions.")]
-        public Slider MinMoveRange { get; set; } = new Slider(800, 100, 2000);
+        public Slider<float> MinMoveRange { get; set; } = new Slider<float>(800, 100, 2000);
 
         [Item("Move Hero")]
         [Tooltip("Moves your hero to your mouse position, while pressing the split hotkey.")]
