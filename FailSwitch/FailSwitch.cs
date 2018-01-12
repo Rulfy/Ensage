@@ -193,7 +193,10 @@ namespace FailSwitch
                                 if (betterTarget != null)
                                 {
                                     caster.Stop();
-                                    ability.UseAbility(betterTarget);
+                                    if (this.config.FindRealTarget)
+                                    {
+                                        ability.UseAbility(betterTarget);
+                                    }
                                 }
                                 else if (targetBlocking)
                                 {
