@@ -19,6 +19,7 @@ namespace FailSwitch
             renderer.TextureManager.LoadFromDota("puck_dream_coil", @"resource\flash3\images\spellicons\puck_dream_coil.png");
             renderer.TextureManager.LoadFromDota("obsidian_destroyer_sanity_eclipse", @"resource\flash3\images\spellicons\obsidian_destroyer_sanity_eclipse.png");
             renderer.TextureManager.LoadFromDota("faceless_void_chronosphere", @"resource\flash3\images\spellicons\faceless_void_chronosphere.png");
+            renderer.TextureManager.LoadFromDota("lina_light_strike_array", @"resource\flash3\images\spellicons\lina_light_strike_array.png");
 
             renderer.TextureManager.LoadFromDota("magnataur_reverse_polarity", @"resource\flash3\images\spellicons\magnataur_reverse_polarity.png");
             renderer.TextureManager.LoadFromDota("tidehunter_ravage", @"resource\flash3\images\spellicons\tidehunter_ravage.png");
@@ -43,7 +44,8 @@ namespace FailSwitch
             "enigma_black_hole",
             "puck_dream_coil",
             "obsidian_destroyer_sanity_eclipse",
-            "faceless_void_chronosphere");
+            "faceless_void_chronosphere",
+            "lina_light_strike_array");
 
         [Item("No Target Abilities")]
         public ImageToggler NoTargetSpells { get; set; } = new ImageToggler(

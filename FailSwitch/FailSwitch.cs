@@ -213,9 +213,19 @@ namespace FailSwitch
                     await Task.Delay((int)(delay - Game.Ping));
                 }
 
+                var radius = 0f;
                 if (ability is IAreaOfEffectAbility aoeAbility)
                 {
-                    var circle = new Polygon.Circle(center, aoeAbility.Radius);
+                    radius = aoeAbility.Radius;
+                }
+                else if (ability is CircleAbility circleAbility)
+                {
+                    radius = circleAbility.Radius;
+                }
+
+                if (radius > 0)
+                {
+                    var circle = new Polygon.Circle(center, radius);
                     if (!EntityManager<Hero>.Entities.Any(x => x.IsAlive && x.IsVisible && x.IsEnemy(this.context.Owner) && circle.IsInside(x.Position)))
                     {
                         caster.Stop();
