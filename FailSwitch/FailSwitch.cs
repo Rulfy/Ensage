@@ -72,26 +72,48 @@ namespace FailSwitch
             this.context.Inventory.Detach(this);
         }
 
-        private void ExecuteOrder(ExecuteOrderEventArgs args)
+        private async Task ExecuteOrder(ExecuteOrderEventArgs args)
         {
+            Vector3 targetPosition;
             switch (args.OrderId)
             {
                 case OrderId.Ability:
                     args.Ability.UseAbility(args.IsQueued);
+                    targetPosition = Vector3.Zero;
                     break;
 
                 case OrderId.AbilityLocation:
                     args.Ability.UseAbility(args.TargetPosition, args.IsQueued);
+                    targetPosition = args.TargetPosition;
                     break;
 
                 case OrderId.AbilityTarget:
+                    if (!args.Target.IsValid || !args.Target.IsVisible || !args.Target.IsAlive)
+                    {
+                        return;
+                    }
+
                     args.Ability.UseAbility((Unit)args.Target, args.IsQueued);
+                    targetPosition = args.Target.Position;
                     break;
 
                 case OrderId.AbilityTargetRune:
                     args.Ability.UseAbility((Rune)args.Target, args.IsQueued);
+                    targetPosition = args.Target.Position;
                     break;
+
+                default:
+                    return;
             }
+
+            var castPoint = args.Ability is Item ? 1 : args.Ability.GetCastPoint(args.Ability.Level - 1);
+            var waitTime = (int)((castPoint * 1000f) + Game.Ping);
+            if (targetPosition != Vector3.Zero && args.Entities.First() is Hero hero)
+            {
+                waitTime += (int)(hero.TurnTime(targetPosition) * 1000f);
+            }
+
+            await Task.Delay(waitTime);
         }
 
         private async void Player_OnExecuteOrder(Player sender, ExecuteOrderEventArgs args)
@@ -125,8 +147,8 @@ namespace FailSwitch
                         return;
                 }
 
-                Vector3 center;
                 int delay;
+                Vector3 center;
                 switch (args.OrderId)
                 {
                     case OrderId.Ability:
@@ -173,6 +195,7 @@ namespace FailSwitch
                                         && replicateFrom.IsVisible
                                         && !replicateFrom.IsLinkensProtected()
                                         && !replicateFrom.IsReflectingAbilities()
+                                        && replicateFrom.IsEnemy(caster)
                                         && ability.CanHit(replicateFrom))
                                     {
                                         betterTarget = replicateFrom;
@@ -185,14 +208,14 @@ namespace FailSwitch
                                 {
                                     betterTarget = EntityManager<Hero>
                                                    .Entities.Where(
-                                                       x => x.IsAlive && x.IsVisible && !x.IsIllusion && !x.IsLinkensProtected() && !x.IsReflectingAbilities() && ability.CanHit(x))
+                                                       x => x.IsAlive && x.IsVisible && !x.IsIllusion && !x.IsLinkensProtected() && !x.IsReflectingAbilities() && x.IsEnemy(caster) && ability.CanHit(x))
                                                    .OrderBy(x => x.Distance2D(target))
                                                    .FirstOrDefault();
                                 }
 
                                 if (betterTarget != null)
                                 {
-                                    caster.Stop();
+                                    args.Process = false;
                                     if (this.config.FindRealTarget)
                                     {
                                         ability.UseAbility(betterTarget);
@@ -200,7 +223,7 @@ namespace FailSwitch
                                 }
                                 else if (targetBlocking)
                                 {
-                                    caster.Stop();
+                                    args.Process = false;
                                 }
                             }
 
@@ -245,7 +268,7 @@ namespace FailSwitch
         {
             try
             {
-                if (!this.config.TogglePowerTreads || !args.IsPlayerInput)
+                if (!this.config.TogglePowerTreads || !args.IsPlayerInput || !(args.Entities.First() is Hero))
                 {
                     return;
                 }
@@ -282,7 +305,7 @@ namespace FailSwitch
                             await Task.Delay(100);
                         }
 
-                        this.ExecuteOrder(args);
+                        await this.ExecuteOrder(args);
                         return;
                     }
 
@@ -290,13 +313,14 @@ namespace FailSwitch
                     this.toggling = true;
                     this.powerTreadsWaiting++;
                     this.powerTreadsAttribute = this.PowerTreads.ActiveAttribute;
-                    while (this.PowerTreads.ActiveAttribute != Attribute.Intelligence)
+
+                    // while (this.PowerTreads.ActiveAttribute != Attribute.Intelligence)
                     {
                         this.PowerTreads.SwitchAttribute(Attribute.Intelligence);
-                        await Task.Delay(100);
+                        await Task.Delay(100 + (int)Game.Ping);
                     }
 
-                    this.ExecuteOrder(args);
+                    await this.ExecuteOrder(args);
                 }
                 finally
                 {
@@ -314,10 +338,10 @@ namespace FailSwitch
                         else
                         {
                             // restore power treads attribute
-                            while (this.PowerTreads.ActiveAttribute != this.powerTreadsAttribute)
+                            // while (this.PowerTreads.ActiveAttribute != this.powerTreadsAttribute)
                             {
                                 this.PowerTreads.SwitchAttribute(this.powerTreadsAttribute);
-                                await Task.Delay(100);
+                                await Task.Delay(100 + (int)Game.Ping);
                             }
                         }
                     }
