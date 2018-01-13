@@ -125,8 +125,8 @@ namespace FailSwitch
                         return;
                 }
 
-                int delay;
                 Vector3 center;
+                int delay;
                 switch (args.OrderId)
                 {
                     case OrderId.Ability:
