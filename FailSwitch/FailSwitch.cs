@@ -137,7 +137,7 @@ namespace FailSwitch
                         }
                         catch (AbilityNotImplementedException e)
                         {
-                            Log.Error(e);
+                            // Log.Error(e);
                             return;
                         }
 

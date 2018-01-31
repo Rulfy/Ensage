@@ -47,9 +47,8 @@
     <Compile Include="FailSwitch.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Ensage, Version=0.0.0.1, Culture=neutral, PublicKeyToken=a41ba14f653257a6, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
+    <Reference Include="Ensage">
+      <HintPath>..\..\..\..\EnsageSharp\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.SDK, Version=1.0.0.0, Culture=neutral, PublicKeyToken=2a0bb906a796e43b, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -58,12 +57,11 @@
     <Reference Include="NLog">
       <HintPath>..\..\..\..\..\..\EnsageSharp\References\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="PlaySharp.Toolkit, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharpTest\References\PlaySharp.Toolkit.dll</HintPath>
+    <Reference Include="PlaySharp.Toolkit">
+      <HintPath>..\..\..\..\EnsageSharp\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics">
-      <HintPath>C:\EnsageSharpTest\References\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
