@@ -43,7 +43,7 @@
     <Reference Include="Ensage">
       <HintPath>C:\EnsageSharp\References\Ensage.dll</HintPath>
     </Reference>
-    <Reference Include="Ensage.Common, Version=1.2.8.5, Culture=neutral, PublicKeyToken=9849de8727708dde">
+    <Reference Include="Ensage.Common">
       <HintPath>C:\EnsageSharp\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.SDK">
