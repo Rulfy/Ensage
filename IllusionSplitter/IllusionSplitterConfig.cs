@@ -1,5 +1,5 @@
 ﻿// <copyright file="IllusionSplitterConfig.cs" company="Ensage">
-//    Copyright (c) 2018 Ensage.
+//     Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace IllusionSplitter

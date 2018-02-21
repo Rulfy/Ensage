@@ -1,10 +1,9 @@
 ﻿// <copyright file="Program.cs" company="Ensage">
-//    Copyright (c) 2018 Ensage.
+//     Copyright (c) 2018 Ensage.
 // </copyright>
 
 namespace IllusionSplitter
 {
-    using System;
     using System.ComponentModel.Composition;
 
     using Ensage.SDK.Menu.Items;
