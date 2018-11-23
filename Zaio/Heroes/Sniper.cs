@@ -18,7 +18,7 @@ using AbilityId = Ensage.AbilityId;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Sniper)]
+    [Hero(HeroId.npc_dota_hero_sniper)]
     internal class Sniper : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -77,7 +77,7 @@ namespace Zaio.Heroes
 
             if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted() && !IsEnemyNear())
             {
-                var hasAgha = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                var hasAgha = MyHero.HasItem(ItemId.item_ultimate_scepter);
                 if (hasAgha)
                 {
                     var critBonus = _ultAbility.GetAbilityData("scepter_crit_bonus"); // 280
@@ -155,7 +155,7 @@ namespace Zaio.Heroes
                 if (_ultAbility.IsAbilityEnabled() && _ultAbility.CanBeCasted(target) && _ultAbility.CanHit(target) && !IsEnemyNear() &&
                     !MyHero.IsInvisible())
                 {
-                    var hasAgha = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                    var hasAgha = MyHero.HasItem(ItemId.item_ultimate_scepter);
                     if (hasAgha)
                     {
                         var critBonus = _ultAbility.GetAbilityData("scepter_crit_bonus"); // 280

@@ -22,7 +22,7 @@ namespace Zaio.Heroes
 {
     using AbilityId = Ensage.AbilityId;
 
-    [Hero(ClassId.CDOTA_Unit_Hero_Pudge)]
+    [Hero(HeroId.npc_dota_hero_pudge)]
     internal class Pudge : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -166,7 +166,7 @@ namespace Zaio.Heroes
 
             if (_hookAbility.IsKillstealAbilityEnabled() && _hookAbility.CanBeCasted())
             {
-                var damage = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                var damage = MyHero.HasItem(ItemId.item_ultimate_scepter)
                     ? _hookAbility.GetAbilityData("damage_scepter")
                     : _hookAbility.GetDamage(_hookAbility.Level - 1);
                 damage *= GetSpellAmp();

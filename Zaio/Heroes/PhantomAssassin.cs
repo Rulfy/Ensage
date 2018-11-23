@@ -16,7 +16,7 @@ using AbilityId = Ensage.AbilityId;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_PhantomAssassin)]
+    [Hero(HeroId.npc_dota_hero_phantom_assassin)]
     internal class PhantomAssassin : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -7,11 +7,11 @@ namespace Zaio.Helpers
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public sealed class HeroAttribute : Attribute
     {
-        public HeroAttribute(ClassId id)
+        public HeroAttribute(HeroId id)
         {
             Id = id;
         }
 
-        public ClassId Id { get; }
+        public HeroId Id { get; }
     }
 }
