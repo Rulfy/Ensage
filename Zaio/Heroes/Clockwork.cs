@@ -18,7 +18,7 @@ using Zaio.Prediction;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Rattletrap)]
+    [Hero(HeroId.npc_dota_hero_rattletrap)]
     internal class Clockwork : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -113,7 +113,7 @@ namespace Zaio.Heroes
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.IsKillstealAbilityEnabled() && MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter) && ult.CanBeCasted())
+            if (ult.IsKillstealAbilityEnabled() && MyHero.HasItem(ItemId.item_ultimate_scepter) && ult.CanBeCasted())
             {
                 var damage = ult.GetAbilityData("damage");
                 damage *= GetSpellAmp();

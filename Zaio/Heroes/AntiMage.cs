@@ -24,7 +24,7 @@ namespace Zaio.Heroes
 
     using AbilityId = Ensage.AbilityId;
 
-    [Hero(ClassId.CDOTA_Unit_Hero_AntiMage)]
+    [Hero(HeroId.npc_dota_hero_antimage)]
     internal class AntiMage : ComboHero
     {
         private static readonly string[] KillstealAbilities = { "antimage_mana_void" };

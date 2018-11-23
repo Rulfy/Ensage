@@ -17,7 +17,7 @@ using Zaio.Prediction;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Jakiro)]
+    [Hero(HeroId.npc_dota_hero_jakiro)]
     internal class Jakiro : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -161,7 +161,7 @@ namespace Zaio.Heroes
                         var dir = predictedPos - MyHero.NetworkPosition;
                         dir.Normalize();
                         dir *=
-                            _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                            _ultAbility.GetAbilityData(MyHero.HasItem(ItemId.item_ultimate_scepter)
                                 ? "cast_range_scepter"
                                 : "cast_range");
 

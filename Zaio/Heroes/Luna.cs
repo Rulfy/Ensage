@@ -16,7 +16,7 @@ using AbilityId = Ensage.AbilityId;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Luna)]
+    [Hero(HeroId.npc_dota_hero_luna)]
     internal class Luna : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -121,7 +121,7 @@ namespace Zaio.Heroes
 
                 if (_aoeAbility.IsAbilityEnabled() && _aoeAbility.CanBeCasted() && _aoeAbility.CanHit(target))
                 {
-                    var hasScepter = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                    var hasScepter = MyHero.HasItem(ItemId.item_ultimate_scepter);
                     var radius = _aoeAbility.GetAbilityData("search_radius");
 
                     var enemiesNearCount =

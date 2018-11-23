@@ -45,7 +45,7 @@ X:3365,406 Y:5799,75 Z:384
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Naga_Siren)]
+    [Hero(HeroId.npc_dota_hero_naga_siren)]
     internal class Naga : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

@@ -17,7 +17,7 @@ using AbilityId = Ensage.AbilityId;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Lina)]
+    [Hero(HeroId.npc_dota_hero_lina)]
     internal class Lina : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -81,7 +81,7 @@ namespace Zaio.Heroes
             if (_ultAbility.IsKillstealAbilityEnabled() &&_ultAbility.CanBeCasted())
             {
                 var damage = _ultAbility.GetAbilityData("damage");
-                var hasScepter = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                var hasScepter = MyHero.HasItem(ItemId.item_ultimate_scepter);
                 damage *= GetSpellAmp();
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()

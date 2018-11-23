@@ -18,7 +18,7 @@ using AbilityId = Ensage.AbilityId;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_MonkeyKing)]
+    [Hero(HeroId.npc_dota_hero_monkey_king)]
     internal class MonkeyKing : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

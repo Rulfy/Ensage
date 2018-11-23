@@ -398,7 +398,7 @@ namespace Zaio.Interfaces
 
             if (ZaioMenu.ShouldUseBlinkDagger && !MyHero.IsMuted())
             {
-                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Item_BlinkDagger);
+                var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.Id == AbilityId.item_blink);
                 if (blink != null && blink.CanBeCasted())
                 {
                     var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
@@ -425,7 +425,7 @@ namespace Zaio.Interfaces
             {
                 if (ZaioMenu.ShouldUseBlinkDagger)
                 {
-                    var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.ClassId == ClassId.CDOTA_Item_BlinkDagger);
+                    var blink = MyHero.Inventory.Items.FirstOrDefault(x => x.Id == AbilityId.item_blink);
                     if (blink != null && blink.CanBeCasted())
                     {
                         var blinkRange = blink.AbilitySpecialData.First(x => x.Name == "blink_range").Value;
