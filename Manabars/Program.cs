@@ -30,7 +30,14 @@
                     .ToList();
             foreach (var enemy in enemies)
             {
-                var start = HUDInfo.GetHPbarPosition(enemy) + new Vector2(0, HUDInfo.GetHpBarSizeY(enemy) + 1);
+                var start = HUDInfo.GetHPbarPosition(enemy);
+                if (start == Vector2.Zero)
+                {
+                    continue;
+                }
+
+                start = start + new Vector2(0, HUDInfo.GetHpBarSizeY(enemy) + 1);
+
                 var manaperc = enemy.Mana / enemy.MaximumMana;
                 var size = new Vector2(HUDInfo.GetHPBarSizeX(enemy), HUDInfo.GetHpBarSizeY(enemy) / 2);
                 // Draw background
@@ -56,7 +63,6 @@
         {
             Drawing.OnDraw += Drawing_OnDraw;
         }
-
         #endregion
     }
 }

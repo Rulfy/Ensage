@@ -83,7 +83,7 @@ namespace Zaio.Heroes
             if (_ultAbility.IsKillstealAbilityEnabled() && _ultAbility.CanBeCasted())
             {
                 var damage =
-                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                    _ultAbility.GetAbilityData(MyHero.HasItem(ItemId.item_ultimate_scepter)
                         ? "damage_scepter"
                         : "damage");
                 damage *= GetSpellAmp();
@@ -151,7 +151,7 @@ namespace Zaio.Heroes
                 await HasNoLinkens(target, tk))
             {
                 var damage =
-                    _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                    _ultAbility.GetAbilityData(MyHero.HasItem(ItemId.item_ultimate_scepter)
                         ? "damage_scepter"
                         : "damage");
                 if (target.Health <= damage * (1.0f - target.MagicResistance()))

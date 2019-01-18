@@ -166,7 +166,7 @@ namespace Zaio.Heroes
 
             if (_hookAbility.IsKillstealAbilityEnabled() && _hookAbility.CanBeCasted())
             {
-                var damage = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                var damage = MyHero.HasItem(ItemId.item_ultimate_scepter)
                     ? _hookAbility.GetAbilityData("damage_scepter")
                     : _hookAbility.GetDamage(_hookAbility.Level - 1);
                 damage *= GetSpellAmp();

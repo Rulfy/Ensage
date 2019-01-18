@@ -161,7 +161,7 @@ namespace Zaio.Heroes
                         var dir = predictedPos - MyHero.NetworkPosition;
                         dir.Normalize();
                         dir *=
-                            _ultAbility.GetAbilityData(MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                            _ultAbility.GetAbilityData(MyHero.HasItem(ItemId.item_ultimate_scepter)
                                 ? "cast_range_scepter"
                                 : "cast_range");
 

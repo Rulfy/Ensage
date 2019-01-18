@@ -81,7 +81,7 @@ namespace Zaio.Heroes
             if (_ultAbility.IsKillstealAbilityEnabled() &&_ultAbility.CanBeCasted())
             {
                 var damage = _ultAbility.GetAbilityData("damage");
-                var hasScepter = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                var hasScepter = MyHero.HasItem(ItemId.item_ultimate_scepter);
                 damage *= GetSpellAmp();
                 var enemy =
                     ObjectManager.GetEntitiesParallel<Hero>()

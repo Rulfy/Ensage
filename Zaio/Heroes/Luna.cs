@@ -121,7 +121,7 @@ namespace Zaio.Heroes
 
                 if (_aoeAbility.IsAbilityEnabled() && _aoeAbility.CanBeCasted() && _aoeAbility.CanHit(target))
                 {
-                    var hasScepter = MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter);
+                    var hasScepter = MyHero.HasItem(ItemId.item_ultimate_scepter);
                     var radius = _aoeAbility.GetAbilityData("search_radius");
 
                     var enemiesNearCount =

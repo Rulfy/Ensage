@@ -231,7 +231,7 @@ namespace Zaio.Interfaces
 
         public override int GetHashCode()
         {
-            return (int) ControlledUnit.Handle;
+            return (int) ControlledUnit.Handle.Handle;
         }
     }
 }

@@ -34,20 +34,20 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="clipper_library">
-      <HintPath>C:\EnsageSharpTest\References\clipper_library.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\clipper_library.dll</HintPath>
     </Reference>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharpTest\References\Ensage.Common.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="PlaySharp.Toolkit">
-      <HintPath>C:\EnsageSharpTest\References\PlaySharp.Toolkit.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\PlaySharp.Toolkit.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics, Version=3.1.0.0, Culture=neutral, PublicKeyToken=7e3dc52b16ce4f66, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\EnsageSharpTest\References\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

@@ -113,7 +113,7 @@ namespace Zaio.Heroes
             }
 
             var ult = MyHero.Spellbook.SpellR;
-            if (ult.IsKillstealAbilityEnabled() && MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter) && ult.CanBeCasted())
+            if (ult.IsKillstealAbilityEnabled() && MyHero.HasItem(ItemId.item_ultimate_scepter) && ult.CanBeCasted())
             {
                 var damage = ult.GetAbilityData("damage");
                 damage *= GetSpellAmp();

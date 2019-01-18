@@ -405,7 +405,7 @@ namespace Zaio.Heroes
                                 await Await.Delay(GetAbilityDelay(target, _powerShotAbility) + (int)time, tk);
                                 MyHero.Stop();
                             }
-                            else if (!_shackleAbility.CanBeCasted(target) && !MyHero.HasItem(ClassId.CDOTA_Item_BlinkDagger) && distance > MyHero.GetAttackRange() * 1.25f)
+                            else if (!_shackleAbility.CanBeCasted(target) && !MyHero.HasItem(ItemId.item_blink) && distance > MyHero.GetAttackRange() * 1.25f)
                             {
                                 _powerShotAbility.UseAbility(predictedPos);
                                 Log.Debug($"using powershot since no blink or shackle");

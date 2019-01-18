@@ -52,7 +52,7 @@ namespace Vaper.Heroes
 
         public override int GetHashCode()
         {
-            return (int)this.Ward.Handle;
+            return (int)this.Ward.Handle.Handle;
         }
     }
 

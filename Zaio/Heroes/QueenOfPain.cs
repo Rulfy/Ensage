@@ -7,6 +7,7 @@ namespace Zaio.Heroes
     using System.Threading.Tasks;
 
     using Ensage;
+    using Ensage.Common.Enums;
     using Ensage.Common.Extensions;
     using Ensage.Common.Extensions.SharpDX;
     using Ensage.Common.Menu;
@@ -229,7 +230,7 @@ namespace Zaio.Heroes
 
             if (this._ultAbility.IsKillstealAbilityEnabled() && this._ultAbility.CanBeCasted())
             {
-                var damage = this.MyHero.HasItem(ClassId.CDOTA_Item_UltimateScepter)
+                var damage = this.MyHero.HasItem(ItemId.item_ultimate_scepter)
                                  ? this._ultAbility.GetAbilityData("damage_scepter")
                                  : this._ultAbility.GetAbilityData("damage");
 

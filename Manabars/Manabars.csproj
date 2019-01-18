@@ -40,22 +40,15 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Ensage">
-      <HintPath>C:\EnsageSharpTest\References\Ensage.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\Ensage.dll</HintPath>
     </Reference>
     <Reference Include="Ensage.Common">
-      <HintPath>C:\EnsageSharpTest\References\Ensage.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX">
-      <HintPath>C:\EnsageSharpTest\References\SharpDX.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpDX.Direct3D9">
-      <HintPath>C:\EnsageSharpTest\References\SharpDX.Direct3D9.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\Ensage.Common.dll</HintPath>
     </Reference>
     <Reference Include="SharpDX.Mathematics">
-      <HintPath>C:\EnsageSharpTest\References\SharpDX.Mathematics.dll</HintPath>
+      <HintPath>..\..\..\..\EnsageSharp\References\SharpDX.Mathematics.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
