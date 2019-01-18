@@ -21,7 +21,7 @@ using Zaio.Prediction;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Windrunner)]
+    [Hero(HeroId.npc_dota_hero_windrunner)]
     internal class Windranger : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

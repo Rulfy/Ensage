@@ -18,7 +18,7 @@ using Zaio.Prediction;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Slark)]
+    [Hero(HeroId.npc_dota_hero_slark)]
     internal class Slark : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

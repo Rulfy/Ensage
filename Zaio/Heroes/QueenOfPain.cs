@@ -24,7 +24,7 @@ namespace Zaio.Heroes
     using AbilityId = Ensage.AbilityId;
     using Prediction = Ensage.Common.Prediction;
 
-    [Hero(ClassId.CDOTA_Unit_Hero_QueenOfPain)]
+    [Hero(HeroId.npc_dota_hero_queenofpain)]
     internal class QueenOfPain : ComboHero
     {
         private static readonly string[] KillstealAbilities =

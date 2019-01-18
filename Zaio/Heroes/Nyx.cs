@@ -17,7 +17,7 @@ using AbilityId = Ensage.AbilityId;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Nyx_Assassin)]
+    [Hero(HeroId.npc_dota_hero_nyx_assassin)]
     internal class Nyx : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

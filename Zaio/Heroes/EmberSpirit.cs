@@ -17,7 +17,7 @@ using AbilityId = Ensage.AbilityId;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_EmberSpirit)]
+    [Hero(HeroId.npc_dota_hero_ember_spirit)]
     internal class EmberSpirit : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

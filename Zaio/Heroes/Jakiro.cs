@@ -17,7 +17,7 @@ using Zaio.Prediction;
 
 namespace Zaio.Heroes
 {
-    [Hero(ClassId.CDOTA_Unit_Hero_Jakiro)]
+    [Hero(HeroId.npc_dota_hero_jakiro)]
     internal class Jakiro : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

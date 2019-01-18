@@ -22,7 +22,7 @@ namespace Zaio.Heroes
 {
     using AbilityId = Ensage.AbilityId;
 
-    [Hero(ClassId.CDOTA_Unit_Hero_Pudge)]
+    [Hero(HeroId.npc_dota_hero_pudge)]
     internal class Pudge : ComboHero
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
