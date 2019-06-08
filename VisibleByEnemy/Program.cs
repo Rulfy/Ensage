@@ -71,6 +71,7 @@ namespace VisibleByEnemy
             if (visible && unit.IsAlive)
             {
                 this.particleManager.Value.AddOrUpdate(unit, $"unit_{unit.Handle}", "particles/items_fx/aura_shivas.vpcf", ParticleAttachment.AbsOriginFollow);
+                this.particleManager.Value.Release($"unit_{unit.Handle}");
             }
             else
             {
