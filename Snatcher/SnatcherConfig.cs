@@ -18,11 +18,11 @@ namespace Snatcher
     {
         public SnatcherConfig(IRendererManager renderer)
         {
-            renderer.TextureManager.LoadFromDota("item_aegis", @"resource\flash3\images\items\aegis.png");
-            renderer.TextureManager.LoadFromDota("item_cheese", @"resource\flash3\images\items\cheese.png");
-            renderer.TextureManager.LoadFromDota("rune_doubledamage", @"resource\flash3\images\spellicons\rune_doubledamage.png");
-            renderer.TextureManager.LoadFromDota("item_gem", @"resource\flash3\images\items\gem.png");
-            renderer.TextureManager.LoadFromDota("item_rapier", @"resource\flash3\images\items\rapier.png");
+            renderer.TextureManager.LoadFromDota("item_aegis", @"panorama\\images\\items\\aegis_png.vtex_c");
+            renderer.TextureManager.LoadFromDota("item_cheese", @"panorama\\images\items\\cheese_png.vtex_c");
+            renderer.TextureManager.LoadFromDota("rune_doubledamage", @"panorama\\images\\spellicons\\rune_doubledamage_png.vtex_c");
+            renderer.TextureManager.LoadFromDota("item_gem", @"panorama\\images\\items\\gem_png.vtex_c");
+            renderer.TextureManager.LoadFromDota("item_rapier", @"panorama\\images\\items\\rapier_png.vtex_c");
 
             // this.GreedMode = this.factory.Item("Greed Mode", new AbilityToggler(this.greedDictionary));
             this.ToggleHotkey = new HotkeySelector(Key.None, this.ToggleActive, HotkeyFlags.Press);
