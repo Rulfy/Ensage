@@ -14,13 +14,13 @@ namespace IllusionSplitter
     [Menu("Illusion Splitter")]
     public class IllusionSplitterConfig
     {
-        public IllusionSplitterConfig(IRendererManager renderer)
+        public IllusionSplitterConfig(IRenderManager renderer)
         {
-            renderer.TextureManager.LoadFromDota("bottle_illusion", @"resource\flash3\images\items\bottle_illusion.png");
-            renderer.TextureManager.LoadFromDota("item_manta", @"resource\flash3\images\items\manta.png");
-            renderer.TextureManager.LoadFromDota("naga_siren_mirror_image", @"resource\flash3\images\spellicons\naga_siren_mirror_image.png");
-            renderer.TextureManager.LoadFromDota("terrorblade_conjure_image", @"resource\flash3\images\spellicons\terrorblade_conjure_image.png");
-            renderer.TextureManager.LoadFromDota("phantom_lancer_doppelwalk", @"resource\flash3\images\spellicons\phantom_lancer_doppelwalk.png");
+            renderer.TextureManager.LoadAbilityFromDota("item_bottle_illusion");
+            renderer.TextureManager.LoadAbilityFromDota("item_manta");
+            renderer.TextureManager.LoadAbilityFromDota("naga_siren_mirror_image");
+            renderer.TextureManager.LoadAbilityFromDota("terrorblade_conjure_image");
+            renderer.TextureManager.LoadAbilityFromDota("phantom_lancer_doppelwalk");
         }
 
         [Item("Randomize Split Angle")]
@@ -48,7 +48,7 @@ namespace IllusionSplitter
         [Tooltip("Uses your spells and items to create illusions before splitting them.")]
         public ImageToggler UseAbilities { get; set; } = new ImageToggler(
             true,
-            "bottle_illusion",
+            "item_bottle_illusion",
             "item_manta",
             "naga_siren_mirror_image",
             "terrorblade_conjure_image",

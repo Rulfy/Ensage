@@ -16,13 +16,13 @@ namespace Snatcher
     [Menu("Snatcher")]
     public class SnatcherConfig
     {
-        public SnatcherConfig(IRendererManager renderer)
+        public SnatcherConfig(IRenderManager renderer)
         {
-            renderer.TextureManager.LoadFromDota("item_aegis", @"resource\flash3\images\items\aegis.png");
-            renderer.TextureManager.LoadFromDota("item_cheese", @"resource\flash3\images\items\cheese.png");
-            renderer.TextureManager.LoadFromDota("rune_doubledamage", @"resource\flash3\images\spellicons\rune_doubledamage.png");
-            renderer.TextureManager.LoadFromDota("item_gem", @"resource\flash3\images\items\gem.png");
-            renderer.TextureManager.LoadFromDota("item_rapier", @"resource\flash3\images\items\rapier.png");
+            renderer.TextureManager.LoadAbilityFromDota("item_aegis");
+            renderer.TextureManager.LoadAbilityFromDota("item_cheese");
+            renderer.TextureManager.LoadAbilityFromDota("item_gem");
+            renderer.TextureManager.LoadAbilityFromDota("item_rapier");
+            renderer.TextureManager.LoadAbilityFromDota("rune_doubledamage");
 
             // this.GreedMode = this.factory.Item("Greed Mode", new AbilityToggler(this.greedDictionary));
             this.ToggleHotkey = new HotkeySelector(Key.None, this.ToggleActive, HotkeyFlags.Press);

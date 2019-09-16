@@ -16,6 +16,7 @@ namespace Vaper
     using Ensage;
     using Ensage.SDK.Handlers;
     using Ensage.SDK.Helpers;
+    using Ensage.SDK.Renderer;
     using Ensage.SDK.Renderer.Particle;
     using Ensage.SDK.Service;
 
@@ -186,12 +187,12 @@ namespace Vaper
             }
         }
 
-        private void IntroDraw(object sender, EventArgs e)
+        private void IntroDraw(IRenderer renderer)
         {
             Vector2 screenPos;
             if (Drawing.WorldToScreen(this.Owner.Position + new Vector3(-140, -50, 0), out screenPos))
             {
-                this.Context.Renderer.DrawText(screenPos, "Vaper loaded", Color.Gold, 35);
+                renderer.DrawText(screenPos, "Vaper loaded", Color.Gold, 35);
             }
         }
     }

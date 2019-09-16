@@ -68,7 +68,7 @@ namespace Snatcher
         {
             this.context.Inventory.Attach(this);
 
-            this.config = new SnatcherConfig(this.context.Renderer);
+            this.config = new SnatcherConfig(this.context.RenderManager);
             this.context.MenuManager.RegisterMenu(this.config);
 
             foreach (var blinkAbilityId in BlinkAbilityIds)
