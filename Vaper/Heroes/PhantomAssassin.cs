@@ -17,6 +17,7 @@ namespace Vaper.Heroes
     using Ensage.SDK.Helpers;
     using Ensage.SDK.Inventory.Metadata;
     using Ensage.SDK.Menu;
+    using Ensage.SDK.Renderer;
     using Ensage.SDK.Utils;
 
     using PlaySharp.Toolkit.Helper.Annotations;
@@ -162,7 +163,7 @@ namespace Vaper.Heroes
             }
         }
 
-        private void OnDraw(object sender, EventArgs e)
+        private void OnDraw(IRenderer renderer)
         {
             if (!this.CritIndicator || (this.Crit.Ability.Level <= 0))
             {
@@ -173,10 +174,10 @@ namespace Vaper.Heroes
             var barPos = this.Owner.Position + new Vector3(0, 0, this.Owner.HealthBarOffset);
             if (Drawing.WorldToScreen(barPos, out screenPos))
             {
-                this.Context.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 15, 80, 7), Color.Red);
+                renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 15, 80, 7), Color.Red);
 
                 var critWidth = 80.0f * this.CurrentCritChance;
-                this.Context.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 11), new Vector2((screenPos.X - 40) + critWidth, screenPos.Y - 11), Color.Red, 7);
+                renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 11), new Vector2((screenPos.X - 40) + critWidth, screenPos.Y - 11), Color.Red, 7);
             }
         }
 

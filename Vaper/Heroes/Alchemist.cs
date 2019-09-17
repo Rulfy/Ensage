@@ -19,6 +19,7 @@ namespace Vaper.Heroes
     using Ensage.SDK.Helpers;
     using Ensage.SDK.Inventory.Metadata;
     using Ensage.SDK.Menu;
+    using Ensage.SDK.Renderer;
 
     using log4net;
 
@@ -159,7 +160,7 @@ namespace Vaper.Heroes
             }
         }
 
-        private void OnDraw(object sender, EventArgs e)
+        private void OnDraw(IRenderer renderer)
         {
             if (this.Greed.Ability.Level <= 0)
             {
@@ -170,13 +171,13 @@ namespace Vaper.Heroes
             var barPos = this.Owner.Position + new Vector3(0, 0, this.Owner.HealthBarOffset);
             if (Drawing.WorldToScreen(barPos, out screenPos))
             {
-                this.Context.Renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 12, 80, 7), Color.Gold);
+                renderer.DrawRectangle(new RectangleF(screenPos.X - 40, screenPos.Y - 12, 80, 7), Color.Gold);
 
                 var percentage = Math.Max(0.0f, Math.Min(1.0f, (this.Greed.Duration - (Game.GameTime - this.LastHitTime)) / this.Greed.Duration));
 
                 // Log.Debug($"({this.Greed.Duration} - {Game.GameTime - this.LastHitTime})");
                 var durationWidth = 80.0f * percentage;
-                this.Context.Renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 8), new Vector2((screenPos.X - 40) + durationWidth, screenPos.Y - 8), Color.Gold, 7);
+                renderer.DrawLine(new Vector2(screenPos.X - 40, screenPos.Y - 8), new Vector2((screenPos.X - 40) + durationWidth, screenPos.Y - 8), Color.Gold, 7);
             }
         }
 

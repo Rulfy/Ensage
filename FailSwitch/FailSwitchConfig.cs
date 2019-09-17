@@ -13,29 +13,27 @@ namespace FailSwitch
     [Menu("FailSwitch")]
     public class FailSwitchConfig
     {
-        public FailSwitchConfig(IRendererManager renderer)
+        public FailSwitchConfig(IRenderManager renderer)
         {
-            renderer.TextureManager.LoadFromDota("enigma_black_hole", @"resource\flash3\images\spellicons\enigma_black_hole.png");
-            renderer.TextureManager.LoadFromDota("puck_dream_coil", @"resource\flash3\images\spellicons\puck_dream_coil.png");
-            renderer.TextureManager.LoadFromDota("obsidian_destroyer_sanity_eclipse", @"resource\flash3\images\spellicons\obsidian_destroyer_sanity_eclipse.png");
-            renderer.TextureManager.LoadFromDota("faceless_void_chronosphere", @"resource\flash3\images\spellicons\faceless_void_chronosphere.png");
-            renderer.TextureManager.LoadFromDota("lina_light_strike_array", @"resource\flash3\images\spellicons\lina_light_strike_array.png");
-
-            renderer.TextureManager.LoadFromDota("magnataur_reverse_polarity", @"resource\flash3\images\spellicons\magnataur_reverse_polarity.png");
-            renderer.TextureManager.LoadFromDota("tidehunter_ravage", @"resource\flash3\images\spellicons\tidehunter_ravage.png");
-            renderer.TextureManager.LoadFromDota("axe_berserkers_call", @"resource\flash3\images\spellicons\axe_berserkers_call.png");
-            renderer.TextureManager.LoadFromDota("centaur_hoof_stomp", @"resource\flash3\images\spellicons\centaur_hoof_stomp.png");
-            renderer.TextureManager.LoadFromDota("slardar_slithereen_crush", @"resource\flash3\images\spellicons\slardar_slithereen_crush.png");
-            renderer.TextureManager.LoadFromDota("earthshaker_echo_slam", @"resource\flash3\images\spellicons\earthshaker_echo_slam.png");
-
-            renderer.TextureManager.LoadFromDota("doom_bringer_doom", @"resource\flash3\images\spellicons\doom_bringer_doom.png");
-            renderer.TextureManager.LoadFromDota("lion_finger_of_death", @"resource\flash3\images\spellicons\lion_finger_of_death.png");
-            renderer.TextureManager.LoadFromDota("lina_laguna_blade", @"resource\flash3\images\spellicons\lina_laguna_blade.png");
-            renderer.TextureManager.LoadFromDota("antimage_mana_void", @"resource\flash3\images\spellicons\antimage_mana_void.png");
-            renderer.TextureManager.LoadFromDota("legion_commander_duel", @"resource\flash3\images\spellicons\legion_commander_duel.png");
-            renderer.TextureManager.LoadFromDota("bloodseeker_rupture", @"resource\flash3\images\spellicons\bloodseeker_rupture.png");
-            renderer.TextureManager.LoadFromDota("terrorblade_sunder", @"resource\flash3\images\spellicons\terrorblade_sunder.png");
-            renderer.TextureManager.LoadFromDota("bane_fiends_grip", @"resource\flash3\images\spellicons\bane_fiends_grip.png");
+            renderer.TextureManager.LoadAbilityFromDota("enigma_black_hole");
+            renderer.TextureManager.LoadAbilityFromDota("puck_dream_coil");
+            renderer.TextureManager.LoadAbilityFromDota("obsidian_destroyer_sanity_eclipse");
+            renderer.TextureManager.LoadAbilityFromDota("faceless_void_chronosphere");
+            renderer.TextureManager.LoadAbilityFromDota("lina_light_strike_array");
+            renderer.TextureManager.LoadAbilityFromDota("magnataur_reverse_polarity");
+            renderer.TextureManager.LoadAbilityFromDota("tidehunter_ravage");
+            renderer.TextureManager.LoadAbilityFromDota("axe_berserkers_call");
+            renderer.TextureManager.LoadAbilityFromDota("centaur_hoof_stomp");
+            renderer.TextureManager.LoadAbilityFromDota("slardar_slithereen_crush");
+            renderer.TextureManager.LoadAbilityFromDota("earthshaker_echo_slam");
+            renderer.TextureManager.LoadAbilityFromDota("doom_bringer_doom");
+            renderer.TextureManager.LoadAbilityFromDota("lion_finger_of_death");
+            renderer.TextureManager.LoadAbilityFromDota("lina_laguna_blade");
+            renderer.TextureManager.LoadAbilityFromDota("antimage_mana_void");
+            renderer.TextureManager.LoadAbilityFromDota("legion_commander_duel");
+            renderer.TextureManager.LoadAbilityFromDota("bloodseeker_rupture");
+            renderer.TextureManager.LoadAbilityFromDota("terrorblade_sunder");
+            renderer.TextureManager.LoadAbilityFromDota("bane_fiends_grip");
         }
 
         [Item("AoE Abilities")]
