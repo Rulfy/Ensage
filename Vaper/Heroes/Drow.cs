@@ -45,7 +45,7 @@ namespace Vaper.Heroes
     {
         private static readonly ILog Log = AssemblyLogs.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public drow_ranger_trueshot Aura { get; private set; }
+        public drow_ranger_multishot Multishot { get; private set; }
 
         public MenuItem<bool> DrawRangeItem { get; private set; }
 
@@ -204,7 +204,7 @@ namespace Vaper.Heroes
 
             this.FrostArrows = this.Context.AbilityFactory.GetAbility<drow_ranger_frost_arrows>();
             this.Silence = this.Context.AbilityFactory.GetAbility<drow_ranger_wave_of_silence>();
-            this.Aura = this.Context.AbilityFactory.GetAbility<drow_ranger_trueshot>();
+            this.Multishot = this.Context.AbilityFactory.GetAbility<drow_ranger_multishot>();
             this.Ult = this.Context.AbilityFactory.GetAbility<drow_ranger_marksmanship>();
 
             var factory = this.Menu.Hero.Factory;
